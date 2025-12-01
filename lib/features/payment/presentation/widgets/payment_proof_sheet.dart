@@ -7,7 +7,8 @@ import '../../../../core/widgets/ios_components.dart';
 import '../../../../core/widgets/top_notification.dart';
 
 class PaymentProofSheet extends StatefulWidget {
-  final Future<void> Function() onConfirm;
+  final Future<void> Function(String? imagePath, String accountNumber)
+  onConfirm;
 
   const PaymentProofSheet({super.key, required this.onConfirm});
 
@@ -194,7 +195,10 @@ class _PaymentProofSheetState extends State<PaymentProofSheet> {
 
                     try {
                       // Call the onConfirm callback which will save the booking
-                      await widget.onConfirm();
+                      await widget.onConfirm(
+                        _imageFile?.path,
+                        _accountController.text,
+                      );
 
                       // Close sheet only if still mounted
                       if (mounted) {

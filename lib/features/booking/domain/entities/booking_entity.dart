@@ -44,6 +44,8 @@ class BookingEntity extends Equatable {
   final String? dropoffStationId;
   final String? departureTime; // e.g., 'AM 7:00'
   final String? returnTime; // e.g., 'PM 3:00'
+  final String? paymentProofImage;
+  final String? transferNumber;
   final BookingStatus status;
   final PaymentStatus paymentStatus;
   final double totalPrice;
@@ -60,6 +62,8 @@ class BookingEntity extends Equatable {
     this.dropoffStationId,
     this.departureTime,
     this.returnTime,
+    this.paymentProofImage,
+    this.transferNumber,
     required this.status,
     required this.paymentStatus,
     required this.totalPrice,
@@ -78,6 +82,8 @@ class BookingEntity extends Equatable {
     dropoffStationId,
     departureTime,
     returnTime,
+    paymentProofImage,
+    transferNumber,
     status,
     paymentStatus,
     totalPrice,

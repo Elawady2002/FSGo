@@ -115,21 +115,54 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
 
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  // Upcoming Trip Card
-                  _buildSectionTitle('رحلتك الجاية'),
-                  const SizedBox(height: 16),
-                  _buildUpcomingTripCard(),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  // Invalidate providers to trigger refresh
+                  ref.invalidate(upcomingBookingProvider);
+                  ref.invalidate(userBookingsProvider);
+                  // Wait for the providers to refresh
+                  await Future.wait([
+                    ref.read(upcomingBookingProvider.future),
+                    ref.read(userBookingsProvider.future),
+                  ]);
+                },
+                color: AppTheme.primaryColor,
+                backgroundColor: Colors.white,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    // Upcoming Trip Card
+                    _buildSectionTitle('رحلتك الجاية'),
+                    const SizedBox(height: 16),
+                    _buildUpcomingTripCard(),
 
-                  const SizedBox(height: 32),
-
-                  // Route Info
-                  _buildSectionTitle('مسار الرحلة'),
-                  const SizedBox(height: 16),
-                  _buildRouteInfoCard(),
-                ],
+                    // Route Info - Only show if there is an upcoming booking
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final upcomingBookingAsync = ref.watch(
+                          upcomingBookingProvider,
+                        );
+                        return upcomingBookingAsync.when(
+                          data: (booking) {
+                            if (booking == null) return const SizedBox.shrink();
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 32),
+                                _buildSectionTitle('مسار الرحلة'),
+                                const SizedBox(height: 16),
+                                _buildRouteInfoCard(booking),
+                              ],
+                            );
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -185,50 +218,40 @@ class _HomePageState extends ConsumerState<HomePage> {
     return upcomingBookingAsync.when(
       data: (booking) {
         if (booking == null) {
-          // Empty state - no bookings
-          return Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundColor,
-                    shape: BoxShape.circle,
+          // Empty state - no bookings - centered without container
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 60),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    CupertinoIcons.calendar_badge_minus,
+                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                    size: 120,
                   ),
-                  child: Icon(
-                    CupertinoIcons.ticket,
-                    color: AppTheme.textSecondary,
-                    size: 32,
+                  const SizedBox(height: 32),
+                  Text(
+                    'لا توجد رحلات محجوزة',
+                    style: AppTheme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'لا توجد رحلات محجوزة',
-                  style: AppTheme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      'احجز رحلتك الجاية دلوقتي عشان تضمن مكانك',
+                      textAlign: TextAlign.center,
+                      style: AppTheme.textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'احجز رحلتك الجاية دلوقتي عشان تضمن مكانك',
-                  textAlign: TextAlign.center,
-                  style: AppTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }
@@ -421,7 +444,16 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  Widget _buildRouteInfoCard() {
+  Widget _buildRouteInfoCard(BookingEntity booking) {
+    // Determine route based on trip type
+    String from = 'مدينتي';
+    String to = 'الجامعة الألمانية (GUC)';
+
+    if (booking.tripType == 'return_only') {
+      from = 'الجامعة الألمانية (GUC)';
+      to = 'مدينتي';
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -435,14 +467,14 @@ class _HomePageState extends ConsumerState<HomePage> {
             icon: CupertinoIcons.circle_fill,
             iconColor: AppTheme.primaryColor,
             label: 'من',
-            value: 'مدينتي',
+            value: from,
             isLast: false,
           ),
           _buildLocationRow(
             icon: CupertinoIcons.location_solid,
             iconColor: Colors.black,
             label: 'إلى',
-            value: 'الجامعة الألمانية (GUC)',
+            value: to,
             isLast: true,
           ),
         ],

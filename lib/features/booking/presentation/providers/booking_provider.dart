@@ -118,7 +118,11 @@ class BookingState extends _$BookingState {
 
   double get totalPrice => state.tripType.price;
 
-  Future<String?> createBooking(BookingRepository repository) async {
+  Future<String?> createBooking(
+    BookingRepository repository, {
+    String? paymentProofImage,
+    String? transferNumber,
+  }) async {
     if (!isBookingComplete) {
       return 'يرجى إكمال جميع بيانات الحجز';
     }
@@ -136,6 +140,8 @@ class BookingState extends _$BookingState {
         dropoffStationId: state.selectedStation?.id,
         departureTime: state.selectedDepartureTime,
         returnTime: state.selectedReturnTime,
+        paymentProofImage: paymentProofImage,
+        transferNumber: transferNumber,
         totalPrice: totalPrice,
       );
 

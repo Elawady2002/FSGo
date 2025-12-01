@@ -1,12 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../booking/presentation/providers/booking_provider.dart';
+import '../../../booking/domain/entities/booking_entity.dart';
+import '../widgets/transaction_details_sheet.dart';
 
-class WalletPage extends StatelessWidget {
+class WalletPage extends ConsumerWidget {
   const WalletPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bookingsAsync = ref.watch(userBookingsProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       appBar: AppBar(
@@ -113,25 +119,38 @@ class WalletPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildTransactionItem(
-              'شحن رصيد',
-              '28 نوفمبر، 08:30 م',
-              '+ 200.00 ج.م',
-              true,
-            ),
-            const SizedBox(height: 12),
-            _buildTransactionItem(
-              'دفع رحلة',
-              '27 نوفمبر، 07:30 ص',
-              '- 50.00 ج.م',
-              false,
-            ),
-            const SizedBox(height: 12),
-            _buildTransactionItem(
-              'دفع رحلة',
-              '26 نوفمبر، 05:15 م',
-              '- 50.00 ج.م',
-              false,
+
+            // Bookings List
+            bookingsAsync.when(
+              data: (bookings) {
+                if (bookings.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text('لا توجد عمليات سابقة'),
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: bookings.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final booking = bookings[index];
+                    return _buildTransactionItem(
+                      context,
+                      'دفع رحلة',
+                      _formatDate(booking.createdAt),
+                      '- ${booking.totalPrice} ج.م',
+                      false,
+                      booking,
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(child: Text('Error: $error')),
             ),
           ],
         ),
@@ -140,65 +159,82 @@ class WalletPage extends StatelessWidget {
   }
 
   Widget _buildTransactionItem(
+    BuildContext context,
     String title,
     String date,
     String amount,
     bool isCredit,
+    BookingEntity booking,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isCredit
-                  ? AppTheme.successColor.withValues(alpha: 0.1)
-                  : Colors.red.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => TransactionDetailsSheet(booking: booking),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isCredit
+                    ? AppTheme.successColor.withValues(alpha: 0.1)
+                    : Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isCredit
+                    ? CupertinoIcons.arrow_down_left
+                    : CupertinoIcons.arrow_up_right,
+                color: isCredit ? AppTheme.successColor : Colors.red,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              isCredit
-                  ? CupertinoIcons.arrow_down_left
-                  : CupertinoIcons.arrow_up_right,
-              color: isCredit ? AppTheme.successColor : Colors.red,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTheme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  date,
-                  style: AppTheme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  const SizedBox(height: 4),
+                  Text(
+                    date,
+                    style: AppTheme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Text(
-            amount,
-            style: AppTheme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: isCredit ? AppTheme.successColor : Colors.black,
+            Text(
+              amount,
+              style: AppTheme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isCredit ? AppTheme.successColor : Colors.black,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    // Simple date formatting, you might want to use intl package
+    return '${date.day}/${date.month} ${date.hour}:${date.minute}';
   }
 }

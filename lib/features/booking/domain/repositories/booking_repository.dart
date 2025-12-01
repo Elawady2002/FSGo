@@ -20,6 +20,8 @@ abstract class BookingRepository {
     String? dropoffStationId,
     String? departureTime,
     String? returnTime,
+    String? paymentProofImage,
+    String? transferNumber,
     required double totalPrice,
   });
 

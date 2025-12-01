@@ -194,7 +194,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                     isDismissible: false,
                     enableDrag: false,
                     builder: (sheetContext) => PaymentProofSheet(
-                      onConfirm: () async {
+                      onConfirm: (imagePath, accountNumber) async {
                         final bookingRepository = ref.read(
                           bookingRepositoryProvider,
                         );
@@ -203,12 +203,19 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                         );
 
                         // Create booking in database
+                        print('📝 Creating booking with payment details...');
+                        print('   Image path: $imagePath');
+                        print('   Transfer number: $accountNumber');
+
                         final error = await bookingNotifier.createBooking(
                           bookingRepository,
+                          paymentProofImage: imagePath,
+                          transferNumber: accountNumber,
                         );
 
                         if (error != null) {
                           // Show error
+                          print('❌ Booking creation failed: $error');
                           if (!mounted) return;
                           if (!context.mounted) return;
 
@@ -216,11 +223,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                             SnackBar(
                               content: Text(error),
                               backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 5),
                             ),
                           );
                           throw Exception(error); // Throw to stop the flow
                         }
 
+                        print('✅ Booking created successfully!');
                         // Success! Do not navigate here.
                         // PaymentProofSheet will pop with true.
                       },
@@ -228,7 +237,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                   );
 
                   // Navigate to ConfirmationPage if payment was confirmed
+                  print('📱 Payment sheet result: $result');
                   if (result == true) {
+                    print('✅ Navigating to confirmation page...');
                     if (!mounted) return;
                     if (!context.mounted) return;
 
@@ -238,6 +249,8 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                         builder: (_) => const ConfirmationPage(),
                       ),
                     );
+                  } else {
+                    print('❌ Payment was not confirmed');
                   }
                 },
               ),

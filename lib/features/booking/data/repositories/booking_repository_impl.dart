@@ -20,6 +20,8 @@ class BookingRepositoryImpl implements BookingRepository {
     String? dropoffStationId,
     String? departureTime,
     String? returnTime,
+    String? paymentProofImage,
+    String? transferNumber,
     required double totalPrice,
   }) async {
     try {
@@ -33,6 +35,8 @@ class BookingRepositoryImpl implements BookingRepository {
         dropoffStationId: dropoffStationId,
         departureTime: departureTime,
         returnTime: returnTime,
+        paymentProofImage: paymentProofImage,
+        transferNumber: transferNumber,
         totalPrice: totalPrice,
       );
       return Right(booking);
