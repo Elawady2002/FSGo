@@ -16,6 +16,8 @@ import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/trip_map_sheet.dart';
+import '../widgets/active_subscription_card.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -121,10 +123,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // Invalidate providers to trigger refresh
                   ref.invalidate(upcomingBookingProvider);
                   ref.invalidate(userBookingsProvider);
+                  ref.invalidate(userSubscriptionsProvider);
+                  ref.invalidate(activeSubscriptionProvider);
                   // Wait for the providers to refresh
                   await Future.wait([
                     ref.read(upcomingBookingProvider.future),
                     ref.read(userBookingsProvider.future),
+                    ref.read(userSubscriptionsProvider.future),
+                    ref.read(activeSubscriptionProvider.future),
                   ]);
                 },
                 color: AppTheme.primaryColor,
@@ -133,10 +139,57 @@ class _HomePageState extends ConsumerState<HomePage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    // Upcoming Trip Card
-                    _buildSectionTitle('رحلتك الجاية'),
-                    const SizedBox(height: 16),
-                    _buildUpcomingTripCard(),
+                    // Check for active subscription first
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final activeSubAsync = ref.watch(
+                          activeSubscriptionProvider,
+                        );
+                        return activeSubAsync.when(
+                          data: (subscription) {
+                            if (subscription != null) {
+                              // User has active subscription
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSectionTitle('اشتراكك النشط'),
+                                  const SizedBox(height: 16),
+                                  ActiveSubscriptionCard(
+                                    subscription: subscription,
+                                  ),
+                                  const SizedBox(height: 32),
+                                ],
+                              );
+                            }
+                            // No active subscription, show upcoming trip
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle('رحلتك الجاية'),
+                                const SizedBox(height: 16),
+                                _buildUpcomingTripCard(),
+                              ],
+                            );
+                          },
+                          loading: () => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionTitle('رحلتك الجاية'),
+                              const SizedBox(height: 16),
+                              _buildUpcomingTripCard(),
+                            ],
+                          ),
+                          error: (_, __) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionTitle('رحلتك الجاية'),
+                              const SizedBox(height: 16),
+                              _buildUpcomingTripCard(),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
 
                     // Route Info - Only show if there is an upcoming booking
                     Consumer(

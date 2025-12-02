@@ -34,166 +34,183 @@ class WalletPage extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Balance Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Invalidate providers to trigger refresh
+          ref.invalidate(userBookingsProvider);
+          ref.invalidate(userSubscriptionsProvider);
+          // Wait for the providers to refresh
+          await Future.wait([
+            ref.read(userBookingsProvider.future),
+            ref.read(userSubscriptionsProvider.future),
+          ]);
+        },
+        color: AppTheme.primaryColor,
+        backgroundColor: Colors.white,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Balance Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'الرصيد الحالي',
-                    style: AppTheme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '150.00',
-                        style: AppTheme.textTheme.displayMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'ج.م',
-                        style: AppTheme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'شحن الرصيد',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'الرصيد الحالي',
+                      style: AppTheme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.white70,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '150.00',
+                          style: AppTheme.textTheme.displayMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'ج.م',
+                          style: AppTheme.textTheme.titleMedium?.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'شحن الرصيد',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // Transactions
-            Text(
-              'آخر العمليات',
-              style: AppTheme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+              // Transactions
+              Text(
+                'آخر العمليات',
+                style: AppTheme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Transactions List
-            bookingsAsync.when(
-              data: (bookings) {
-                return subscriptionsAsync.when(
-                  data: (subscriptions) {
-                    // Combine and sort transactions
-                    final transactions = <_TransactionItem>[];
+              // Transactions List
+              bookingsAsync.when(
+                data: (bookings) {
+                  return subscriptionsAsync.when(
+                    data: (subscriptions) {
+                      // Combine and sort transactions
+                      final transactions = <_TransactionItem>[];
 
-                    for (final booking in bookings) {
-                      transactions.add(
-                        _TransactionItem(
-                          title: 'دفع رحلة',
-                          date: booking.createdAt,
-                          amount: booking.totalPrice,
-                          originalObject: booking,
-                          type: _TransactionType.booking,
-                        ),
-                      );
-                    }
-
-                    for (final subscription in subscriptions) {
-                      transactions.add(
-                        _TransactionItem(
-                          title: 'اشتراك ${subscription.planType.displayName}',
-                          date: subscription.createdAt,
-                          amount: subscription.amount,
-                          originalObject: subscription,
-                          type: _TransactionType.subscription,
-                        ),
-                      );
-                    }
-
-                    // Sort by date (newest first)
-                    transactions.sort((a, b) => b.date.compareTo(a.date));
-
-                    if (transactions.isEmpty) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(20.0),
-                          child: Text('لا توجد عمليات سابقة'),
-                        ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: transactions.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final transaction = transactions[index];
-                        return _buildTransactionItem(
-                          context,
-                          transaction.title,
-                          _formatDate(transaction.date),
-                          '- ${transaction.amount} ج.م',
-                          false,
-                          transaction.originalObject,
+                      for (final booking in bookings) {
+                        transactions.add(
+                          _TransactionItem(
+                            title: 'دفع رحلة',
+                            date: booking.createdAt,
+                            amount: booking.totalPrice,
+                            originalObject: booking,
+                            type: _TransactionType.booking,
+                          ),
                         );
-                      },
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
-            ),
-          ],
+                      }
+
+                      for (final subscription in subscriptions) {
+                        transactions.add(
+                          _TransactionItem(
+                            title:
+                                'اشتراك ${subscription.planType.displayName}',
+                            date: subscription.createdAt,
+                            amount: subscription.amount,
+                            originalObject: subscription,
+                            type: _TransactionType.subscription,
+                          ),
+                        );
+                      }
+
+                      // Sort by date (newest first)
+                      transactions.sort((a, b) => b.date.compareTo(a.date));
+
+                      if (transactions.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Text('لا توجد عمليات سابقة'),
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: transactions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final transaction = transactions[index];
+                          return _buildTransactionItem(
+                            context,
+                            transaction.title,
+                            _formatDate(transaction.date),
+                            '- ${transaction.amount} ج.م',
+                            false,
+                            transaction.originalObject,
+                          );
+                        },
+                      );
+                    },
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) =>
+                        Center(child: Text('Error: $error')),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
+              ),
+            ],
+          ),
         ),
       ),
     );

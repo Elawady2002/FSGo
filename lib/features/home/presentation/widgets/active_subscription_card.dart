@@ -1,0 +1,836 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../subscription/domain/entities/subscription_entity.dart';
+import '../../../subscription/domain/entities/subscription_schedule_entity.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+
+enum SubscriptionCardView { details, calendar, timeSelection }
+
+class ActiveSubscriptionCard extends ConsumerStatefulWidget {
+  final SubscriptionEntity subscription;
+
+  const ActiveSubscriptionCard({super.key, required this.subscription});
+
+  @override
+  ConsumerState<ActiveSubscriptionCard> createState() =>
+      _ActiveSubscriptionCardState();
+}
+
+class _ActiveSubscriptionCardState
+    extends ConsumerState<ActiveSubscriptionCard> {
+  SubscriptionCardView _currentView = SubscriptionCardView.details;
+  SubscriptionCardView _previousView = SubscriptionCardView.details;
+  DateTime? _selectedDate;
+  String? _selectedDepartureTime;
+  String? _selectedReturnTime;
+  String _selectedTripType = 'round_trip';
+  String _universityName = 'الجامعة';
+  Map<String, SubscriptionScheduleEntity> _schedules = {};
+  bool _isLoadingSchedules = true;
+
+  final List<String> _departureTimes = [
+    'AM 6:00',
+    'AM 6:30',
+    'AM 7:00',
+    'AM 7:30',
+    'AM 8:00',
+  ];
+
+  final List<String> _returnTimes = [
+    'PM 2:00',
+    'PM 2:30',
+    'PM 3:00',
+    'PM 3:30',
+    'PM 4:00',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUniversityName();
+    _fetchSchedules();
+  }
+
+  Future<void> _fetchUniversityName() async {
+    final user = ref.read(authProvider);
+    if (user?.universityId != null) {
+      try {
+        final response = await Supabase.instance.client
+            .from('universities')
+            .select('name')
+            .eq('id', user!.universityId!)
+            .single();
+        if (mounted) {
+          setState(() {
+            _universityName = response['name'] as String;
+          });
+        }
+      } catch (e) {
+        // Fallback or log error
+      }
+    }
+  }
+
+  Future<void> _fetchSchedules() async {
+    if (widget.subscription.id == null) return;
+
+    setState(() => _isLoadingSchedules = true);
+    final repository = ref.read(subscriptionRepositoryProvider);
+    final result = await repository.getSubscriptionSchedules(
+      widget.subscription.id!,
+    );
+
+    result.fold(
+      (failure) {
+        // Handle error
+        setState(() => _isLoadingSchedules = false);
+      },
+      (schedulesList) {
+        if (mounted) {
+          final Map<String, SubscriptionScheduleEntity> schedulesMap = {};
+          for (var schedule in schedulesList) {
+            final dateKey = schedule.tripDate.toIso8601String().split('T')[0];
+            schedulesMap[dateKey] = schedule;
+          }
+          setState(() {
+            _schedules = schedulesMap;
+            _isLoadingSchedules = false;
+          });
+        }
+      },
+    );
+  }
+
+  void _playSound() {
+    HapticFeedback.selectionClick();
+    SystemSound.play(SystemSoundType.click);
+  }
+
+  void _onCalendarIconTap() {
+    _playSound();
+    setState(() {
+      _previousView = _currentView;
+      _currentView = SubscriptionCardView.calendar;
+    });
+  }
+
+  void _onDateSelected(DateTime date) {
+    _playSound();
+    final dateKey = date.toIso8601String().split('T')[0];
+    final existingSchedule = _schedules[dateKey];
+
+    setState(() {
+      _selectedDate = date;
+      _previousView = _currentView;
+      _currentView = SubscriptionCardView.timeSelection;
+
+      // Load existing schedule if available
+      if (existingSchedule != null) {
+        _selectedTripType = existingSchedule.tripType;
+        _selectedDepartureTime = existingSchedule.departureTime;
+        _selectedReturnTime = existingSchedule.returnTime;
+      } else {
+        // Reset to defaults
+        _selectedTripType = 'round_trip';
+        _selectedDepartureTime = null;
+        _selectedReturnTime = null;
+      }
+    });
+  }
+
+  void _onBackToCalendar() {
+    _playSound();
+    setState(() {
+      _previousView = _currentView;
+      _currentView = SubscriptionCardView.calendar;
+      _selectedDate = null;
+      _selectedDepartureTime = null;
+      _selectedReturnTime = null;
+    });
+  }
+
+  void _onBackToDetails() {
+    _playSound();
+    setState(() {
+      _previousView = _currentView;
+      _currentView = SubscriptionCardView.details;
+      _selectedDate = null;
+      _selectedDepartureTime = null;
+      _selectedReturnTime = null;
+    });
+  }
+
+  Future<void> _onConfirmSchedule() async {
+    _playSound();
+    if (_selectedDate == null) return;
+
+    final repository = ref.read(subscriptionRepositoryProvider);
+    final result = await repository.createOrUpdateSchedule(
+      subscriptionId: widget.subscription.id!,
+      tripDate: _selectedDate!,
+      tripType: _selectedTripType,
+      departureTime: _selectedDepartureTime,
+      returnTime: _selectedReturnTime,
+    );
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('خطأ: ${failure.message}')));
+        }
+      },
+      (schedule) {
+        if (mounted) {
+          HapticFeedback.heavyImpact(); // Success haptic
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('تم حفظ الجدول بنجاح')));
+          // Update local state
+          final dateKey = _selectedDate!.toIso8601String().split('T')[0];
+          setState(() {
+            _schedules[dateKey] = schedule;
+          });
+          _onBackToCalendar(); // Go back to calendar to see the update
+        }
+      },
+    );
+  }
+
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+
+  bool _canConfirm() {
+    if (_selectedDate == null) return false;
+    if (_selectedTripType == 'departure_only' &&
+        _selectedDepartureTime == null) {
+      return false;
+    }
+    if (_selectedTripType == 'return_only' && _selectedReturnTime == null) {
+      return false;
+    }
+    if (_selectedTripType == 'round_trip' &&
+        (_selectedDepartureTime == null || _selectedReturnTime == null)) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.topCenter,
+                children: <Widget>[
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            transitionBuilder: (child, animation) {
+              final isForward = _currentView.index > _previousView.index;
+              final offset = isForward
+                  ? const Offset(1.0, 0.0)
+                  : const Offset(-1.0, 0.0);
+
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: offset,
+                  end: Offset.zero,
+                ).animate(animation),
+                child: FadeTransition(opacity: animation, child: child),
+              );
+            },
+            child: _buildCurrentViewContent(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentViewContent() {
+    switch (_currentView) {
+      case SubscriptionCardView.details:
+        return _buildDetailsContent();
+      case SubscriptionCardView.calendar:
+        return _buildCalendarContent();
+      case SubscriptionCardView.timeSelection:
+        return _buildTimeSelectionContent();
+    }
+  }
+
+  Widget _buildDetailsContent() {
+    return GestureDetector(
+      key: const ValueKey('details'),
+      onTap: _onCalendarIconTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'قريباً',
+                    style: AppTheme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                Icon(
+                  CupertinoIcons.arrow_right_circle_fill,
+                  color: Colors.white.withValues(alpha: 0.5),
+                  size: 24,
+                ),
+              ],
+            ).animate().fadeIn().slideX(begin: -0.2, end: 0),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'تاريخ البداية',
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat(
+                          'd MMMM',
+                          'ar',
+                        ).format(widget.subscription.startDate),
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'تاريخ الانتهاء',
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat(
+                          'd MMMM',
+                          'ar',
+                        ).format(widget.subscription.endDate),
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.2, end: 0),
+            const SizedBox(height: 24),
+            const Divider(color: Colors.white24),
+            const SizedBox(height: 16),
+            // Route Info at the bottom
+            Row(
+              children: [
+                const Icon(
+                  CupertinoIcons.location_solid,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'من منطقتك إلى $_universityName',
+                    style: AppTheme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalendarContent() {
+    return Container(
+      key: const ValueKey('calendar'),
+      // Fixed height for calendar view to ensure consistency or let it size itself?
+      // Letting it size itself might be better for AnimatedSize.
+      // But we need a constraint for the grid.
+      height: 450,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: _onBackToDetails,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.chevron_back,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'اختار يوم الرحلة',
+                    style: AppTheme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: Colors.white10),
+          Expanded(
+            child: _isLoadingSchedules
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.primaryColor,
+                      ),
+                    ),
+                  )
+                : _buildCalendarGrid(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarGrid() {
+    final startDate = widget.subscription.startDate;
+    final endDate = widget.subscription.endDate;
+    final daysInRange = endDate.difference(startDate).inDays + 1;
+    final weeks = (daysInRange / 7).ceil();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // Weekday headers
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س']
+                .map(
+                  (day) => Expanded(
+                    child: Center(
+                      child: Text(
+                        day,
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white60,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ).animate().fadeIn(),
+          const SizedBox(height: 16),
+          // Calendar days
+          ...List.generate(weeks, (weekIndex) {
+            return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(7, (dayIndex) {
+                      final dayOffset = weekIndex * 7 + dayIndex;
+                      if (dayOffset >= daysInRange) {
+                        return const Expanded(child: SizedBox());
+                      }
+
+                      final date = startDate.add(Duration(days: dayOffset));
+                      final dateKey = date.toIso8601String().split('T')[0];
+                      final isToday = _isSameDay(date, DateTime.now());
+                      final isWeekend =
+                          date.weekday == DateTime.friday ||
+                          date.weekday == DateTime.saturday;
+                      final isAvailable =
+                          date.isAfter(
+                            DateTime.now().subtract(const Duration(days: 1)),
+                          ) &&
+                          !isWeekend;
+                      final hasSchedule = _schedules.containsKey(dateKey);
+
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: isAvailable
+                              ? () => _onDateSelected(date)
+                              : null,
+                          child: Container(
+                            margin: const EdgeInsets.all(4),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isToday
+                                  ? AppTheme.primaryColor.withValues(alpha: 0.2)
+                                  : (hasSchedule
+                                        ? Colors.white10
+                                        : Colors.transparent),
+                              borderRadius: BorderRadius.circular(12),
+                              border: isToday
+                                  ? Border.all(
+                                      color: AppTheme.primaryColor,
+                                      width: 2,
+                                    )
+                                  : (hasSchedule
+                                        ? Border.all(
+                                            color: AppTheme.primaryColor
+                                                .withOpacity(0.5),
+                                          )
+                                        : null),
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Text(
+                                  '${date.day}',
+                                  style: AppTheme.textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: isToday || hasSchedule
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isAvailable
+                                            ? (isToday
+                                                  ? AppTheme.primaryColor
+                                                  : Colors.white)
+                                            : Colors.white24,
+                                      ),
+                                ),
+                                if (hasSchedule)
+                                  Positioned(
+                                    bottom: 4,
+                                    child: Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(
+                                        color: AppTheme.primaryColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                )
+                .animate()
+                .fadeIn(delay: (50 * weekIndex).ms)
+                .slideY(begin: 0.1, end: 0);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeSelectionContent() {
+    return Container(
+      key: const ValueKey('timeSelection'),
+      height: 500, // Slightly taller for time selection
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: _onBackToCalendar,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.chevron_back,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'اختار المواعيد',
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (_selectedDate != null)
+                        Text(
+                          DateFormat(
+                            'EEEE، d MMMM',
+                            'ar',
+                          ).format(_selectedDate!),
+                          style: AppTheme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white70,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: Colors.white10),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'نوع الرحلة',
+                    style: AppTheme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTripTypeSelector()
+                      .animate()
+                      .fadeIn(delay: 100.ms)
+                      .slideX(begin: 0.1, end: 0),
+                  const SizedBox(height: 24),
+                  if (_selectedTripType != 'return_only') ...[
+                    Text(
+                      'ميعاد الذهاب',
+                      style: AppTheme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ).animate().fadeIn(delay: 200.ms),
+                    const SizedBox(height: 12),
+                    _buildTimeSelector(
+                          times: _departureTimes,
+                          selectedTime: _selectedDepartureTime,
+                          onSelect: (time) {
+                            _playSound();
+                            setState(() => _selectedDepartureTime = time);
+                          },
+                        )
+                        .animate()
+                        .fadeIn(delay: 250.ms)
+                        .slideX(begin: 0.1, end: 0),
+                    const SizedBox(height: 24),
+                  ],
+                  if (_selectedTripType != 'departure_only') ...[
+                    Text(
+                      'ميعاد العودة',
+                      style: AppTheme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ).animate().fadeIn(delay: 300.ms),
+                    const SizedBox(height: 12),
+                    _buildTimeSelector(
+                          times: _returnTimes,
+                          selectedTime: _selectedReturnTime,
+                          onSelect: (time) {
+                            _playSound();
+                            setState(() => _selectedReturnTime = time);
+                          },
+                        )
+                        .animate()
+                        .fadeIn(delay: 350.ms)
+                        .slideX(begin: 0.1, end: 0),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _canConfirm() ? _onConfirmSchedule : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  disabledBackgroundColor: Colors.white10,
+                ),
+                child: const Text(
+                  'تأكيد الجدول',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTripTypeSelector() {
+    final types = [
+      {'value': 'departure_only', 'label': 'ذهاب فقط'},
+      {'value': 'return_only', 'label': 'عودة فقط'},
+      {'value': 'round_trip', 'label': 'ذهاب وعودة'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: types.map((type) {
+          final isSelected = _selectedTripType == type['value'];
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                _playSound();
+                setState(() => _selectedTripType = type['value'] as String);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Text(
+                  type['label'] as String,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.textTheme.bodyMedium?.copyWith(
+                    color: isSelected ? Colors.black : Colors.white60,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTimeSelector({
+    required List<String> times,
+    required String? selectedTime,
+    required Function(String) onSelect,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: times.map((time) {
+        final isSelected = selectedTime == time;
+        return GestureDetector(
+          onTap: () => onSelect(time),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? AppTheme.primaryColor : Colors.white10,
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected
+                  ? Border.all(color: AppTheme.primaryColor, width: 2)
+                  : null,
+            ),
+            child: Text(
+              time,
+              style: AppTheme.textTheme.bodyMedium?.copyWith(
+                color: isSelected ? Colors.black : Colors.white70,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}

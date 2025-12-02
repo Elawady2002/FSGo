@@ -42,7 +42,7 @@ final subscriptionRepositoryProvider =
 
 typedef SubscriptionRepositoryRef
     = AutoDisposeProviderRef<SubscriptionRepository>;
-String _$userSubscriptionsHash() => r'f3c26b983d32de326b0ee18fba68e90b6ae0cbd0';
+String _$userSubscriptionsHash() => r'9498cc8e44990966333645874e3a91ff2ea98d4f';
 
 /// See also [userSubscriptions].
 @ProviderFor(userSubscriptions)
@@ -59,5 +59,23 @@ final userSubscriptionsProvider =
 
 typedef UserSubscriptionsRef
     = AutoDisposeFutureProviderRef<List<SubscriptionEntity>>;
+String _$activeSubscriptionHash() =>
+    r'9f46197428e8599867f349042bc157dfcabe146f';
+
+/// See also [activeSubscription].
+@ProviderFor(activeSubscription)
+final activeSubscriptionProvider =
+    AutoDisposeFutureProvider<SubscriptionEntity?>.internal(
+  activeSubscription,
+  name: r'activeSubscriptionProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$activeSubscriptionHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef ActiveSubscriptionRef
+    = AutoDisposeFutureProviderRef<SubscriptionEntity?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

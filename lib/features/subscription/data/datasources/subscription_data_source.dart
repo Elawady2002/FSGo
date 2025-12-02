@@ -9,11 +9,31 @@ abstract class SubscriptionDataSource {
     required SubscriptionPlanType planType,
     required String? paymentProofUrl,
     required String? transferNumber,
+    bool isInstallment = false,
   });
 
   Future<Map<String, dynamic>?> getUserSubscription(String userId);
 
   Future<List<Map<String, dynamic>>> getUserSubscriptions(String userId);
+
+  Future<List<Map<String, dynamic>>> getSubscriptionInstallments(
+    String subscriptionId,
+  );
+
+  // Subscription Schedule methods
+  Future<Map<String, dynamic>> createOrUpdateSchedule({
+    required String subscriptionId,
+    required DateTime tripDate,
+    required String tripType,
+    String? departureTime,
+    String? returnTime,
+  });
+
+  Future<List<Map<String, dynamic>>> getSubscriptionSchedules(
+    String subscriptionId,
+  );
+
+  Future<void> deleteSchedule(String scheduleId);
 }
 
 /// Subscription data source implementation
@@ -28,6 +48,7 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
     required SubscriptionPlanType planType,
     required String? paymentProofUrl,
     required String? transferNumber,
+    bool isInstallment = false,
   }) async {
     try {
       final now = DateTime.now();
@@ -39,17 +60,54 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
       );
       AppLogger.info('Start: $now, End: $endDate');
 
+      // Calculate price and interest
+      double finalPrice = planType.price;
+      double interestRate = 0.0;
+
+      if (isInstallment && planType == SubscriptionPlanType.semester) {
+        interestRate = 0.05; // 5% service fee
+        finalPrice = finalPrice * (1 + interestRate);
+      }
+
       // Insert into subscriptions table (transaction record)
-      await _supabase.from('subscriptions').insert({
-        'user_id': userId,
-        'plan_type': planType.name,
-        'total_price': planType.price,
-        'payment_proof_url': paymentProofUrl,
-        'transfer_number': transferNumber,
-        'status': SubscriptionStatus.pending.name,
-        'start_date': now.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
-      });
+      final subscription = await _supabase
+          .from('subscriptions')
+          .insert({
+            'user_id': userId,
+            'plan_type': planType.name,
+            'total_price': finalPrice,
+            'payment_proof_url': paymentProofUrl,
+            'transfer_number': transferNumber,
+            'status': SubscriptionStatus.pending.name,
+            'start_date': now.toIso8601String(),
+            'end_date': endDate.toIso8601String(),
+            'is_installment': isInstallment,
+            'allow_location_change': planType == SubscriptionPlanType.semester,
+            'interest_rate': interestRate,
+          })
+          .select()
+          .single();
+
+      final subscriptionId = subscription['id'];
+
+      // Create installments if applicable
+      if (isInstallment && planType == SubscriptionPlanType.semester) {
+        final installmentAmount = finalPrice / 3;
+
+        for (int i = 0; i < 3; i++) {
+          final dueDate = now.add(Duration(days: i * 30)); // Monthly
+
+          await _supabase.from('subscription_installments').insert({
+            'subscription_id': subscriptionId,
+            'amount': installmentAmount,
+            'due_date': dueDate.toIso8601String(),
+            'status': i == 0
+                ? 'pending'
+                : 'pending', // First one might be paid immediately? Kept pending for manual approval
+            'created_at': now.toIso8601String(),
+          });
+        }
+      }
 
       // Update user's profile with current subscription details
       await _supabase
@@ -99,6 +157,109 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
       return List<Map<String, dynamic>>.from(response as List);
     } catch (e, stackTrace) {
       AppLogger.error('Failed to get user subscriptions', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getSubscriptionInstallments(
+    String subscriptionId,
+  ) async {
+    try {
+      final response = await _supabase
+          .from('subscription_installments')
+          .select()
+          .eq('subscription_id', subscriptionId)
+          .order('due_date', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response as List);
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to get subscription installments', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> createOrUpdateSchedule({
+    required String subscriptionId,
+    required DateTime tripDate,
+    required String tripType,
+    String? departureTime,
+    String? returnTime,
+  }) async {
+    try {
+      final dateString = tripDate.toIso8601String().split('T')[0];
+
+      // Check if schedule already exists
+      final existing = await _supabase
+          .from('subscription_schedules')
+          .select()
+          .eq('subscription_id', subscriptionId)
+          .eq('trip_date', dateString)
+          .maybeSingle();
+
+      if (existing != null) {
+        // Update existing schedule
+        final updated = await _supabase
+            .from('subscription_schedules')
+            .update({
+              'trip_type': tripType,
+              'departure_time': departureTime,
+              'return_time': returnTime,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', existing['id'])
+            .select()
+            .single();
+        return updated;
+      } else {
+        // Create new schedule
+        final created = await _supabase
+            .from('subscription_schedules')
+            .insert({
+              'subscription_id': subscriptionId,
+              'trip_date': dateString,
+              'trip_type': tripType,
+              'departure_time': departureTime,
+              'return_time': returnTime,
+            })
+            .select()
+            .single();
+        return created;
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to create/update schedule', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getSubscriptionSchedules(
+    String subscriptionId,
+  ) async {
+    try {
+      final response = await _supabase
+          .from('subscription_schedules')
+          .select()
+          .eq('subscription_id', subscriptionId)
+          .order('trip_date', ascending: true);
+
+      return List<Map<String, dynamic>>.from(response as List);
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to get subscription schedules', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteSchedule(String scheduleId) async {
+    try {
+      await _supabase
+          .from('subscription_schedules')
+          .delete()
+          .eq('id', scheduleId);
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to delete schedule', e, stackTrace);
       rethrow;
     }
   }

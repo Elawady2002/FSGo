@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../payment/presentation/pages/payment_page.dart';
+import 'calendar_plan_card.dart';
+import '../../domain/entities/subscription_entity.dart';
 
 class SubscriptionPlansSheet extends StatefulWidget {
   const SubscriptionPlansSheet({super.key});
@@ -47,6 +49,9 @@ class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
       'accentColor': AppTheme.primaryColor,
     },
   ];
+
+  // State to track if installment is enabled for semester plan
+  bool _isInstallmentEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -101,22 +106,53 @@ class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
 
           // Plans PageView
           SizedBox(
-            height: 520, // Fixed height for the cards
+            height: 540, // Increased height for the cards
             child: PageView.builder(
               controller: _pageController,
               itemCount: _plans.length,
               itemBuilder: (context, index) {
                 final plan = _plans[index];
+                final isSemester = plan['title'] == 'باقة الترم';
+
+                // Calculate price based on installment
+                String displayPrice = plan['price'];
+                String displayPeriod = plan['period'];
+
+                if (isSemester && _isInstallmentEnabled) {
+                  // Semester plan with installment: 2000 + 5% = 2100 / 3 = 700
+                  displayPrice = '700';
+                  displayPeriod = 'القسط الأول';
+                }
+
+                // Determine plan type
+                SubscriptionPlanType planType = plan['title'] == 'باقة الشهر'
+                    ? SubscriptionPlanType.monthly
+                    : SubscriptionPlanType.semester;
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: _buildPlanCard(
-                    context,
+                  child: CalendarPlanCard(
                     title: plan['title'],
-                    price: plan['price'],
-                    period: plan['period'],
+                    price: displayPrice,
+                    period: displayPeriod,
                     features: plan['features'],
                     isPopular: plan['isPopular'],
                     accentColor: plan['accentColor'],
+                    planType: planType,
+                    onSubscribe: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (_) => PaymentPage(
+                            planName: plan['title'],
+                            amount: displayPrice,
+                            isSubscription: true,
+                            isInstallment: isSemester && _isInstallmentEnabled,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
@@ -125,196 +161,6 @@ class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
 
           const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPlanCard(
-    BuildContext context, {
-    required String title,
-    required String price,
-    required String period,
-    required List<String> features,
-    required bool isPopular,
-    required Color accentColor,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        Navigator.push(
-          context,
-          CupertinoPageRoute(
-            builder: (_) => PaymentPage(
-              planName: title,
-              amount: price,
-              isSubscription: true,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isPopular ? accentColor : Colors.grey.shade200,
-            width: isPopular ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card Header
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        title,
-                        style: AppTheme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (isPopular)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'الاكثر توفيرا',
-                            style: TextStyle(
-                              color: accentColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.none,
-                              decorationColor: Colors.transparent,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        price,
-                        style: AppTheme.textTheme.displayLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'ج.م',
-                        style: AppTheme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        ' / $period',
-                        style: AppTheme.textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const Divider(height: 1),
-
-            // Features List
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(24),
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: features.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        CupertinoIcons.checkmark_alt,
-                        color: isPopular ? accentColor : Colors.black,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          features[index],
-                          style: AppTheme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.black87,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-
-            // Action Button
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (_) => PaymentPage(
-                          planName: title,
-                          amount: price,
-                          isSubscription: true,
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isPopular ? accentColor : Colors.black,
-                    foregroundColor: isPopular ? Colors.black : Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    'اشترك الآن',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

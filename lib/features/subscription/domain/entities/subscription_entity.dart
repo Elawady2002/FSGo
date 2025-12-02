@@ -43,6 +43,16 @@ enum SubscriptionPlanType {
         return 120;
     }
   }
+
+  /// Check if installment is available for this plan
+  bool get isInstallmentAvailable {
+    switch (this) {
+      case SubscriptionPlanType.monthly:
+        return false;
+      case SubscriptionPlanType.semester:
+        return true;
+    }
+  }
 }
 
 /// Subscription status enumeration
@@ -63,6 +73,7 @@ enum SubscriptionStatus {
 
 /// Subscription entity - represents a user subscription
 class SubscriptionEntity extends Equatable {
+  final String? id;
   final String userId;
   final SubscriptionPlanType planType;
   final double amount;
@@ -72,8 +83,13 @@ class SubscriptionEntity extends Equatable {
   final DateTime startDate;
   final DateTime endDate;
   final DateTime createdAt;
+  final bool allowLocationChange;
+  final bool isInstallment;
+  // We don't include the list of installments here to keep the entity lightweight
+  // Installments should be fetched separately when needed
 
   const SubscriptionEntity({
+    this.id,
     required this.userId,
     required this.planType,
     required this.amount,
@@ -83,6 +99,8 @@ class SubscriptionEntity extends Equatable {
     required this.startDate,
     required this.endDate,
     required this.createdAt,
+    this.allowLocationChange = false,
+    this.isInstallment = false,
   });
 
   @override
@@ -96,6 +114,8 @@ class SubscriptionEntity extends Equatable {
     startDate,
     endDate,
     createdAt,
+    allowLocationChange,
+    isInstallment,
   ];
 
   /// Check if subscription is active

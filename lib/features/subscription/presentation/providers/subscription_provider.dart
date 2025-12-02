@@ -19,21 +19,49 @@ SubscriptionRepository subscriptionRepository(SubscriptionRepositoryRef ref) {
   return SubscriptionRepositoryImpl(dataSource);
 }
 
+// User Subscriptions Provider (all subscriptions)
 @riverpod
 Future<List<SubscriptionEntity>> userSubscriptions(
   UserSubscriptionsRef ref,
 ) async {
-  final authState = ref.watch(authProvider);
-
-  if (authState == null) {
-    return [];
-  }
+  final user = ref.watch(authProvider);
+  if (user == null) return [];
 
   final repository = ref.watch(subscriptionRepositoryProvider);
-  final result = await repository.getUserSubscriptions(authState.id);
+  final result = await repository.getUserSubscriptions(user.id);
 
   return result.fold(
     (failure) => throw Exception(failure.message),
     (subscriptions) => subscriptions,
   );
+}
+
+// Active Subscription Provider (current active subscription)
+@riverpod
+Future<SubscriptionEntity?> activeSubscription(
+  ActiveSubscriptionRef ref,
+) async {
+  final subscriptions = await ref.watch(userSubscriptionsProvider.future);
+
+  // Find the first active or pending subscription
+  try {
+    print(
+      'DEBUG: Filtering ${subscriptions.length} subscriptions for active/pending',
+    );
+    final activeSub = subscriptions.firstWhere((sub) {
+      final isActiveOrPending =
+          sub.status == SubscriptionStatus.active ||
+          sub.status == SubscriptionStatus.pending;
+      final isNotExpired = sub.endDate.isAfter(DateTime.now());
+      print(
+        'DEBUG: Sub ${sub.id}: Status=${sub.status}, End=${sub.endDate}, Active/Pending=$isActiveOrPending, NotExpired=$isNotExpired',
+      );
+      return isActiveOrPending && isNotExpired;
+    });
+    print('DEBUG: Found active subscription: ${activeSub.id}');
+    return activeSub;
+  } catch (e) {
+    print('DEBUG: No active subscription found: $e');
+    return null;
+  }
 }
