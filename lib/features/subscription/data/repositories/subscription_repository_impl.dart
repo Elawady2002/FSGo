@@ -19,15 +19,41 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     required String? paymentProofUrl,
     required String? transferNumber,
     bool isInstallment = false,
+    SubscriptionScheduleParams? scheduleParams,
   }) async {
     try {
-      await _dataSource.createSubscription(
+      // 1. Create the subscription record
+      final subscriptionId = await _dataSource.createSubscription(
         userId: userId,
         planType: planType,
         paymentProofUrl: paymentProofUrl,
         transferNumber: transferNumber,
         isInstallment: isInstallment,
       );
+
+      // 2. If monthly plan and schedule params provided, generate 26 bookings
+      if (planType == SubscriptionPlanType.monthly && scheduleParams != null) {
+        DateTime currentDate = scheduleParams.startDate;
+        int bookingsCreated = 0;
+
+        while (bookingsCreated < 26) {
+          // Skip Fridays (Friday is weekday 5 in Dart if Monday is 1? No, in Dart:
+          // Monday=1, ..., Friday=5, Saturday=6, Sunday=7)
+          // Wait, let's verify Dart weekday. DateTime.friday constant is 5.
+          if (currentDate.weekday != DateTime.friday) {
+            await _dataSource.createOrUpdateSchedule(
+              subscriptionId: subscriptionId,
+              tripDate: currentDate,
+              tripType: scheduleParams.tripType,
+              departureTime: scheduleParams.departureTime,
+              returnTime: scheduleParams.returnTime,
+            );
+            bookingsCreated++;
+          }
+          currentDate = currentDate.add(const Duration(days: 1));
+        }
+      }
+
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
@@ -176,6 +202,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   Future<Either<Failure, void>> deleteSchedule(String scheduleId) async {
     try {
       await _dataSource.deleteSchedule(scheduleId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> cancelSubscription(
+    String subscriptionId,
+  ) async {
+    try {
+      await _dataSource.cancelSubscription(subscriptionId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));

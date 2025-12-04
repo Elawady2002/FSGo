@@ -20,6 +20,7 @@ class PaymentPage extends ConsumerStatefulWidget {
   final String amount;
   final bool isSubscription;
   final bool isInstallment;
+  final SubscriptionScheduleParams? scheduleParams;
 
   const PaymentPage({
     super.key,
@@ -27,6 +28,7 @@ class PaymentPage extends ConsumerStatefulWidget {
     required this.amount,
     this.isSubscription = false,
     this.isInstallment = false,
+    this.scheduleParams,
   });
 
   @override
@@ -263,6 +265,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                                 paymentProofUrl: imageUrl,
                                 transferNumber: accountNumber,
                                 isInstallment: widget.isInstallment,
+                                scheduleParams: widget.scheduleParams,
                               );
 
                           result.fold(

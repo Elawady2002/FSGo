@@ -5,15 +5,23 @@ import '../../../payment/presentation/pages/payment_page.dart';
 import 'calendar_plan_card.dart';
 import '../../domain/entities/subscription_entity.dart';
 
-class SubscriptionPlansSheet extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/subscription_provider.dart';
+
+class SubscriptionPlansSheet extends ConsumerStatefulWidget {
   const SubscriptionPlansSheet({super.key});
 
   @override
-  State<SubscriptionPlansSheet> createState() => _SubscriptionPlansSheetState();
+  ConsumerState<SubscriptionPlansSheet> createState() =>
+      _SubscriptionPlansSheetState();
 }
 
-class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
+class _SubscriptionPlansSheetState
+    extends ConsumerState<SubscriptionPlansSheet> {
   final PageController _pageController = PageController(viewportFraction: 0.9);
+  // _currentPage removed as it was unused
+  bool _isInstallmentEnabled = false; // Moved by instruction
+  bool _isProcessing = false; // Added by instruction
 
   final List<Map<String, dynamic>> _plans = [
     {
@@ -49,9 +57,6 @@ class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
       'accentColor': AppTheme.primaryColor,
     },
   ];
-
-  // State to track if installment is enabled for semester plan
-  bool _isInstallmentEnabled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -139,19 +144,88 @@ class _SubscriptionPlansSheetState extends State<SubscriptionPlansSheet> {
                     isPopular: plan['isPopular'],
                     accentColor: plan['accentColor'],
                     planType: planType,
-                    onSubscribe: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (_) => PaymentPage(
-                            planName: plan['title'],
-                            amount: displayPrice,
-                            isSubscription: true,
-                            isInstallment: isSemester && _isInstallmentEnabled,
+                    onSubscribe: (params) async {
+                      // Prevent double clicks
+                      if (_isProcessing) return;
+
+                      setState(() {
+                        _isProcessing = true;
+                      });
+
+                      try {
+                        // Check for active subscription using activeSubscriptionProvider
+                        final activeSubscription = await ref.read(
+                          activeSubscriptionProvider.future,
+                        );
+
+                        if (activeSubscription != null) {
+                          setState(() {
+                            _isProcessing = false;
+                          });
+
+                          if (!context.mounted) return;
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (context) => CupertinoAlertDialog(
+                              title: const Text('تنبيه'),
+                              content: const Text(
+                                'لديك اشتراك نشط بالفعل. يجب إلغاء الاشتراك الحالي أو انتظار انتهائه قبل الاشتراك في باقة جديدة.',
+                              ),
+                              actions: [
+                                CupertinoDialogAction(
+                                  child: const Text('حسناً'),
+                                  onPressed: () => Navigator.pop(context),
+                                ),
+                              ],
+                            ),
+                          );
+                          return;
+                        }
+
+                        // No active subscription, proceed to payment
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => PaymentPage(
+                              planName: plan['title'],
+                              amount: displayPrice,
+                              isSubscription: true,
+                              scheduleParams: params,
+                            ),
                           ),
-                        ),
-                      );
+                        ).then((_) {
+                          // Reset processing state when returning
+                          if (mounted) {
+                            setState(() {
+                              _isProcessing = false;
+                            });
+                          }
+                        });
+                      } catch (e) {
+                        print('Error checking subscription: $e');
+                        setState(() {
+                          _isProcessing = false;
+                        });
+
+                        if (!context.mounted) return;
+                        showCupertinoDialog(
+                          context: context,
+                          builder: (context) => CupertinoAlertDialog(
+                            title: const Text('خطأ'),
+                            content: const Text(
+                              'حدث خطأ أثناء التحقق من الاشتراك. يرجى المحاولة مرة أخرى.',
+                            ),
+                            actions: [
+                              CupertinoDialogAction(
+                                child: const Text('حسناً'),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     },
                   ),
                 );

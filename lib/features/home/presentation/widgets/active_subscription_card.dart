@@ -684,7 +684,13 @@ class _ActiveSubscriptionCardState
                           selectedTime: _selectedDepartureTime,
                           onSelect: (time) {
                             _playSound();
-                            setState(() => _selectedDepartureTime = time);
+                            setState(() {
+                              if (_selectedDepartureTime == time) {
+                                _selectedDepartureTime = null;
+                              } else {
+                                _selectedDepartureTime = time;
+                              }
+                            });
                           },
                         )
                         .animate()
@@ -706,7 +712,13 @@ class _ActiveSubscriptionCardState
                           selectedTime: _selectedReturnTime,
                           onSelect: (time) {
                             _playSound();
-                            setState(() => _selectedReturnTime = time);
+                            setState(() {
+                              if (_selectedReturnTime == time) {
+                                _selectedReturnTime = null;
+                              } else {
+                                _selectedReturnTime = time;
+                              }
+                            });
                           },
                         )
                         .animate()
@@ -809,23 +821,27 @@ class _ActiveSubscriptionCardState
       runSpacing: 8,
       children: times.map((time) {
         final isSelected = selectedTime == time;
-        return GestureDetector(
-          onTap: () => onSelect(time),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isSelected ? AppTheme.primaryColor : Colors.white10,
-              borderRadius: BorderRadius.circular(12),
-              border: isSelected
-                  ? Border.all(color: AppTheme.primaryColor, width: 2)
-                  : null,
-            ),
-            child: Text(
-              time,
-              style: AppTheme.textTheme.bodyMedium?.copyWith(
-                color: isSelected ? Colors.black : Colors.white70,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => onSelect(time),
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? AppTheme.primaryColor : Colors.white10,
+                borderRadius: BorderRadius.circular(12),
+                border: isSelected
+                    ? Border.all(color: AppTheme.primaryColor, width: 2)
+                    : Border.all(color: Colors.transparent, width: 2),
+              ),
+              child: Text(
+                time,
+                style: AppTheme.textTheme.bodyMedium?.copyWith(
+                  color: isSelected ? Colors.black : Colors.white70,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
             ),
           ),

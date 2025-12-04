@@ -13,6 +13,7 @@ abstract class SubscriptionRepository {
     required String? paymentProofUrl,
     required String? transferNumber,
     bool isInstallment = false,
+    SubscriptionScheduleParams? scheduleParams,
   });
 
   /// Get subscription installments
@@ -45,4 +46,7 @@ abstract class SubscriptionRepository {
 
   /// Delete a schedule
   Future<Either<Failure, void>> deleteSchedule(String scheduleId);
+
+  /// Cancel a subscription
+  Future<Either<Failure, void>> cancelSubscription(String subscriptionId);
 }

@@ -18,6 +18,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/trip_map_sheet.dart';
 import '../widgets/active_subscription_card.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/subscription_plans_sheet.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -157,6 +158,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   ActiveSubscriptionCard(
                                     subscription: subscription,
                                   ),
+                                  const SizedBox(height: 32),
+                                  _buildSectionTitle('مسار الرحلة'),
+                                  const SizedBox(height: 16),
+                                  _buildSubscriptionRouteInfoCard(),
                                   const SizedBox(height: 32),
                                 ],
                               );
@@ -544,6 +549,35 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Widget _buildSubscriptionRouteInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.dividerColor),
+      ),
+      child: Column(
+        children: [
+          _buildLocationRow(
+            icon: CupertinoIcons.circle_fill,
+            iconColor: AppTheme.primaryColor,
+            label: 'من',
+            value: 'منطقتك',
+            isLast: false,
+          ),
+          _buildLocationRow(
+            icon: CupertinoIcons.location_solid,
+            iconColor: Colors.black,
+            label: 'إلى',
+            value: 'الجامعة',
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLocationRow({
     required IconData icon,
     required Color iconColor,
@@ -604,7 +638,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
 // Location Selection Drawer
 class LocationSelectionDrawer extends ConsumerStatefulWidget {
-  const LocationSelectionDrawer({super.key});
+  final bool navigateToSubscription;
+
+  const LocationSelectionDrawer({
+    super.key,
+    this.navigateToSubscription = false,
+  });
 
   @override
   ConsumerState<LocationSelectionDrawer> createState() =>
@@ -1087,10 +1126,23 @@ class _LocationSelectionDrawerState
                           );
 
                       Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(builder: (_) => const BookingPage()),
-                      );
+
+                      // Navigate based on mode
+                      if (widget.navigateToSubscription) {
+                        // Show subscription plans sheet
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (context) => const SubscriptionPlansSheet(),
+                        );
+                      } else {
+                        // Navigate to booking page
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (_) => const BookingPage(),
+                          ),
+                        );
+                      }
                     }
                   : null,
               color: selectedStation != null

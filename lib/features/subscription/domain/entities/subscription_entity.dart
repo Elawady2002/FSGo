@@ -125,3 +125,18 @@ class SubscriptionEntity extends Equatable {
   /// Check if subscription is expired
   bool get isExpired => endDate.isBefore(DateTime.now());
 }
+
+/// Parameters for creating subscription schedules
+class SubscriptionScheduleParams {
+  final DateTime startDate;
+  final String tripType;
+  final String? departureTime;
+  final String? returnTime;
+
+  const SubscriptionScheduleParams({
+    required this.startDate,
+    required this.tripType,
+    this.departureTime,
+    this.returnTime,
+  });
+}

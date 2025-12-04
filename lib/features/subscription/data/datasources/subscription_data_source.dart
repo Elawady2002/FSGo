@@ -4,7 +4,7 @@ import '../../domain/entities/subscription_entity.dart';
 
 /// Subscription data source interface
 abstract class SubscriptionDataSource {
-  Future<void> createSubscription({
+  Future<String> createSubscription({
     required String userId,
     required SubscriptionPlanType planType,
     required String? paymentProofUrl,
@@ -34,6 +34,8 @@ abstract class SubscriptionDataSource {
   );
 
   Future<void> deleteSchedule(String scheduleId);
+
+  Future<void> cancelSubscription(String subscriptionId);
 }
 
 /// Subscription data source implementation
@@ -43,7 +45,7 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
   SubscriptionDataSourceImpl(this._supabase);
 
   @override
-  Future<void> createSubscription({
+  Future<String> createSubscription({
     required String userId,
     required SubscriptionPlanType planType,
     required String? paymentProofUrl,
@@ -121,6 +123,7 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
           .eq('id', userId);
 
       AppLogger.info('✅ Subscription created successfully');
+      return subscriptionId;
     } catch (e, stackTrace) {
       AppLogger.error('Failed to create subscription', e, stackTrace);
       rethrow;
@@ -260,6 +263,62 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
           .eq('id', scheduleId);
     } catch (e, stackTrace) {
       AppLogger.error('Failed to delete schedule', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> cancelSubscription(String subscriptionId) async {
+    try {
+      AppLogger.info(
+        '🔴 Starting cancellation for subscription: $subscriptionId',
+      );
+
+      // First, get the subscription to find the user_id
+      final subscription = await _supabase
+          .from('subscriptions')
+          .select('user_id, status')
+          .eq('id', subscriptionId)
+          .single();
+
+      AppLogger.info('📋 Current subscription data: $subscription');
+      final userId = subscription['user_id'] as String;
+
+      // Update subscription status to expired
+      AppLogger.info('⏳ Updating subscription status to expired...');
+      await _supabase
+          .from('subscriptions')
+          .update({
+            'status': SubscriptionStatus.expired.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', subscriptionId);
+      AppLogger.info('✅ Subscription status updated');
+
+      // Update user's subscription status to expired
+      AppLogger.info('⏳ Updating user subscription status...');
+      await _supabase
+          .from('users')
+          .update({
+            'subscription_status': SubscriptionStatus.expired.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', userId);
+      AppLogger.info('✅ User subscription status updated');
+
+      // Verify the update
+      final verifySubscription = await _supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('id', subscriptionId)
+          .single();
+      AppLogger.info(
+        '🔍 Verified subscription status: ${verifySubscription['status']}',
+      );
+
+      AppLogger.info('✅ Subscription canceled successfully');
+    } catch (e, stackTrace) {
+      AppLogger.error('❌ Failed to cancel subscription', e, stackTrace);
       rethrow;
     }
   }

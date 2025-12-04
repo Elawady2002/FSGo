@@ -13,6 +13,7 @@ import 'payment_methods_page.dart';
 import 'ride_history_page.dart';
 import 'statistics_page.dart';
 import 'help_center_page.dart';
+import '../../../subscription/presentation/pages/my_subscription_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -49,6 +50,17 @@ class ProfilePage extends ConsumerWidget {
             // Account & Settings
             _buildSectionTitle('الحساب والإعدادات'),
             _buildSection([
+              _MenuItem(
+                icon: CupertinoIcons.ticket,
+                title: 'اشتراكي',
+                subtitle: 'إدارة اشتراكك الحالي',
+                onTap: () => Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => const MySubscriptionPage(),
+                  ),
+                ),
+              ),
               _MenuItem(
                 icon: CupertinoIcons.person,
                 title: 'البيانات الشخصية',
