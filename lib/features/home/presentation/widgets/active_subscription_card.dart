@@ -231,13 +231,34 @@ class _ActiveSubscriptionCardState
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return ScaleTransition(
-            scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          // Custom curve for realistic expansion
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+
+          // Scale from card size to full screen
+          final scaleAnimation = Tween<double>(
+            begin: 0.85,
+            end: 1.0,
+          ).animate(curvedAnimation);
+
+          // Slide up slightly for natural feel
+          final slideAnimation = Tween<Offset>(
+            begin: const Offset(0, 0.1),
+            end: Offset.zero,
+          ).animate(curvedAnimation);
+
+          return SlideTransition(
+            position: slideAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              alignment: Alignment.center,
+              child: FadeTransition(opacity: animation, child: child),
             ),
-            child: FadeTransition(opacity: animation, child: child),
           );
         },
+        transitionDuration: const Duration(milliseconds: 400),
         opaque: false,
         barrierColor: Colors.black87,
       ),
