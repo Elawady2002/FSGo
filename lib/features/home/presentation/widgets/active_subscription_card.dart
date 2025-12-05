@@ -179,7 +179,8 @@ class _ActiveSubscriptionCardState
     setState(() {
       _selectedDate = date;
       _previousView = _currentView;
-      _currentView = SubscriptionCardView.bookingList; // Changed to bookingList
+      _currentView =
+          SubscriptionCardView.details; // Back to details to show updated data
 
       // Load existing schedule if available
       if (existingSchedule != null) {
@@ -350,126 +351,137 @@ class _ActiveSubscriptionCardState
   }
 
   Widget _buildDetailsContent() {
-    return Padding(
-      key: const ValueKey('details'),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'قريباً',
-                  style: AppTheme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+    return GestureDetector(
+      onTap: () {
+        if (_selectedDate != null) {
+          _playSound();
+          setState(() {
+            _previousView = _currentView;
+            _currentView = SubscriptionCardView.bookingList;
+          });
+        }
+      },
+      child: Padding(
+        key: const ValueKey('details'),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                ),
-              ),
-              GestureDetector(
-                onTap: _onCalendarIconTap,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    CupertinoIcons.calendar,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ],
-          ).animate().fadeIn().slideX(begin: -0.2, end: 0),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'تاريخ البداية',
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                      ),
+                  child: Text(
+                    'قريباً',
+                    style: AppTheme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat(
-                        'd MMMM',
-                        'ar',
-                      ).format(widget.subscription.startDate),
-                      style: AppTheme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'تاريخ الانتهاء',
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat(
-                        'd MMMM',
-                        'ar',
-                      ).format(widget.subscription.endDate),
-                      style: AppTheme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.2, end: 0),
-          const SizedBox(height: 24),
-          const Divider(color: Colors.white24),
-          const SizedBox(height: 16),
-          // Route Info at the bottom
-          Row(
-            children: [
-              const Icon(
-                CupertinoIcons.location_solid,
-                color: AppTheme.primaryColor,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'من منطقتك إلى $_universityName',
-                  style: AppTheme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ],
-          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
-        ],
+                GestureDetector(
+                  onTap: _onCalendarIconTap,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.calendar,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn().slideX(begin: -0.2, end: 0),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'تاريخ البداية',
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat(
+                          'd MMMM',
+                          'ar',
+                        ).format(widget.subscription.startDate),
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'تاريخ الانتهاء',
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat(
+                          'd MMMM',
+                          'ar',
+                        ).format(widget.subscription.endDate),
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.2, end: 0),
+            const SizedBox(height: 24),
+            const Divider(color: Colors.white24),
+            const SizedBox(height: 16),
+            // Route Info at the bottom
+            Row(
+              children: [
+                const Icon(
+                  CupertinoIcons.location_solid,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'من منطقتك إلى $_universityName',
+                    style: AppTheme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+          ],
+        ),
       ),
     );
   }
