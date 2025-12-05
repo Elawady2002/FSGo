@@ -209,6 +209,8 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                             itemBuilder: (context, index) {
                               return _BookingCardItem(
                                 booking: bookings[index],
+                                index:
+                                    index, // Pass index for stagger animation
                                 onTap: () =>
                                     widget.onBookingTap(bookings[index]),
                               );
@@ -330,129 +332,137 @@ class _DateChip extends StatelessWidget {
 
 class _BookingCardItem extends StatelessWidget {
   final SubscriptionScheduleEntity booking;
+  final int index;
   final VoidCallback onTap;
 
-  const _BookingCardItem({required this.booking, required this.onTap});
+  const _BookingCardItem({
+    required this.booking,
+    required this.index,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [const Color(0xFF1A1A1A), const Color(0xFF0D0D0D)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppTheme.primaryColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  booking.tripType == 'round_trip'
-                      ? CupertinoIcons.arrow_right_arrow_left
-                      : booking.tripType == 'departure_only'
-                      ? CupertinoIcons.arrow_right
-                      : CupertinoIcons.arrow_left,
-                  color: AppTheme.primaryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  booking.tripType == 'round_trip'
-                      ? 'ذهاب وعودة'
-                      : booking.tripType == 'departure_only'
-                      ? 'ذهاب فقط'
-                      : 'عودة فقط',
-                  style: AppTheme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+          onTap: onTap,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [const Color(0xFF1A1A1A), const Color(0xFF0D0D0D)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
-            const SizedBox(height: 16),
-            Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (booking.departureTime != null) ...[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ميعاد الذهاب',
-                          style: AppTheme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          booking.departureTime!,
-                          style: AppTheme.textTheme.headlineSmall?.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                Row(
+                  children: [
+                    Icon(
+                      booking.tripType == 'round_trip'
+                          ? CupertinoIcons.arrow_right_arrow_left
+                          : booking.tripType == 'departure_only'
+                          ? CupertinoIcons.arrow_right
+                          : CupertinoIcons.arrow_left,
+                      color: AppTheme.primaryColor,
+                      size: 24,
                     ),
-                  ),
-                ],
-                if (booking.returnTime != null) ...[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ميعاد العودة',
-                          style: AppTheme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          booking.returnTime!,
-                          style: AppTheme.textTheme.headlineSmall?.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 12),
+                    Text(
+                      booking.tripType == 'round_trip'
+                          ? 'ذهاب وعودة'
+                          : booking.tripType == 'departure_only'
+                          ? 'ذهاب فقط'
+                          : 'عودة فقط',
+                      style: AppTheme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    if (booking.departureTime != null) ...[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ميعاد الذهاب',
+                              style: AppTheme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              booking.departureTime!,
+                              style: AppTheme.textTheme.headlineSmall?.copyWith(
+                                color: AppTheme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (booking.returnTime != null) ...[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ميعاد العودة',
+                              style: AppTheme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              booking.returnTime!,
+                              style: AppTheme.textTheme.headlineSmall?.copyWith(
+                                color: AppTheme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'اضغط لتعديل المواعيد',
+                      style: AppTheme.textTheme.bodySmall?.copyWith(
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      CupertinoIcons.arrow_right,
+                      size: 16,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'اضغط لتعديل المواعيد',
-                  style: AppTheme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  CupertinoIcons.arrow_right,
-                  size: 16,
-                  color: AppTheme.primaryColor,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn().slideY(begin: 0.2, end: 0);
+          ),
+        )
+        .animate()
+        .fadeIn(delay: (100 * index).ms)
+        .slideY(begin: 0.3, end: 0, delay: (100 * index).ms);
   }
 }
