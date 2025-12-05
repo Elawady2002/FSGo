@@ -597,82 +597,84 @@ class _ActiveSubscriptionCardState
                   ],
                 ),
               ],
-            ] else ...[
-              // Start and End dates side by side
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // End date section - NOW SHOWS TRIP TYPE
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'نوع الرحلة',
-                          style: AppTheme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _getTripTypeLabel(_selectedTripType),
-                          style: AppTheme.textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Start date section
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'تاريخ الرحلة',
-                          style: AppTheme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('d MMMM', 'ar')
-                              .format(widget.subscription.startDate),
-                          style: AppTheme.textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Divider(color: Colors.white24),
-              const SizedBox(height: 16),
-              // Route Info with green arrow icon
-              Row(
-                children: [
-                  const Icon(
-                    CupertinoIcons.arrow_right,
-                    color: AppTheme.primaryColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'من منطقتك إلى ${_universityName ?? "الجامعة"}',
-                      style: AppTheme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
             ],
-          ),
+            const SizedBox(height: 24),
+            // Start and End dates side by side
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // End date section - NOW SHOWS TRIP TYPE
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'نوع الرحلة',
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getTripTypeLabel(_selectedTripType),
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Start date section
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'تاريخ الرحلة',
+                        style: AppTheme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat(
+                          'd MMMM',
+                          'ar',
+                        ).format(widget.subscription.startDate),
+                        style: AppTheme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Divider(color: Colors.white24),
+            const SizedBox(height: 16),
+            // Route Info with green arrow icon
+            Row(
+              children: [
+                const Icon(
+                  CupertinoIcons.arrow_right,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'من منطقتك إلى ${_universityName ?? "الجامعة"}',
+                    style: AppTheme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+          ],
         ),
       ),
     );
