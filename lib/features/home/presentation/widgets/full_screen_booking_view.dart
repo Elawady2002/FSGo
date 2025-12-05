@@ -468,14 +468,97 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
           ),
         ),
 
-        // Placeholder for time selection
-        Expanded(
-          child: Center(
-            child: Text(
-              'Time selection UI',
-              style: AppTheme.textTheme.bodyLarge?.copyWith(
-                color: Colors.white70,
+        // Trip type selector
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'نوع الرحلة',
+                style: AppTheme.textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTripTypeButton('ذهاب فقط', 'departure_only'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTripTypeButton('عودة فقط', 'return_only'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTripTypeButton('ذهاب وعودة', 'round_trip'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Time selection
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Departure times
+                if (_selectedBooking!.tripType == 'departure_only' ||
+                    _selectedBooking!.tripType == 'round_trip') ...[
+                  Text(
+                    'ميعاد الذهاب',
+                    style: AppTheme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      '6:00 AM',
+                      '6:30 AM',
+                      '7:00 AM',
+                      '7:30 AM',
+                      '8:00 AM',
+                    ].map((time) => _buildTimeChip(time, true)).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // Return times
+                if (_selectedBooking!.tripType == 'return_only' ||
+                    _selectedBooking!.tripType == 'round_trip') ...[
+                  Text(
+                    'ميعاد العودة',
+                    style: AppTheme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      '2:00 PM',
+                      '2:30 PM',
+                      '3:00 PM',
+                      '3:30 PM',
+                      '4:00 PM',
+                    ].map((time) => _buildTimeChip(time, false)).toList(),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -510,6 +593,67 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTripTypeButton(String label, String type) {
+    final isSelected = _selectedBooking?.tripType == type;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (_selectedBooking != null) {
+            // Update trip type (would need to update entity)
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.primaryColor
+              : Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppTheme.textTheme.bodyMedium?.copyWith(
+            color: isSelected ? Colors.black : Colors.white,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeChip(String time, bool isDeparture) {
+    final currentTime = isDeparture
+        ? _selectedBooking?.departureTime
+        : _selectedBooking?.returnTime;
+    final isSelected = currentTime == time;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          // Update time (would need to update entity and save)
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.primaryColor
+              : Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          time,
+          style: AppTheme.textTheme.bodyMedium?.copyWith(
+            color: isSelected ? Colors.black : Colors.white,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -39,8 +39,6 @@ class _ActiveSubscriptionCardState
   String? _selectedReturnTime;
   String _selectedTripType = 'round_trip';
   String? _universityName;
-  final String _userArea =
-      'منطقتك'; // Default value, will be updated from route
   Map<String, SubscriptionScheduleEntity> _schedules = {};
   bool _isLoadingSchedules = false;
   late DateTime _currentMonth;
@@ -65,9 +63,12 @@ class _ActiveSubscriptionCardState
   @override
   void initState() {
     super.initState();
-    _currentMonth = widget.subscription.startDate;
+    _selectedDate = DateTime.now();
+    _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
+    // Assuming AudioPlayer is declared and imported elsewhere if needed
+    // _player = AudioPlayer();
+    _fetchSchedules(); // Renamed from _loadSchedules to match existing method
     _fetchUniversityName();
-    _fetchSchedules();
   }
 
   @override
@@ -682,10 +683,9 @@ class _ActiveSubscriptionCardState
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'من $_userArea إلى $_universityName',
-                    style: AppTheme.textTheme.bodyMedium?.copyWith(
+                    'من منطقتك إلى ${_universityName ?? "..."}',
+                    style: AppTheme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -947,6 +947,27 @@ class _ActiveSubscriptionCardState
     );
   }
 
+  String _getNearestBookingDate() {
+    if (_schedules.isEmpty) {
+      return 'لا يوجد حجوزات';
+    }
+
+    // Get all booking dates and sort them
+    final bookingDates =
+        _schedules.keys
+            .map((key) => DateTime.parse(key))
+            .where((date) => !date.isBefore(DateTime.now()))
+            .toList()
+          ..sort();
+
+    if (bookingDates.isEmpty) {
+      return 'لا يوجد حجوزات قادمة';
+    }
+
+    final nearestDate = bookingDates.first;
+    return DateFormat('EEEE d MMMM', 'ar').format(nearestDate);
+  }
+
   Widget _buildBookingListContent() {
     if (_selectedDate == null) {
       return const Center(child: Text('لا يوجد تاريخ محدد'));
@@ -1106,6 +1127,56 @@ class _ActiveSubscriptionCardState
                         ),
                         const SizedBox(height: 8),
                       ],
+                      const SizedBox(height: 16),
+
+                      // Nearest booking date
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _getNearestBookingDate(),
+                            style: AppTheme.textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.calendar,
+                              color: AppTheme.primaryColor,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Route info with university name
+                      Row(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.location_fill,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'من منطقتك إلى ${_universityName ?? "..."}',
+                              style: AppTheme.textTheme.bodyLarge?.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       if (bookingsOnDate.returnTime != null) ...[
                         Row(
                           children: [
