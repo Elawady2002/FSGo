@@ -238,6 +238,13 @@ class _DateChip extends StatelessWidget {
     required this.onTap,
   });
 
+  bool get isToday {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -277,8 +284,32 @@ class _DateChip extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (hasBooking) ...[
-                  const SizedBox(height: 4),
+                const SizedBox(height: 4),
+                // Today indicator (red dot) or booking indicator (yellow dot)
+                if (isToday)
+                  Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF3B30), // Red for today
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                      .animate(onPlay: (controller) => controller.repeat())
+                      .scale(
+                        begin: const Offset(1.0, 1.0),
+                        end: const Offset(1.2, 1.2),
+                        duration: 1000.ms,
+                        curve: Curves.easeInOut,
+                      )
+                      .then()
+                      .scale(
+                        begin: const Offset(1.2, 1.2),
+                        end: const Offset(1.0, 1.0),
+                        duration: 1000.ms,
+                        curve: Curves.easeInOut,
+                      )
+                else if (hasBooking)
                   Container(
                     width: 6,
                     height: 6,
@@ -287,7 +318,6 @@ class _DateChip extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                ],
               ],
             ),
           ),

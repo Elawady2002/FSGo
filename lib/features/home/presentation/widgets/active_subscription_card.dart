@@ -165,14 +165,6 @@ class _ActiveSubscriptionCardState
     SystemSound.play(SystemSoundType.click);
   }
 
-  void _onCalendarIconTap() {
-    _playSound();
-    setState(() {
-      _previousView = _currentView;
-      _currentView = SubscriptionCardView.calendar;
-    });
-  }
-
   void _onDateSelected(DateTime date) {
     _playSound();
     final dateKey = date.toIso8601String().split('T')[0];
