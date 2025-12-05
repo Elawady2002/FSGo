@@ -35,13 +35,6 @@ abstract class BookingDataSource {
   Future<List<BookingModel>> getUserBookings(String userId);
   Future<BookingModel?> getUpcomingBooking(String userId);
   Future<BookingModel> getBookingById(String bookingId);
-
-  /// Update booking times
-  Future<void> updateBookingTimes({
-    required String bookingId,
-    String? departureTime,
-    String? returnTime,
-  });
 }
 
 class BookingDataSourceImpl implements BookingDataSource {
@@ -296,38 +289,6 @@ class BookingDataSourceImpl implements BookingDataSource {
       throw Exception('Database error: ${e.message}');
     } catch (e) {
       throw Exception('Unexpected error fetching booking: $e');
-    }
-  }
-
-  @override
-  Future<void> updateBookingTimes({
-    required String bookingId,
-    String? departureTime,
-    String? returnTime,
-  }) async {
-    try {
-      final Map<String, dynamic> updates = {};
-
-      if (departureTime != null) {
-        updates['departure_time'] = departureTime;
-      }
-      if (returnTime != null) {
-        updates['return_time'] = returnTime;
-      }
-
-      if (updates.isEmpty) return;
-
-      updates['updated_at'] = DateTime.now().toIso8601String();
-
-      await _client.from('bookings').update(updates).eq('id', bookingId);
-
-      AppLogger.info('✅ Updated booking times for booking: $bookingId');
-    } on PostgrestException catch (e) {
-      AppLogger.error('❌ Database error updating booking times: ${e.message}');
-      throw Exception('Database error: ${e.message}');
-    } catch (e) {
-      AppLogger.error('❌ Unexpected error updating booking times: $e');
-      throw Exception('Unexpected error: $e');
     }
   }
 }
