@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../booking/data/datasources/booking_data_source.dart';
 import '../../domain/repositories/subscription_repository.dart';
 import '../../data/datasources/subscription_data_source.dart';
 import '../../domain/entities/subscription_entity.dart';
@@ -16,7 +17,9 @@ SubscriptionDataSource subscriptionDataSource(SubscriptionDataSourceRef ref) {
 @riverpod
 SubscriptionRepository subscriptionRepository(SubscriptionRepositoryRef ref) {
   final dataSource = ref.watch(subscriptionDataSourceProvider);
-  return SubscriptionRepositoryImpl(dataSource);
+  // Create BookingDataSource directly instead of using a provider
+  final bookingDataSource = BookingDataSourceImpl();
+  return SubscriptionRepositoryImpl(dataSource, bookingDataSource);
 }
 
 // User Subscriptions Provider (all subscriptions)

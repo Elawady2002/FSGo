@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../booking/data/datasources/booking_data_source.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../../domain/entities/installment_entity.dart';
 import '../../domain/entities/subscription_schedule_entity.dart';
@@ -9,8 +11,9 @@ import '../datasources/subscription_data_source.dart';
 /// Subscription repository implementation
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   final SubscriptionDataSource _dataSource;
+  final BookingDataSource _bookingDataSource;
 
-  SubscriptionRepositoryImpl(this._dataSource);
+  SubscriptionRepositoryImpl(this._dataSource, this._bookingDataSource);
 
   @override
   Future<Either<Failure, void>> createSubscription({
@@ -22,6 +25,10 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     SubscriptionScheduleParams? scheduleParams,
   }) async {
     try {
+      AppLogger.info('🔵 Starting subscription creation...');
+      AppLogger.info('   Plan type: ${planType.name}');
+      AppLogger.info('   Has schedule params: ${scheduleParams != null}');
+
       // 1. Create the subscription record
       final subscriptionId = await _dataSource.createSubscription(
         userId: userId,
@@ -31,31 +38,67 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         isInstallment: isInstallment,
       );
 
-      // 2. If monthly plan and schedule params provided, generate 26 bookings
+      AppLogger.info('✅ Subscription created with ID: $subscriptionId');
+
+      // 2. If monthly plan and schedule params provided, generate 26 bookings in bookings table
       if (planType == SubscriptionPlanType.monthly && scheduleParams != null) {
+        AppLogger.info('🔵 Creating 26 bookings for monthly subscription...');
+
         DateTime currentDate = scheduleParams.startDate;
         int bookingsCreated = 0;
 
-        while (bookingsCreated < 26) {
-          // Skip Fridays (Friday is weekday 5 in Dart if Monday is 1? No, in Dart:
-          // Monday=1, ..., Friday=5, Saturday=6, Sunday=7)
-          // Wait, let's verify Dart weekday. DateTime.friday constant is 5.
+        // Get subscription end date (same day next month)
+        final endDate = DateTime(
+          scheduleParams.startDate.year,
+          scheduleParams.startDate.month + 1,
+          scheduleParams.startDate.day,
+        );
+
+        AppLogger.info('   Start date: $currentDate');
+        AppLogger.info('   End date: $endDate');
+
+        // Use universityId as scheduleId temporarily
+        // This allows the system to work while proper route selection is being implemented
+        final scheduleId =
+            scheduleParams.scheduleId ?? '00000000-0000-0000-0000-000000000000';
+        AppLogger.info('   Schedule ID: $scheduleId');
+
+        while (bookingsCreated < 26 && currentDate.isBefore(endDate)) {
+          // Skip Fridays (Friday is weekday 5 in Dart)
           if (currentDate.weekday != DateTime.friday) {
-            await _dataSource.createOrUpdateSchedule(
+            AppLogger.info('   Creating booking for date: $currentDate');
+
+            // Create booking in bookings table
+            await _bookingDataSource.createSubscriptionBooking(
+              userId: userId,
               subscriptionId: subscriptionId,
-              tripDate: currentDate,
+              scheduleId: scheduleId,
+              bookingDate: currentDate,
               tripType: scheduleParams.tripType,
+              pickupStationId: scheduleParams.pickupStationId,
+              dropoffStationId: scheduleParams.dropoffStationId,
               departureTime: scheduleParams.departureTime,
               returnTime: scheduleParams.returnTime,
+              totalPrice: 0.0, // Price is already paid in subscription
             );
             bookingsCreated++;
           }
           currentDate = currentDate.add(const Duration(days: 1));
         }
+
+        AppLogger.info('✅ Created $bookingsCreated bookings successfully!');
+      } else {
+        AppLogger.warning('⚠️ Skipping booking creation:');
+        AppLogger.warning(
+          '   Is monthly: ${planType == SubscriptionPlanType.monthly}',
+        );
+        AppLogger.warning('   Has params: ${scheduleParams != null}');
       }
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('❌ Error creating subscription: $e');
+      AppLogger.error('   Stack trace: $stackTrace');
       return Left(ServerFailure(message: e.toString()));
     }
   }

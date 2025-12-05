@@ -18,6 +18,20 @@ abstract class BookingDataSource {
     required double totalPrice,
   });
 
+  /// Create a booking from a subscription
+  Future<BookingModel> createSubscriptionBooking({
+    required String userId,
+    required String subscriptionId,
+    required String scheduleId,
+    required DateTime bookingDate,
+    required String tripType,
+    String? pickupStationId,
+    String? dropoffStationId,
+    String? departureTime,
+    String? returnTime,
+    required double totalPrice,
+  });
+
   Future<List<BookingModel>> getUserBookings(String userId);
   Future<BookingModel?> getUpcomingBooking(String userId);
   Future<BookingModel> getBookingById(String bookingId);
@@ -75,6 +89,61 @@ class BookingDataSourceImpl implements BookingDataSource {
     } catch (e) {
       AppLogger.error('❌ Unexpected error creating booking: $e');
       throw Exception('Unexpected error during booking creation: $e');
+    }
+  }
+
+  @override
+  Future<BookingModel> createSubscriptionBooking({
+    required String userId,
+    required String subscriptionId,
+    required String scheduleId,
+    required DateTime bookingDate,
+    required String tripType,
+    String? pickupStationId,
+    String? dropoffStationId,
+    String? departureTime,
+    String? returnTime,
+    required double totalPrice,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final response = await _client
+          .from('bookings')
+          .insert({
+            'user_id': userId,
+            'subscription_id': subscriptionId,
+            'schedule_id': scheduleId,
+            'booking_date': bookingDate.toIso8601String(),
+            'trip_type': tripType,
+            'pickup_station_id': pickupStationId,
+            'dropoff_station_id': dropoffStationId,
+            'departure_time': departureTime,
+            'return_time': returnTime,
+            'payment_proof_image':
+                null, // No payment proof for subscription bookings
+            'transfer_number':
+                null, // No transfer number for subscription bookings
+            'status': 'pending', // Pending until admin approval
+            'payment_status': 'paid', // Already paid via subscription
+            'total_price': totalPrice,
+            'created_at': now.toIso8601String(),
+            'updated_at': now.toIso8601String(),
+          })
+          .select()
+          .single();
+
+      return BookingModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      AppLogger.error('❌ Database error creating subscription booking:');
+      AppLogger.error('   Code: ${e.code}');
+      AppLogger.error('   Message: ${e.message}');
+      AppLogger.error('   Details: ${e.details}');
+      throw Exception('Database error: ${e.message}');
+    } catch (e) {
+      AppLogger.error('❌ Unexpected error creating subscription booking: $e');
+      throw Exception(
+        'Unexpected error during subscription booking creation: $e',
+      );
     }
   }
 

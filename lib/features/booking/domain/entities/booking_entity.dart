@@ -38,6 +38,8 @@ class BookingEntity extends Equatable {
   final String id;
   final String userId;
   final String scheduleId;
+  final String?
+  subscriptionId; // Link to subscription if booking is from subscription
   final DateTime bookingDate;
   final String tripType; // 'departure_only', 'return_only', 'round_trip'
   final String? pickupStationId;
@@ -56,6 +58,7 @@ class BookingEntity extends Equatable {
     required this.id,
     required this.userId,
     required this.scheduleId,
+    this.subscriptionId,
     required this.bookingDate,
     required this.tripType,
     this.pickupStationId,
@@ -76,6 +79,7 @@ class BookingEntity extends Equatable {
     id,
     userId,
     scheduleId,
+    subscriptionId,
     bookingDate,
     tripType,
     pickupStationId,
@@ -95,4 +99,5 @@ class BookingEntity extends Equatable {
   bool get isConfirmed => status == BookingStatus.confirmed;
   bool get isCancelled => status == BookingStatus.cancelled;
   bool get isCompleted => status == BookingStatus.completed;
+  bool get isFromSubscription => subscriptionId != null;
 }

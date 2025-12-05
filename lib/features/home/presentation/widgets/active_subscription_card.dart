@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../booking/data/datasources/booking_data_source.dart';
 import '../../../subscription/domain/entities/subscription_entity.dart';
 import '../../../subscription/domain/entities/subscription_schedule_entity.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 enum SubscriptionCardView { details, calendar, timeSelection }
@@ -84,30 +84,45 @@ class _ActiveSubscriptionCardState
     if (widget.subscription.id == null) return;
 
     setState(() => _isLoadingSchedules = true);
-    final repository = ref.read(subscriptionRepositoryProvider);
-    final result = await repository.getSubscriptionSchedules(
-      widget.subscription.id!,
-    );
 
-    result.fold(
-      (failure) {
-        // Handle error
-        setState(() => _isLoadingSchedules = false);
-      },
-      (schedulesList) {
-        if (mounted) {
-          final Map<String, SubscriptionScheduleEntity> schedulesMap = {};
-          for (var schedule in schedulesList) {
-            final dateKey = schedule.tripDate.toIso8601String().split('T')[0];
-            schedulesMap[dateKey] = schedule;
-          }
-          setState(() {
-            _schedules = schedulesMap;
-            _isLoadingSchedules = false;
-          });
+    try {
+      // Fetch bookings from bookings table instead of subscription_schedules
+      final response = await Supabase.instance.client
+          .from('bookings')
+          .select()
+          .eq('subscription_id', widget.subscription.id!)
+          .order('booking_date');
+
+      if (mounted) {
+        final Map<String, SubscriptionScheduleEntity> schedulesMap = {};
+        for (var booking in response) {
+          final bookingDate = DateTime.parse(booking['booking_date'] as String);
+          final dateKey = bookingDate.toIso8601String().split('T')[0];
+
+          // Convert booking to SubscriptionScheduleEntity for compatibility
+          schedulesMap[dateKey] = SubscriptionScheduleEntity(
+            id: booking['id'] as String,
+            subscriptionId: booking['subscription_id'] as String,
+            tripDate: bookingDate,
+            tripType: booking['trip_type'] as String,
+            departureTime: booking['departure_time'] as String?,
+            returnTime: booking['return_time'] as String?,
+            createdAt: DateTime.parse(booking['created_at'] as String),
+            updatedAt: booking['updated_at'] != null
+                ? DateTime.parse(booking['updated_at'] as String)
+                : DateTime.parse(booking['created_at'] as String),
+          );
         }
-      },
-    );
+        setState(() {
+          _schedules = schedulesMap;
+          _isLoadingSchedules = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingSchedules = false);
+      }
+    }
   }
 
   void _playSound() {
@@ -173,38 +188,43 @@ class _ActiveSubscriptionCardState
     _playSound();
     if (_selectedDate == null) return;
 
-    final repository = ref.read(subscriptionRepositoryProvider);
-    final result = await repository.createOrUpdateSchedule(
-      subscriptionId: widget.subscription.id!,
-      tripDate: _selectedDate!,
-      tripType: _selectedTripType,
-      departureTime: _selectedDepartureTime,
-      returnTime: _selectedReturnTime,
-    );
+    try {
+      final user = ref.read(authProvider);
+      if (user == null) throw Exception('User not authenticated');
 
-    result.fold(
-      (failure) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('خطأ: ${failure.message}')));
-        }
-      },
-      (schedule) {
-        if (mounted) {
-          HapticFeedback.heavyImpact(); // Success haptic
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('تم حفظ الجدول بنجاح')));
-          // Update local state
-          final dateKey = _selectedDate!.toIso8601String().split('T')[0];
-          setState(() {
-            _schedules[dateKey] = schedule;
-          });
-          _onBackToCalendar(); // Go back to calendar to see the update
-        }
-      },
-    );
+      // Create booking directly in bookings table
+      final bookingDataSource = BookingDataSourceImpl();
+
+      await bookingDataSource.createSubscriptionBooking(
+        userId: user.id,
+        subscriptionId: widget.subscription.id!,
+        scheduleId: user.universityId ?? '00000000-0000-0000-0000-000000000000',
+        bookingDate: _selectedDate!,
+        tripType: _selectedTripType,
+        pickupStationId: null, // TODO: Get from user profile
+        dropoffStationId: null, // TODO: Get from user profile
+        departureTime: _selectedDepartureTime,
+        returnTime: _selectedReturnTime,
+        totalPrice: 0.0, // Already paid via subscription
+      );
+
+      if (mounted) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تم حفظ الحجز بنجاح')));
+
+        // Refresh schedules to show the new booking
+        await _fetchSchedules();
+        _onBackToCalendar();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('خطأ: $e')));
+      }
+    }
   }
 
   bool _isSameDay(DateTime date1, DateTime date2) {

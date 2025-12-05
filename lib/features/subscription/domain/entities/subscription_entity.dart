@@ -132,11 +132,17 @@ class SubscriptionScheduleParams {
   final String tripType;
   final String? departureTime;
   final String? returnTime;
+  final String? scheduleId; // Route schedule ID
+  final String? pickupStationId; // Pickup station ID
+  final String? dropoffStationId; // Dropoff station ID
 
   const SubscriptionScheduleParams({
     required this.startDate,
     required this.tripType,
     this.departureTime,
     this.returnTime,
+    this.scheduleId,
+    this.pickupStationId,
+    this.dropoffStationId,
   });
 }

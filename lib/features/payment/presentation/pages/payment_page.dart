@@ -258,6 +258,23 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                             planType = SubscriptionPlanType.semester;
                           }
 
+                          AppLogger.info('📋 Subscription details:');
+                          AppLogger.info('   Plan type: ${planType.name}');
+                          AppLogger.info(
+                            '   Has scheduleParams: ${widget.scheduleParams != null}',
+                          );
+                          if (widget.scheduleParams != null) {
+                            AppLogger.info(
+                              '   Start date: ${widget.scheduleParams!.startDate}',
+                            );
+                            AppLogger.info(
+                              '   Trip type: ${widget.scheduleParams!.tripType}',
+                            );
+                            AppLogger.info(
+                              '   Schedule ID: ${widget.scheduleParams!.scheduleId}',
+                            );
+                          }
+
                           final result = await subscriptionRepository
                               .createSubscription(
                                 userId: user.id,

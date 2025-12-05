@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/subscription_entity.dart';
 
 enum CardViewState { details, calendar, timeSelection }
 
-class CalendarPlanCard extends StatefulWidget {
+class CalendarPlanCard extends ConsumerStatefulWidget {
   final String title;
   final String price;
   final String period;
@@ -29,10 +31,10 @@ class CalendarPlanCard extends StatefulWidget {
   });
 
   @override
-  State<CalendarPlanCard> createState() => _CalendarPlanCardState();
+  ConsumerState<CalendarPlanCard> createState() => _CalendarPlanCardState();
 }
 
-class _CalendarPlanCardState extends State<CalendarPlanCard> {
+class _CalendarPlanCardState extends ConsumerState<CalendarPlanCard> {
   CardViewState _currentView = CardViewState.details;
   DateTime? _selectedDate;
   String? _selectedDepartureTime;
@@ -656,6 +658,11 @@ class _CalendarPlanCardState extends State<CalendarPlanCard> {
             child: ElevatedButton(
               onPressed: _canConfirm()
                   ? () {
+                      // Get user data
+                      final user = ref.read(authProvider);
+
+                      // Create params with user's university as temporary scheduleId
+                      // TODO: Replace with actual route selection in future
                       final params = SubscriptionScheduleParams(
                         startDate: _selectedDate!,
                         tripType:
@@ -663,6 +670,12 @@ class _CalendarPlanCardState extends State<CalendarPlanCard> {
                             'round_trip', // Default to round_trip if null
                         departureTime: _selectedDepartureTime,
                         returnTime: _selectedReturnTime,
+                        scheduleId: user
+                            ?.universityId, // Use university as temp scheduleId
+                        pickupStationId:
+                            null, // TODO: Get from user profile or route selection
+                        dropoffStationId:
+                            null, // TODO: Get from user profile or route selection
                       );
                       widget.onSubscribe(params);
                     }
