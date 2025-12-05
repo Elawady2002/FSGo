@@ -26,6 +26,7 @@ class FullScreenBookingView extends StatefulWidget {
 class _FullScreenBookingViewState extends State<FullScreenBookingView>
     with SingleTickerProviderStateMixin {
   late DateTime _selectedDate;
+  late DateTime _currentMonth;
   late ScrollController _dateScrollController;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -35,6 +36,7 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate;
+    _currentMonth = DateTime(widget.initialDate.year, widget.initialDate.month);
     _dateScrollController = ScrollController();
 
     // Setup animations
@@ -59,6 +61,181 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
     _dateScrollController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  Widget _buildCalendarGrid() {
+    final daysInMonth = DateUtils.getDaysInMonth(
+      _currentMonth.year,
+      _currentMonth.month,
+    );
+    final firstDayOfMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month,
+      1,
+    );
+    final offset = firstDayOfMonth.weekday % 7;
+
+    return Column(
+      children: [
+        // Month Navigation
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  CupertinoIcons.chevron_right,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _currentMonth = DateTime(
+                      _currentMonth.year,
+                      _currentMonth.month - 1,
+                    );
+                  });
+                },
+              ),
+              Text(
+                DateFormat('MMMM yyyy', 'ar').format(_currentMonth),
+                style: AppTheme.textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(
+                  CupertinoIcons.chevron_left,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _currentMonth = DateTime(
+                      _currentMonth.year,
+                      _currentMonth.month + 1,
+                    );
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // Weekday Headers
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س']
+              .map(
+                (day) => Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: AppTheme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white60,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ).animate().fadeIn(),
+        const SizedBox(height: 16),
+
+        // Calendar Grid
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.75,
+            ),
+            itemCount: offset + daysInMonth,
+            itemBuilder: (context, index) {
+              if (index < offset) return const SizedBox();
+
+              final day = index - offset + 1;
+              final date = DateTime(
+                _currentMonth.year,
+                _currentMonth.month,
+                day,
+              );
+              final dateKey = date.toIso8601String().split('T')[0];
+
+              final isToday = _isSameDay(date, DateTime.now());
+              final hasBooking = widget.schedules.containsKey(dateKey);
+              final isSelected = _isSameDay(date, _selectedDate);
+
+              Color? backgroundColor;
+              Color textColor = Colors.white;
+              FontWeight fontWeight = FontWeight.normal;
+
+              if (isSelected) {
+                backgroundColor = AppTheme.primaryColor;
+                textColor = Colors.black;
+                fontWeight = FontWeight.bold;
+              } else if (hasBooking) {
+                backgroundColor = AppTheme.primaryColor.withValues(alpha: 0.3);
+                textColor = AppTheme.primaryColor;
+                fontWeight = FontWeight.bold;
+              } else {
+                backgroundColor = Colors.transparent;
+                textColor = Colors.white;
+              }
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                  widget.onDateSelected(date);
+                },
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: backgroundColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$day',
+                          style: AppTheme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: fontWeight,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Today Indicator (Red Dot)
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isToday
+                            ? const Color(0xFFFF3B30)
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
   List<DateTime> _getDateRange() {
@@ -152,33 +329,8 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                     ),
                   ),
 
-                  // Horizontal date picker
-                  SizedBox(
-                    height: 100,
-                    child: ListView.builder(
-                      controller: _dateScrollController,
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: dates.length,
-                      itemBuilder: (context, index) {
-                        final date = dates[index];
-                        final isSelected =
-                            date.day == _selectedDate.day &&
-                            date.month == _selectedDate.month &&
-                            date.year == _selectedDate.year;
-                        final hasBooking = widget.schedules.containsKey(
-                          date.toIso8601String().split('T')[0],
-                        );
-
-                        return _DateChip(
-                          date: date,
-                          isSelected: isSelected,
-                          hasBooking: hasBooking,
-                          onTap: () => _onDateTap(date),
-                        );
-                      },
-                    ),
-                  ),
+                  // Full month calendar
+                  SizedBox(height: 380, child: _buildCalendarGrid()),
 
                   const SizedBox(height: 16),
 
