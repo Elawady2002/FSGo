@@ -32,6 +32,9 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
     with SingleTickerProviderStateMixin {
   FullScreenView _currentView = FullScreenView.bookingList;
   SubscriptionScheduleEntity? _selectedBooking;
+  String _editingTripType = 'round_trip';
+  String? _editingDepartureTime;
+  String? _editingReturnTime;
   late DateTime _selectedDate;
   late DateTime _currentMonth;
   late ScrollController _dateScrollController;
@@ -283,6 +286,17 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
     return schedule != null ? [schedule] : [];
   }
 
+  void _onAddNewBooking() {
+    // Create a new empty booking for the selected date
+    setState(() {
+      _selectedBooking = null; // null means creating new
+      _editingTripType = 'round_trip';
+      _editingDepartureTime = null;
+      _editingReturnTime = null;
+      _currentView = FullScreenView.timeEditor;
+    });
+  }
+
   Future<void> _close() async {
     await _animationController.reverse();
     if (mounted) {
@@ -327,10 +341,11 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
 
     return Column(
       children: [
-        // Header with close button
+        // Header with close and add buttons
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               GestureDetector(
                 onTap: _close,
@@ -341,18 +356,32 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    CupertinoIcons.chevron_down,
+                    CupertinoIcons.xmark,
                     color: Colors.white,
                     size: 24,
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
               Text(
                 'الحجوزات',
                 style: AppTheme.textTheme.headlineSmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+              GestureDetector(
+                onTap: _onAddNewBooking,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.add,
+                    color: Colors.black,
+                    size: 24,
+                  ),
                 ),
               ),
             ],
@@ -394,9 +423,12 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                       booking: bookings[index],
                       index: index,
                       onTap: () {
-                        // Show time editor inside full-screen
+                        // Initialize editing state with current booking values
                         setState(() {
                           _selectedBooking = bookings[index];
+                          _editingTripType = bookings[index].tripType;
+                          _editingDepartureTime = bookings[index].departureTime;
+                          _editingReturnTime = bookings[index].returnTime;
                           _currentView = FullScreenView.timeEditor;
                         });
                       },
@@ -409,15 +441,6 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
   }
 
   Widget _buildTimeEditorView() {
-    if (_selectedBooking == null) {
-      return const Center(
-        child: Text(
-          'No booking selected',
-          style: TextStyle(color: Colors.white),
-        ),
-      );
-    }
-
     return Column(
       children: [
         // Header
@@ -446,7 +469,7 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
               ),
               const SizedBox(width: 16),
               Text(
-                'اختار المواعيد',
+                _selectedBooking == null ? 'إضافة حجز' : 'تعديل الحجز',
                 style: AppTheme.textTheme.headlineSmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -511,8 +534,8 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Departure times
-                if (_selectedBooking!.tripType == 'departure_only' ||
-                    _selectedBooking!.tripType == 'round_trip') ...[
+                if (_editingTripType == 'departure_only' ||
+                    _editingTripType == 'round_trip') ...[
                   Text(
                     'ميعاد الذهاب',
                     style: AppTheme.textTheme.titleMedium?.copyWith(
@@ -536,8 +559,8 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                 ],
 
                 // Return times
-                if (_selectedBooking!.tripType == 'return_only' ||
-                    _selectedBooking!.tripType == 'round_trip') ...[
+                if (_editingTripType == 'return_only' ||
+                    _editingTripType == 'round_trip') ...[
                   Text(
                     'ميعاد العودة',
                     style: AppTheme.textTheme.titleMedium?.copyWith(
@@ -597,13 +620,11 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
   }
 
   Widget _buildTripTypeButton(String label, String type) {
-    final isSelected = _selectedBooking?.tripType == type;
+    final isSelected = _editingTripType == type;
     return GestureDetector(
       onTap: () {
         setState(() {
-          if (_selectedBooking != null) {
-            // Update trip type (would need to update entity)
-          }
+          _editingTripType = type;
         });
       },
       child: Container(
@@ -628,14 +649,18 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
 
   Widget _buildTimeChip(String time, bool isDeparture) {
     final currentTime = isDeparture
-        ? _selectedBooking?.departureTime
-        : _selectedBooking?.returnTime;
+        ? _editingDepartureTime
+        : _editingReturnTime;
     final isSelected = currentTime == time;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          // Update time (would need to update entity and save)
+          if (isDeparture) {
+            _editingDepartureTime = time;
+          } else {
+            _editingReturnTime = time;
+          }
         });
       },
       child: Container(

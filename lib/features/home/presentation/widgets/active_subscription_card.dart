@@ -1129,12 +1129,12 @@ class _ActiveSubscriptionCardState
                       ],
                       const SizedBox(height: 16),
 
-                      // Nearest booking date
+                      // Trip Type
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _getNearestBookingDate(),
+                            _getTripTypeLabel(_selectedTripType),
                             style: AppTheme.textTheme.headlineSmall?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -1147,7 +1147,7 @@ class _ActiveSubscriptionCardState
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(
-                              CupertinoIcons.calendar,
+                              CupertinoIcons.arrow_right_arrow_left,
                               color: AppTheme.primaryColor,
                               size: 20,
                             ),
@@ -1165,10 +1165,10 @@ class _ActiveSubscriptionCardState
                             color: AppTheme.primaryColor,
                             size: 20,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'من منطقتك إلى ${_universityName ?? "..."}',
+                              'من منطقتك إلى ${_universityName ?? "الجامعة"}',
                               style: AppTheme.textTheme.bodyLarge?.copyWith(
                                 color: Colors.white,
                               ),
