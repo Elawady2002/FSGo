@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../booking/data/datasources/booking_data_source.dart';
+import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../subscription/domain/entities/subscription_entity.dart';
 import '../../../subscription/domain/entities/subscription_schedule_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -15,8 +16,13 @@ enum SubscriptionCardView { details, calendar, timeSelection }
 
 class ActiveSubscriptionCard extends ConsumerStatefulWidget {
   final SubscriptionEntity subscription;
+  final List<BookingEntity> regularBookings;
 
-  const ActiveSubscriptionCard({super.key, required this.subscription});
+  const ActiveSubscriptionCard({
+    super.key,
+    required this.subscription,
+    this.regularBookings = const [],
+  });
 
   @override
   ConsumerState<ActiveSubscriptionCard> createState() =>
@@ -86,33 +92,51 @@ class _ActiveSubscriptionCardState
     setState(() => _isLoadingSchedules = true);
 
     try {
-      // Fetch bookings from bookings table instead of subscription_schedules
+      final Map<String, SubscriptionScheduleEntity> schedulesMap = {};
+
+      // 1. Fetch subscription bookings from bookings table
       final response = await Supabase.instance.client
           .from('bookings')
           .select()
           .eq('subscription_id', widget.subscription.id!)
           .order('booking_date');
 
-      if (mounted) {
-        final Map<String, SubscriptionScheduleEntity> schedulesMap = {};
-        for (var booking in response) {
-          final bookingDate = DateTime.parse(booking['booking_date'] as String);
-          final dateKey = bookingDate.toIso8601String().split('T')[0];
+      for (var booking in response) {
+        final bookingDate = DateTime.parse(booking['booking_date'] as String);
+        final dateKey = bookingDate.toIso8601String().split('T')[0];
 
-          // Convert booking to SubscriptionScheduleEntity for compatibility
-          schedulesMap[dateKey] = SubscriptionScheduleEntity(
-            id: booking['id'] as String,
-            subscriptionId: booking['subscription_id'] as String,
-            tripDate: bookingDate,
-            tripType: booking['trip_type'] as String,
-            departureTime: booking['departure_time'] as String?,
-            returnTime: booking['return_time'] as String?,
-            createdAt: DateTime.parse(booking['created_at'] as String),
-            updatedAt: booking['updated_at'] != null
-                ? DateTime.parse(booking['updated_at'] as String)
-                : DateTime.parse(booking['created_at'] as String),
-          );
-        }
+        schedulesMap[dateKey] = SubscriptionScheduleEntity(
+          id: booking['id'] as String,
+          subscriptionId: booking['subscription_id'] as String,
+          tripDate: bookingDate,
+          tripType: booking['trip_type'] as String,
+          departureTime: booking['departure_time'] as String?,
+          returnTime: booking['return_time'] as String?,
+          createdAt: DateTime.parse(booking['created_at'] as String),
+          updatedAt: booking['updated_at'] != null
+              ? DateTime.parse(booking['updated_at'] as String)
+              : DateTime.parse(booking['created_at'] as String),
+        );
+      }
+
+      // 2. Add regular bookings from widget.regularBookings
+      for (var booking in widget.regularBookings) {
+        final dateKey = booking.bookingDate.toIso8601String().split('T')[0];
+
+        // Convert BookingEntity to SubscriptionScheduleEntity
+        schedulesMap[dateKey] = SubscriptionScheduleEntity(
+          id: booking.id,
+          subscriptionId: '', // Empty for regular bookings
+          tripDate: booking.bookingDate,
+          tripType: booking.tripType,
+          departureTime: booking.departureTime,
+          returnTime: booking.returnTime,
+          createdAt: booking.createdAt,
+          updatedAt: booking.updatedAt,
+        );
+      }
+
+      if (mounted) {
         setState(() {
           _schedules = schedulesMap;
           _isLoadingSchedules = false;
@@ -609,6 +633,9 @@ class _ActiveSubscriptionCardState
                 isWithinSubscription;
 
             final hasSchedule = _schedules.containsKey(dateKey);
+            final schedule = _schedules[dateKey];
+            final isFromSubscription =
+                schedule?.subscriptionId.isNotEmpty ?? false;
             final isSelected =
                 _selectedDate != null && _isSameDay(date, _selectedDate!);
 
@@ -628,7 +655,11 @@ class _ActiveSubscriptionCardState
               textColor = Colors.black;
               fontWeight = FontWeight.bold;
             } else if (hasSchedule) {
-              backgroundColor = AppTheme.primaryColor;
+              // Different colors for subscription vs regular bookings
+              backgroundColor = isFromSubscription
+                  ? AppTheme
+                        .primaryColor // Yellow for subscription
+                  : Colors.blue.shade400; // Blue for regular bookings
               textColor = Colors.black;
               fontWeight = FontWeight.bold;
             } else if (isStartDate || isEndDate) {

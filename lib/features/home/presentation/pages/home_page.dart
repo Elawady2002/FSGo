@@ -146,9 +146,26 @@ class _HomePageState extends ConsumerState<HomePage> {
                         final activeSubAsync = ref.watch(
                           activeSubscriptionProvider,
                         );
+                        final userBookingsAsync = ref.watch(
+                          userBookingsProvider,
+                        );
+
                         return activeSubAsync.when(
                           data: (subscription) {
                             if (subscription != null) {
+                              // Get upcoming regular bookings (not from subscription)
+                              final upcomingBookings =
+                                  userBookingsAsync.value
+                                      ?.where(
+                                        (b) =>
+                                            b.bookingDate.isAfter(
+                                              DateTime.now(),
+                                            ) &&
+                                            b.subscriptionId == null,
+                                      )
+                                      .toList() ??
+                                  [];
+
                               // User has active subscription
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,11 +174,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   const SizedBox(height: 16),
                                   ActiveSubscriptionCard(
                                     subscription: subscription,
+                                    regularBookings: upcomingBookings,
                                   ),
-                                  const SizedBox(height: 32),
-                                  _buildSectionTitle('مسار الرحلة'),
-                                  const SizedBox(height: 16),
-                                  _buildSubscriptionRouteInfoCard(),
                                   const SizedBox(height: 32),
                                 ],
                               );
@@ -545,35 +559,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSubscriptionRouteInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.dividerColor),
-      ),
-      child: Column(
-        children: [
-          _buildLocationRow(
-            icon: CupertinoIcons.circle_fill,
-            iconColor: AppTheme.primaryColor,
-            label: 'من',
-            value: 'منطقتك',
-            isLast: false,
-          ),
-          _buildLocationRow(
-            icon: CupertinoIcons.location_solid,
-            iconColor: Colors.black,
-            label: 'إلى',
-            value: 'الجامعة',
-            isLast: true,
-          ),
-        ],
       ),
     );
   }
