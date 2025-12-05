@@ -633,7 +633,7 @@ class _ActiveSubscriptionCardState
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'تاريخ البداية',
+                          'تاريخ الرحلة',
                           style: AppTheme.textTheme.bodySmall?.copyWith(
                             color: Colors.white70,
                           ),
