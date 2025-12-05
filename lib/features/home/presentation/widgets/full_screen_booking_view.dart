@@ -296,7 +296,7 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        
+
         if (_currentView == FullScreenView.timeEditor) {
           setState(() {
             _currentView = FullScreenView.bookingList;
@@ -511,16 +511,6 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
         ),
       ],
     );
-  }
-}
-
-              ],
-            ),
-          ),
-        )
-        .animate()
-        .fadeIn(delay: (50 * (date.day % 10)).ms)
-        .slideX(begin: 0.2, end: 0);
   }
 }
 
