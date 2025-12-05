@@ -363,6 +363,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                         Duration(days: planType.durationDays),
                       );
 
+                      // Invalidate providers to refresh home page
+                      ref.invalidate(userBookingsProvider);
+                      ref.invalidate(upcomingBookingProvider);
+                      ref.invalidate(activeSubscriptionProvider);
+
                       Navigator.push(
                         context,
                         CupertinoPageRoute(
@@ -375,6 +380,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                         ),
                       );
                     } else {
+                      // Invalidate providers to refresh home page
+                      ref.invalidate(userBookingsProvider);
+                      ref.invalidate(upcomingBookingProvider);
+
                       // Navigate to booking confirmation page
                       Navigator.push(
                         context,
