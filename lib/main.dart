@@ -7,11 +7,14 @@ import 'core/config/supabase_config.dart';
 import 'core/widgets/auth_wrapper.dart';
 import 'dart:async';
 import 'dart:developer';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      // Initialize date formatting for Arabic
+      await initializeDateFormatting('ar', null);
 
       try {
         // Load environment variables

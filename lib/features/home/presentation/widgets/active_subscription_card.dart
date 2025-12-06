@@ -31,8 +31,8 @@ class ActiveSubscriptionCard extends ConsumerStatefulWidget {
 class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
     with SingleTickerProviderStateMixin {
   DateTime? _selectedDate;
-  String? _selectedDepartureTime;
-  String? _selectedReturnTime;
+  // String? _selectedDepartureTime; // Removed as unused in new design
+  // String? _selectedReturnTime;    // Removed as unused in new design
   // String _selectedTripType = 'round_trip'; // Removed unused field
   String? _universityName;
   Map<String, SubscriptionScheduleEntity> _schedules = {};
@@ -172,8 +172,8 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
         _selectedDate = date;
         if (schedule != null) {
           // _selectedTripType = schedule.tripType;
-          _selectedDepartureTime = schedule.departureTime;
-          _selectedReturnTime = schedule.returnTime;
+          // _selectedDepartureTime = schedule.departureTime;
+          // _selectedReturnTime = schedule.returnTime;
         }
       });
     }
@@ -200,8 +200,8 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                 final schedule = _schedules[dateKey];
                 if (schedule != null) {
                   // _selectedTripType = schedule.tripType;
-                  _selectedDepartureTime = schedule.departureTime;
-                  _selectedReturnTime = schedule.returnTime;
+                  // _selectedDepartureTime = schedule.departureTime;
+                  // _selectedReturnTime = schedule.returnTime;
                 }
               });
             },
@@ -211,8 +211,8 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
               setState(() {
                 _selectedDate = booking.tripDate;
                 // _selectedTripType = booking.tripType;
-                _selectedDepartureTime = booking.departureTime;
-                _selectedReturnTime = booking.returnTime;
+                // _selectedDepartureTime = booking.departureTime;
+                // _selectedReturnTime = booking.returnTime;
               });
             },
           );
@@ -255,39 +255,16 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: _buildDetailsContent(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailsContent() {
-    return GestureDetector(
-      onTap: _openFullScreenView,
       onVerticalDragStart: (_) => _playSound(),
       onVerticalDragUpdate: (details) {
         setState(() {
-          // Add resistance
-          _dragOffsetY += details.primaryDelta! * 0.5;
+          // Add resistance and allow dragging down (positive delta)
+          _dragOffsetY += details.primaryDelta! * 0.6;
         });
       },
       onVerticalDragEnd: (details) {
-        // If dragged up significantly or flicked up
-        if (_dragOffsetY < -80 || details.primaryVelocity! < -300) {
+        // Trigger on Drag Down (positive offset/velocity)
+        if (_dragOffsetY > 80 || details.primaryVelocity! > 300) {
           _openFullScreenView();
           _runSpringBack();
         } else {
@@ -296,147 +273,145 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
       },
       child: Transform.translate(
         offset: Offset(0, _dragOffsetY),
-        child: Padding(
-          key: const ValueKey('details'),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: _buildDetailsContent(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsContent() {
+    return Padding(
+      key: const ValueKey('details'),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Top Row: Badge (Right) and Back Arrow (Left) in RTL
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Badge (First -> Right in RTL)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCFF00), // Lime green
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'قريباً',
+                  style: AppTheme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              // Back Arrow (Second -> Left in RTL)
+            ],
+          ).animate().fadeIn().slideX(begin: -0.2, end: 0),
+
+          const SizedBox(height: 40), // Fixed spacing instead of Spacer
+          // Dates Row
+          // In RTL: First child is Right, Second child is Left.
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Center the columns
+            children: [
+              // Start Date (Right side in RTL)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'قريباً',
-                      style: AppTheme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
+                  Text(
+                    'تاريخ البداية',
+                    style: AppTheme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white70,
+                      fontSize: 14, // Increased from 12
                     ),
                   ),
-                ],
-              ).animate().fadeIn().slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 24),
-              // Show selected booking data or subscription info
-              if (_selectedDate != null) ...[
-                // Times - Moved up as Date header is removed
-                if (_selectedDepartureTime != null ||
-                    _selectedReturnTime != null) ...[
-                  Row(
-                    children: [
-                      if (_selectedDepartureTime != null) ...[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'ميعاد الذهاب',
-                                style: AppTheme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _selectedDepartureTime!,
-                                style: AppTheme.textTheme.titleLarge?.copyWith(
-                                  color: AppTheme.primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      if (_selectedReturnTime != null) ...[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'ميعاد العودة',
-                                style: AppTheme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _selectedReturnTime!,
-                                style: AppTheme.textTheme.titleLarge?.copyWith(
-                                  color: AppTheme.primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ],
-              const SizedBox(height: 24),
-              // Start and End dates side by side
-              Row(
-                children: [
-                  // Trip Date
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'تاريخ الرحلة',
-                          style: AppTheme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('d MMMM', 'ar').format(
-                            _selectedDate ?? widget.subscription.startDate,
-                          ),
-                          style: AppTheme.textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 8),
+                  Text(
+                    _formatDateSafe(widget.subscription.startDate),
+                    style: AppTheme.textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20, // Increased size
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              const Divider(color: Colors.white24),
-              const SizedBox(height: 16),
-              // Route Info with green arrow icon
-              Row(
+
+              // End Date (Left side in RTL)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
-                  const Icon(
-                    CupertinoIcons.arrow_right,
-                    color: AppTheme.primaryColor,
-                    size: 20,
+                  Text(
+                    'نوع الرحلة',
+                    style: AppTheme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'من منطقتك إلى ${_universityName ?? "الجامعة"}',
-                      style: AppTheme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _getTripTypeLabel(widget.subscription.tripType),
+                    style: AppTheme.textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+              ),
             ],
           ),
-        ),
+
+          const SizedBox(height: 32),
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 16),
+
+          // Route Info
+          // In RTL: First child is Right, Second is Left.
+          Row(
+            children: [
+              Icon(
+                CupertinoIcons.location_fill,
+                color: const Color(0xFFCCFF00), // Lime green
+                size: 18,
+              ),
+              const SizedBox(width: 12),
+              // Text (Left of dot)
+              Expanded(
+                child: Text(
+                  'من منطقتك إلى ${_universityName ?? "الجامعة"}',
+                  style: AppTheme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+        ],
       ),
     );
   }
@@ -453,5 +428,27 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
         _dragOffsetY = _springAnimation.value;
       });
     });
+  }
+
+  String _getTripTypeLabel(String tripType) {
+    switch (tripType) {
+      case 'departure_only':
+        return 'ذهاب فقط';
+      case 'return_only':
+        return 'عودة فقط';
+      case 'round_trip':
+        return 'ذهاب وعودة';
+      default:
+        return tripType;
+    }
+  }
+
+  String _formatDateSafe(DateTime date) {
+    try {
+      return DateFormat('d MMMM', 'ar').format(date);
+    } catch (e) {
+      // Fallback if locale data is missing
+      return "${date.day}/${date.month}";
+    }
   }
 }

@@ -85,6 +85,7 @@ class SubscriptionEntity extends Equatable {
   final DateTime createdAt;
   final bool allowLocationChange;
   final bool isInstallment;
+  final String tripType;
   // We don't include the list of installments here to keep the entity lightweight
   // Installments should be fetched separately when needed
 
@@ -101,6 +102,7 @@ class SubscriptionEntity extends Equatable {
     required this.createdAt,
     this.allowLocationChange = false,
     this.isInstallment = false,
+    this.tripType = 'round_trip', // Default to round_trip
   });
 
   @override
@@ -116,6 +118,7 @@ class SubscriptionEntity extends Equatable {
     createdAt,
     allowLocationChange,
     isInstallment,
+    tripType,
   ];
 
   /// Check if subscription is active

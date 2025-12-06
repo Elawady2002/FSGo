@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Added
+import 'package:supabase_flutter/supabase_flutter.dart'; // Added
 import '../../../../core/theme/app_theme.dart';
 import '../../../subscription/domain/entities/subscription_schedule_entity.dart';
 import '../../../subscription/domain/entities/subscription_entity.dart';
+import '../../../auth/presentation/providers/auth_provider.dart'; // Added
 
 enum FullScreenView { bookingList, timeEditor }
 
-class FullScreenBookingView extends StatefulWidget {
+class FullScreenBookingView extends ConsumerStatefulWidget {
   final DateTime initialDate;
   final Map<String, SubscriptionScheduleEntity> schedules;
   final SubscriptionEntity subscription;
@@ -25,10 +28,11 @@ class FullScreenBookingView extends StatefulWidget {
   });
 
   @override
-  State<FullScreenBookingView> createState() => _FullScreenBookingViewState();
+  ConsumerState<FullScreenBookingView> createState() =>
+      _FullScreenBookingViewState();
 }
 
-class _FullScreenBookingViewState extends State<FullScreenBookingView>
+class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
     with SingleTickerProviderStateMixin {
   FullScreenView _currentView = FullScreenView.bookingList;
   SubscriptionScheduleEntity? _selectedBooking;
@@ -41,6 +45,7 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -66,6 +71,83 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
     _animationController.forward();
   }
 
+  // Helper to normalize time strings (e.g. "07:30:00" -> "7:30 AM")
+  String? _normalizeTime(String? dbTime) {
+    if (dbTime == null) return null;
+    try {
+      // Try parsing as HH:mm:ss or HH:mm
+      final parts = dbTime.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      final dt = DateTime(2022, 1, 1, hour, minute);
+      // Format to "h:mm a" to match chips (e.g. "7:30 AM")
+      return DateFormat('h:mm a', 'en').format(dt);
+    } catch (e) {
+      return dbTime; // Fallback
+    }
+  }
+
+  // Helper to convert UI time to DB format (e.g. "7:30 AM" -> "07:30:00")
+  String? _toDbTime(String? uiTime) {
+    if (uiTime == null) return null;
+    try {
+      final dt = DateFormat('h:mm a', 'en').parse(uiTime);
+      return DateFormat('HH:mm:ss').format(dt);
+    } catch (e) {
+      return uiTime;
+    }
+  }
+
+  Future<void> _saveBooking() async {
+    final user = ref.read(authProvider);
+    if (user == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final bookingDate = _selectedDate.toIso8601String().split('T')[0];
+
+      if (_selectedBooking == null) {
+        // Insert new booking
+        await supabase.from('bookings').insert({
+          'user_id': user.id,
+          'subscription_id': widget.subscription.id,
+          'booking_date': bookingDate,
+          'trip_type': _editingTripType,
+          'departure_time': _toDbTime(_editingDepartureTime),
+          'return_time': _toDbTime(_editingReturnTime),
+          'status': 'confirmed',
+          'payment_status': 'paid', // Covered by subscription
+          // 'schedule_id': ..., // Ideally link to schedule if strictly required, but often optional for ad-hoc
+        });
+      } else {
+        // Update existing booking
+        await supabase
+            .from('bookings')
+            .update({
+              'trip_type': _editingTripType,
+              'departure_time': _toDbTime(_editingDepartureTime),
+              'return_time': _toDbTime(_editingReturnTime),
+            })
+            .eq('id', _selectedBooking!.id);
+      }
+
+      if (mounted) {
+        // Refresh parent by popping. The parent usually refetches or we can rely on real-time if enabled.
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      debugPrint('Error saving booking: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('حدث خطأ: $e')));
+      }
+    }
+  }
+
   @override
   void dispose() {
     _dateScrollController.dispose();
@@ -78,59 +160,21 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
   }
 
   Widget _buildCalendarGrid() {
-    final daysInMonth = DateUtils.getDaysInMonth(
-      _currentMonth.year,
-      _currentMonth.month,
-    );
-    final firstDayOfMonth = DateTime(
-      _currentMonth.year,
-      _currentMonth.month,
-      1,
-    );
-    final offset = firstDayOfMonth.weekday % 7;
-
     return Column(
       children: [
-        // Month Navigation
+        // Month Header (No arrows)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.center, // Center the month name
             children: [
-              IconButton(
-                icon: const Icon(
-                  CupertinoIcons.chevron_right,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _currentMonth = DateTime(
-                      _currentMonth.year,
-                      _currentMonth.month - 1,
-                    );
-                  });
-                },
-              ),
               Text(
                 DateFormat('MMMM yyyy', 'ar').format(_currentMonth),
                 style: AppTheme.textTheme.titleMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
-              ),
-              IconButton(
-                icon: const Icon(
-                  CupertinoIcons.chevron_left,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _currentMonth = DateTime(
-                      _currentMonth.year,
-                      _currentMonth.month + 1,
-                    );
-                  });
-                },
               ),
             ],
           ),
@@ -157,121 +201,155 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
         ).animate().fadeIn(),
         const SizedBox(height: 16),
 
-        // Calendar Grid
+        // Horizontal Calendar PageView
         Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 0.75,
+          child: PageView.builder(
+            controller: PageController(
+              initialPage:
+                  12 * 100, // Start in middle to allow going back/forward
             ),
-            itemCount: offset + daysInMonth,
+            onPageChanged: (index) {
+              // Calculate difference from initial page
+              final difference = index - (12 * 100);
+              setState(() {
+                _currentMonth = DateTime(
+                  widget.initialDate.year,
+                  widget.initialDate.month + difference,
+                );
+              });
+            },
             itemBuilder: (context, index) {
-              if (index < offset) return const SizedBox();
-
-              final day = index - offset + 1;
-              final date = DateTime(
-                _currentMonth.year,
-                _currentMonth.month,
-                day,
+              final monthOffset = index - (12 * 100);
+              final monthDate = DateTime(
+                widget.initialDate.year,
+                widget.initialDate.month + monthOffset,
               );
-              final dateKey = date.toIso8601String().split('T')[0];
 
-              final isToday = _isSameDay(date, DateTime.now());
-              final isWeekend = date.weekday == DateTime.friday;
-
-              // Check if date is within subscription range
-              final isWithinSubscription =
-                  !date.isBefore(widget.subscription.startDate) &&
-                  !date.isAfter(widget.subscription.endDate);
-
-              final isAvailable =
-                  date.isAfter(
-                    DateTime.now().subtract(const Duration(days: 1)),
-                  ) &&
-                  !isWeekend &&
-                  isWithinSubscription;
-
-              final hasSchedule = widget.schedules.containsKey(dateKey);
-              final isSelected = _isSameDay(date, _selectedDate);
-
-              final isStartDate = _isSameDay(
-                date,
-                widget.subscription.startDate,
+              final daysInMonth = DateUtils.getDaysInMonth(
+                monthDate.year,
+                monthDate.month,
               );
-              final isEndDate = _isSameDay(date, widget.subscription.endDate);
+              final firstDayOfMonth = DateTime(
+                monthDate.year,
+                monthDate.month,
+                1,
+              );
+              final offset = firstDayOfMonth.weekday % 7;
 
-              // Determine styles based on state
-              // Priority: Selected > Schedule > Start/End > Default
-              Color? backgroundColor;
-              BoxBorder? border;
-              Color textColor = Colors.white;
-              FontWeight fontWeight = FontWeight.normal;
+              return GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                physics:
+                    const NeverScrollableScrollPhysics(), // Disable vertical scroll
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: offset + daysInMonth,
+                itemBuilder: (context, index) {
+                  if (index < offset) return const SizedBox();
 
-              if (isSelected) {
-                backgroundColor = AppTheme.primaryColor;
-                textColor = Colors.black;
-                fontWeight = FontWeight.bold;
-              } else if (hasSchedule) {
-                // All bookings are yellow
-                backgroundColor = AppTheme.primaryColor;
-                textColor = Colors.black;
-                fontWeight = FontWeight.bold;
-              } else if (isStartDate || isEndDate) {
-                backgroundColor = Colors.transparent;
-                border = Border.all(color: AppTheme.primaryColor, width: 2);
-                textColor = AppTheme.primaryColor;
-                fontWeight = FontWeight.bold;
-              } else {
-                backgroundColor = Colors.transparent;
-                textColor = isAvailable ? Colors.white : Colors.white24;
-              }
+                  final day = index - offset + 1;
+                  final date = DateTime(monthDate.year, monthDate.month, day);
+                  final dateKey = date.toIso8601String().split('T')[0];
 
-              return GestureDetector(
-                onTap: isAvailable
-                    ? () {
-                        setState(() {
-                          _selectedDate = date;
-                        });
-                        widget.onDateSelected(date);
-                      }
-                    : null,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: backgroundColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: border,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '$day',
-                          style: AppTheme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: fontWeight,
-                            color: textColor,
+                  final isToday = _isSameDay(date, DateTime.now());
+                  final isWeekend = date.weekday == DateTime.friday;
+
+                  // Check if date is within subscription range
+                  final isWithinSubscription =
+                      !date.isBefore(widget.subscription.startDate) &&
+                      !date.isAfter(widget.subscription.endDate);
+
+                  final isAvailable =
+                      date.isAfter(
+                        DateTime.now().subtract(const Duration(days: 1)),
+                      ) &&
+                      !isWeekend &&
+                      isWithinSubscription;
+
+                  final hasSchedule = widget.schedules.containsKey(dateKey);
+                  final isSelected = _isSameDay(date, _selectedDate);
+
+                  final isStartDate = _isSameDay(
+                    date,
+                    widget.subscription.startDate,
+                  );
+                  final isEndDate = _isSameDay(
+                    date,
+                    widget.subscription.endDate,
+                  );
+
+                  // Determine styles based on state
+                  Color? backgroundColor;
+                  BoxBorder? border;
+                  Color textColor = Colors.white;
+                  FontWeight fontWeight = FontWeight.normal;
+
+                  if (isSelected) {
+                    backgroundColor = AppTheme.primaryColor;
+                    textColor = Colors.black;
+                    fontWeight = FontWeight.bold;
+                  } else if (hasSchedule) {
+                    backgroundColor = AppTheme.primaryColor;
+                    textColor = Colors.black;
+                    fontWeight = FontWeight.bold;
+                  } else if (isStartDate || isEndDate) {
+                    backgroundColor = Colors.transparent;
+                    border = Border.all(color: AppTheme.primaryColor, width: 2);
+                    textColor = AppTheme.primaryColor;
+                    fontWeight = FontWeight.bold;
+                  } else {
+                    backgroundColor = Colors.transparent;
+                    textColor = isAvailable ? Colors.white : Colors.white24;
+                  }
+
+                  return GestureDetector(
+                    onTap: isAvailable
+                        ? () {
+                            setState(() {
+                              _selectedDate = date;
+                            });
+                            widget.onDateSelected(date);
+                          }
+                        : null,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: border,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '$day',
+                              style: AppTheme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: fontWeight,
+                                color: textColor,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                        // Today Indicator (Red Dot)
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isToday
+                                ? const Color(0xFFFF3B30)
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    // Today Indicator (Red Dot)
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: isToday
-                            ? const Color(0xFFFF3B30)
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           ),
@@ -374,12 +452,12 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
+                    color: Colors.transparent, // Removed background
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     CupertinoIcons.add,
-                    color: Colors.black,
+                    color: Colors.white,
                     size: 24,
                   ),
                 ),
@@ -389,7 +467,7 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
         ),
 
         // Full month calendar
-        SizedBox(height: 380, child: _buildCalendarGrid()),
+        SizedBox(height: 450, child: _buildCalendarGrid()),
 
         const SizedBox(height: 16),
 
@@ -427,8 +505,12 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
                         setState(() {
                           _selectedBooking = bookings[index];
                           _editingTripType = bookings[index].tripType;
-                          _editingDepartureTime = bookings[index].departureTime;
-                          _editingReturnTime = bookings[index].returnTime;
+                          _editingDepartureTime = _normalizeTime(
+                            bookings[index].departureTime,
+                          );
+                          _editingReturnTime = _normalizeTime(
+                            bookings[index].returnTime,
+                          );
                           _currentView = FullScreenView.timeEditor;
                         });
                       },
@@ -592,26 +674,38 @@ class _FullScreenBookingViewState extends State<FullScreenBookingView>
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _currentView = FullScreenView.bookingList;
-                });
-              },
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      _saveBooking();
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
+                disabledBackgroundColor: AppTheme.primaryColor.withValues(
+                  alpha: 0.5,
+                ),
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
-                'تأكيد الجدول',
-                style: AppTheme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                      ),
+                    )
+                  : Text(
+                      'تأكيد الجدول',
+                      style: AppTheme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
             ),
           ),
         ),

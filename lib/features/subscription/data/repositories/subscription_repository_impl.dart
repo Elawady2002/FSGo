@@ -126,6 +126,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         startDate: DateTime.parse(data['subscription_start_date'] as String),
         endDate: DateTime.parse(data['subscription_end_date'] as String),
         createdAt: DateTime.parse(data['subscription_start_date'] as String),
+        tripType: data['trip_type'] as String? ?? 'round_trip',
       );
 
       return Right(subscription);
@@ -163,6 +164,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
           createdAt: DateTime.parse(data['created_at'] as String),
           allowLocationChange: data['allow_location_change'] as bool? ?? false,
           isInstallment: data['is_installment'] as bool? ?? false,
+          tripType: data['trip_type'] as String? ?? 'round_trip',
         );
       }).toList();
 
