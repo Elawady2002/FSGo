@@ -73,19 +73,13 @@ class _CalendarPlanCardState extends ConsumerState<CalendarPlanCard> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1A1A1A), // Dark charcoal
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: widget.isPopular 
-              ? widget.accentColor.withValues(alpha: 0.5) 
-              : Colors.black.withValues(alpha: 0.05),
-          width: widget.isPopular ? 2 : 1.5,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: widget.isPopular ? 0.08 : 0.04),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),

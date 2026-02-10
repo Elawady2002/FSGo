@@ -1,12 +1,19 @@
 import 'package:flutter/cupertino.dart';
-import '../../../../core/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/custom_button.dart';
+
 import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../payment/presentation/pages/payment_page.dart';
 
+import '../providers/wallet_provider.dart';
+import '../widgets/digital_ticket.dart';
+import '../widgets/top_up_sheet.dart';
 import '../widgets/transaction_details_sheet.dart';
 
 class WalletPage extends ConsumerWidget {
@@ -14,6 +21,7 @@ class WalletPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final walletState = ref.watch(walletProvider);
     final bookingsAsync = ref.watch(userBookingsProvider);
     final subscriptionsAsync = ref.watch(userSubscriptionsProvider);
 
@@ -38,6 +46,7 @@ class WalletPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           // Invalidate providers to trigger refresh
+          await ref.read(walletProvider.notifier).refresh();
           ref.invalidate(userBookingsProvider);
           ref.invalidate(userSubscriptionsProvider);
           // Wait for the providers to refresh
@@ -83,31 +92,54 @@ class WalletPage extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          '150.00',
-                          style: AppTheme.textTheme.displayMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    walletState.isLoading
+                        ? const CupertinoActivityIndicator(color: Colors.white)
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                walletState.balance.toStringAsFixed(2),
+                                style: AppTheme.textTheme.displayMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'ج.م',
+                                style: AppTheme.textTheme.titleMedium?.copyWith(
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'ج.م',
-                          style: AppTheme.textTheme.titleMedium?.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
                     const SizedBox(height: 24),
                     CustomButton(
                       text: 'شحن الرصيد',
-                      onPressed: () {},
+                      onPressed: () async {
+                        final result = await showModalBottomSheet<Map<String, String>>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const TopUpSheet(),
+                        );
+
+                        if (result != null && context.mounted) {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (_) => PaymentPage(
+                                planName: 'شحن الرصيد',
+                                amount: result['amount']!,
+                                isSubscription: false,
+                                selectedMethod: result['method'],
+                              ),
+                            ),
+                          );
+                        }
+                      },
                       backgroundColor: AppTheme.primaryColor,
                       textColor: Colors.black,
                     ),
@@ -179,13 +211,26 @@ class WalletPage extends ConsumerWidget {
                             const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final transaction = transactions[index];
-                          return _buildTransactionItem(
-                            context,
-                            transaction.title,
-                            _formatDate(transaction.date),
-                            '- ${transaction.amount} ج.م',
-                            false,
-                            transaction.originalObject,
+                          return DigitalTicket(
+                            title: transaction.title,
+                            date: transaction.date,
+                            amount: transaction.amount,
+                            status: 'مدفوع',
+                            type: transaction.type == _TransactionType.booking
+                                ? 'booking'
+                                : 'subscription',
+                            onTap: () {
+                              if (transaction.originalObject is BookingEntity) {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => TransactionDetailsSheet(
+                                    booking: transaction.originalObject,
+                                  ),
+                                );
+                              }
+                            },
                           );
                         },
                       );

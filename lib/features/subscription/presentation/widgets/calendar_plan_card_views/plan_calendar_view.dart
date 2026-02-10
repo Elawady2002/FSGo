@@ -48,13 +48,10 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
             children: [
               GestureDetector(
                 onTap: widget.onBack,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(CupertinoIcons.chevron_right, size: 20),
+                child: const Icon(
+                  CupertinoIcons.chevron_right,
+                  size: 24,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(width: 16),
@@ -63,6 +60,7 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
                   'اختار يوم الرحلة',
                   style: AppTheme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -70,7 +68,7 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
           ),
         ),
 
-        const Divider(height: 1),
+        const Divider(height: 1, color: Colors.white24),
 
         // Calendar Grid
         Expanded(child: _buildCalendarGrid()),
@@ -168,7 +166,7 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
                             child: Text(
                               day,
                               style: AppTheme.textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textSecondary,
+                                color: Colors.white70,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -226,14 +224,14 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: isToday
-                                    ? widget.accentColor.withValues(alpha: 0.15)
+                                    ? AppTheme.primaryColor.withValues(alpha: 0.2)
                                     : (isAvailable
-                                          ? Colors.grey.shade50
+                                          ? Colors.white.withValues(alpha: 0.05)
                                           : Colors.transparent),
                                 borderRadius: BorderRadius.circular(12),
                                 border: isToday
                                     ? Border.all(
-                                        color: widget.accentColor,
+                                        color: AppTheme.primaryColor,
                                         width: 2,
                                       )
                                     : null,
@@ -248,9 +246,9 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
                                             : FontWeight.normal,
                                         color: isAvailable
                                             ? (isToday
-                                                  ? widget.accentColor
-                                                  : Colors.black)
-                                            : AppTheme.textTertiary,
+                                                  ? AppTheme.primaryColor
+                                                  : Colors.white)
+                                            : Colors.white30,
                                       ),
                                 ),
                               ),

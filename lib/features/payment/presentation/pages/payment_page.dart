@@ -7,7 +7,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/widgets/ios_components.dart';
-import '../../../../core/widgets/ticket_card.dart';
 import '../../../../core/providers/storage_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../booking/presentation/providers/booking_provider.dart';
@@ -21,6 +20,7 @@ class PaymentPage extends ConsumerStatefulWidget {
   final bool isSubscription;
   final bool isInstallment;
   final SubscriptionScheduleParams? scheduleParams;
+  final String? selectedMethod;
 
   const PaymentPage({
     super.key,
@@ -29,6 +29,7 @@ class PaymentPage extends ConsumerStatefulWidget {
     this.isSubscription = false,
     this.isInstallment = false,
     this.scheduleParams,
+    this.selectedMethod,
   });
 
   @override
@@ -42,7 +43,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    // Pre-select tab based on selectedMethod
+    final initialIndex = widget.selectedMethod == 'Vodafone Cash' ? 1 : 0;
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: initialIndex,
+    );
   }
 
   @override
@@ -76,88 +83,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
               bottom: false,
               child: Column(
                 children: [
-                  // Order Summary
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: TicketCard(
-                      color: Colors.white,
-                      cornerRadius: 24,
-                      punchRadius: 10,
-                      punchY: 0.5,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Cost Tag (Left side)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF7FEE7), // Very light lime green
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${widget.amount} ج.م',
-                                style: AppTheme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ),
-
-                            // Plan Info (Right side)
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    widget.isSubscription ? widget.planName : 'سعر الرحلة',
-                                    style: AppTheme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 32,
-                                      letterSpacing: -1,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        widget.isSubscription
-                                            ? 'حجز باقة طلاب'
-                                            : 'حجز رحلة',
-                                        style: AppTheme.textTheme.bodyMedium?.copyWith(
-                                          color: AppTheme.textSecondary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        width: 10,
-                                        height: 10,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF84CC16),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 600.ms)
-                        .slideX(begin: 0.2, end: 0, curve: Curves.easeOutCubic)
-                        .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
-                  ),
 
                   // Payment Methods Selector
                   Container(

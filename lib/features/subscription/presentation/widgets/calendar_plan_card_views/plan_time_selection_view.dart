@@ -76,13 +76,10 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
             children: [
               GestureDetector(
                 onTap: widget.onBack,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(CupertinoIcons.chevron_right, size: 20),
+                child: const Icon(
+                  CupertinoIcons.chevron_right,
+                  size: 24,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(width: 16),
@@ -94,12 +91,13 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                       'اختار المواعيد',
                       style: AppTheme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     Text(
                       DateFormat('EEEE، d MMMM', 'ar').format(widget.selectedDate),
                       style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
+                        color: Colors.white70,
                       ),
                     ),
                   ],
@@ -109,7 +107,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
           ),
         ),
 
-        const Divider(height: 1),
+        const Divider(height: 1, color: Colors.white24),
 
         // Time Selection Content
         Expanded(
@@ -123,6 +121,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                   'نوع الرحلة',
                   style: AppTheme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -135,6 +134,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                     'ميعاد الذهاب',
                     style: AppTheme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -160,6 +160,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                     'ميعاد العودة',
                     style: AppTheme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -201,7 +202,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                     widget.onConfirm(params);
                   }
                 : null,
-            backgroundColor: widget.accentColor,
+            backgroundColor: AppTheme.primaryColor,
             textColor: Colors.black,
           ),
         ),
@@ -219,7 +220,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -248,7 +249,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.transparent,
+                color: isSelected ? AppTheme.primaryColor : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
@@ -264,7 +265,7 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                   type['label'] as String,
                   textAlign: TextAlign.center,
                   style: AppTheme.textTheme.bodyMedium?.copyWith(
-                    color: isSelected ? Colors.black : AppTheme.textSecondary,
+                    color: isSelected ? Colors.black : Colors.white70,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
                 ),
@@ -295,16 +296,16 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? widget.accentColor : Colors.grey.shade100,
+                color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: isSelected
-                    ? Border.all(color: widget.accentColor, width: 2)
+                    ? Border.all(color: AppTheme.primaryColor, width: 2)
                     : Border.all(color: Colors.transparent, width: 2),
               ),
               child: Text(
                 time,
                 style: TextStyle(
-                  color: isSelected ? Colors.black : AppTheme.textPrimary,
+                  color: isSelected ? Colors.black : Colors.white70,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),

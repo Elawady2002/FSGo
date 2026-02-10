@@ -47,6 +47,7 @@ class PlanDetailsView extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                       fontSize: 32,
                       letterSpacing: -1,
+                      color: Colors.white,
                     ),
                   ),
                   if (isPopular)
@@ -56,15 +57,8 @@ class PlanDetailsView extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: accentColor,
+                        color: AppTheme.primaryColor, // Lime green
                         borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accentColor.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
                       child: const Text(
                         'الأكثر توفيراً',
@@ -85,7 +79,7 @@ class PlanDetailsView extends StatelessWidget {
                     price,
                     style: AppTheme.textTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: Colors.black,
+                      color: Colors.white,
                       fontSize: 64,
                       height: 0.9,
                     ),
@@ -100,14 +94,14 @@ class PlanDetailsView extends StatelessWidget {
                           'ج.م',
                           style: AppTheme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w900,
-                            color: Colors.black,
+                            color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
                         Text(
                           period,
                           style: AppTheme.textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
+                            color: Colors.white70,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -118,20 +112,10 @@ class PlanDetailsView extends StatelessWidget {
                   // Calendar Icon Button
                   GestureDetector(
                     onTap: onCalendarTap,
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.black.withValues(alpha: 0.05),
-                        ),
-                      ),
-                      child: Icon(
-                        CupertinoIcons.calendar,
-                        color: Colors.black87,
-                        size: 26,
-                      ),
+                    child: Icon(
+                      CupertinoIcons.calendar,
+                      color: AppTheme.primaryColor,
+                      size: 28,
                     ),
                   ),
                 ],
@@ -140,7 +124,7 @@ class PlanDetailsView extends StatelessWidget {
           ),
         ),
 
-        const Divider(height: 1),
+        const Divider(height: 1, color: Colors.white24),
 
         // Features List
         Expanded(
@@ -155,16 +139,15 @@ class PlanDetailsView extends StatelessWidget {
                 children: [
                   Icon(
                     CupertinoIcons.checkmark_alt,
-                    color: isPopular ? accentColor : Colors.black,
+                    color: AppTheme.primaryColor,
                     size: 20,
-                    // Use a fallback icon if checkmark is not available or just to be safe
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       features[index],
                       style: AppTheme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.black87,
+                        color: Colors.white70,
                         height: 1.2,
                       ),
                     ),
@@ -181,9 +164,8 @@ class PlanDetailsView extends StatelessWidget {
           child: CustomButton(
             text: 'اشترك الآن',
             onPressed: onSubscribeTap,
-            backgroundColor: isPopular ? accentColor : Colors.black,
+            backgroundColor: AppTheme.primaryColor,
             textColor: Colors.black,
-            height: 60,
           ),
         ),
       ],

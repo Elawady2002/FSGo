@@ -5,6 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/ios_components.dart';
+import '../../../../core/widgets/insufficient_balance_dialog.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/presentation/providers/wallet_provider.dart';
+import '../../../profile/presentation/widgets/digital_ticket.dart';
 import '../../domain/entities/trip_type.dart';
 import '../providers/booking_provider.dart';
 import '../../../payment/presentation/pages/payment_page.dart';
@@ -42,14 +46,10 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                     onTap: () => Navigator.pop(context),
                     child: Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: AppTheme.floatingShadow,
-                      ),
                       child: const Icon(
                         CupertinoIcons.chevron_right,
                         color: Colors.black,
+                        size: 28,
                       ),
                     ),
                   ),
@@ -110,21 +110,121 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 ],
               ),
               child: IOSButton(
-                text: 'ادفع',
+                text: 'احجز الآن',
                 onPressed:
                     bookingNotifier.isBookingComplete &&
                         bookingNotifier.isSameDayBookingAllowed
-                    ? () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (_) => PaymentPage(
-                              planName: bookingState.tripType.displayName,
-                              amount: bookingState.tripType.price
-                                  .toStringAsFixed(0),
+                    ? () async {
+                        final user = ref.read(authProvider).value;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('يرجى تسجيل الدخول أولاً'),
                             ),
-                          ),
+                          );
+                          return;
+                        }
+
+                        final amount = bookingState.tripType.price;
+                        final walletState = ref.read(walletProvider);
+
+                        // Check wallet balance
+                        if (walletState.balance < amount) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => InsufficientBalanceDialog(
+                              currentBalance: walletState.balance,
+                              requiredAmount: amount,
+                            ),
+                          );
+                          return;
+                        }
+
+                        // Deduct from wallet
+                        final success = await ref
+                            .read(walletProvider.notifier)
+                            .deductAmount(
+                          amount,
+                          'حجز رحلة - ${bookingState.tripType.displayName}',
                         );
+
+                        if (!success) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('حدث خطأ أثناء خصم المبلغ'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        // Create booking
+                        final repository = ref.read(bookingRepositoryProvider);
+                        final errorMessage = await ref
+                            .read(bookingStateProvider.notifier)
+                            .createBooking(
+                          repository,
+                          paymentProofImage: null,
+                          transferNumber: null,
+                        );
+
+                        if (errorMessage == null) {
+                          if (!context.mounted) return;
+
+                          // Show digital ticket
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  DigitalTicket(
+                                    title:
+                                        'حجز رحلة - ${bookingState.tripType.displayName}',
+                                    date: bookingState.selectedDate,
+                                    amount: amount,
+                                    status: 'مدفوع',
+                                    type: 'booking',
+                                  ),
+                                  const SizedBox(height: 16),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context); // Close dialog
+                                      Navigator.popUntil(
+                                        context,
+                                        (route) => route.isFirst,
+                                      ); // Go to home
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        CupertinoIcons.xmark,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        } else {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('حدث خطأ أثناء إنشاء الحجز'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       }
                     : null,
                 color:

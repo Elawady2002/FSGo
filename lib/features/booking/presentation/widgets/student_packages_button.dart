@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../subscription/presentation/widgets/subscription_plans_sheet.dart';
+import '../../../subscription/presentation/pages/subscription_plans_page.dart';
 
 class StudentPackagesButton extends StatelessWidget {
   const StudentPackagesButton({super.key});
@@ -10,9 +10,11 @@ class StudentPackagesButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        showCupertinoModalPopup(
-          context: context,
-          builder: (_) => const SubscriptionPlansSheet(),
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (_) => const SubscriptionPlansPage(),
+          ),
         );
       },
       child: Container(
