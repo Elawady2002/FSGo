@@ -10,6 +10,7 @@ import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../../payment/presentation/pages/payment_page.dart';
+import '../../../payment/presentation/pages/top_up_amount_page.dart';
 
 import '../providers/wallet_provider.dart';
 import '../widgets/digital_ticket.dart';
@@ -45,11 +46,9 @@ class WalletPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // Invalidate providers to trigger refresh
           await ref.read(walletProvider.notifier).refresh();
           ref.invalidate(userBookingsProvider);
           ref.invalidate(userSubscriptionsProvider);
-          // Wait for the providers to refresh
           await Future.wait([
             ref.read(userBookingsProvider.future),
             ref.read(userSubscriptionsProvider.future),
@@ -61,102 +60,177 @@ class WalletPage extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Balance Card
+              // New Wallet Card Design
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'الرصيد الحالي',
-                      style: AppTheme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white70,
+                    // Top Green Section (Balance)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor, // Brand Yellow
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Rivets (Decorative dots)
+                          const Positioned(top: 0, left: 0, child: _Rivet()),
+                          const Positioned(top: 0, right: 0, child: _Rivet()),
+                          const Positioned(bottom: 0, left: 0, child: _Rivet()),
+                          const Positioned(bottom: 0, right: 0, child: _Rivet()),
+
+                          // Content
+                          Center(
+                            child: Column(
+                              children: [
+                                // Balance
+                                walletState.isLoading
+                                    ? const CupertinoActivityIndicator()
+                                    : Text(
+                                        '${walletState.balance.toStringAsFixed(2)} EGP',
+                                        style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF003300), // Dark Green
+                                          letterSpacing: -1,
+                                        ),
+                                      ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'الرصيد الحالي',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF003300).withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    walletState.isLoading
-                        ? const CupertinoActivityIndicator(color: Colors.white)
-                        : Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                walletState.balance.toStringAsFixed(2),
-                                style: AppTheme.textTheme.displayMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                    
+                    // Bottom Black Section (Actions)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                      child: Row(
+                        children: [
+                          // Top Up Button
+                          Expanded(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  CupertinoPageRoute(
+                                    builder: (_) => const TopUpAmountPage(isWithdraw: false),
+                                  ),
+                                );
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(CupertinoIcons.arrow_down_left, color: Colors.white, size: 24),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'شحن',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'ج.م',
-                                style: AppTheme.textTheme.titleMedium?.copyWith(
-                                  color: AppTheme.primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                    const SizedBox(height: 24),
-                    CustomButton(
-                      text: 'شحن الرصيد',
-                      onPressed: () async {
-                        final result = await showModalBottomSheet<Map<String, String>>(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => const TopUpSheet(),
-                        );
-
-                        if (result != null && context.mounted) {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (_) => PaymentPage(
-                                planName: 'شحن الرصيد',
-                                amount: result['amount']!,
-                                isSubscription: false,
-                                selectedMethod: result['method'],
                               ),
                             ),
-                          );
-                        }
-                      },
-                      backgroundColor: AppTheme.primaryColor,
-                      textColor: Colors.black,
+                          ),
+                          
+                          // Divider
+                          Container(
+                            height: 40,
+                            width: 1,
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                          
+                          // Widthdraw Button
+                          Expanded(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  CupertinoPageRoute(
+                                    builder: (_) => const TopUpAmountPage(isWithdraw: true),
+                                  ),
+                                );
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(CupertinoIcons.arrow_up_right, color: Colors.white, size: 24), // Swap icon usually means exchange, but using up-right for withdraw
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'سحب',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-
-              // Transactions
-              Text(
-                'آخر العمليات',
-                style: AppTheme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+              
+              const SizedBox(height: 40),
+             
+              // Transactions Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'سجل العمليات',
+                    style: AppTheme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  Text(
+                    'عرض الكل',
+                    style: AppTheme.textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // Transactions List
               bookingsAsync.when(
@@ -169,7 +243,7 @@ class WalletPage extends ConsumerWidget {
                       for (final booking in bookings) {
                         transactions.add(
                           _TransactionItem(
-                            title: 'دفع رحلة',
+                            title: 'حجز رحلة',
                             date: booking.createdAt,
                             amount: booking.totalPrice,
                             originalObject: booking,
@@ -191,14 +265,13 @@ class WalletPage extends ConsumerWidget {
                         );
                       }
 
-                      // Sort by date (newest first)
                       transactions.sort((a, b) => b.date.compareTo(a.date));
 
                       if (transactions.isEmpty) {
                         return const Center(
                           child: Padding(
-                            padding: EdgeInsets.all(20.0),
-                            child: Text('لا توجد عمليات سابقة'),
+                            padding: EdgeInsets.all(40.0),
+                            child: Text('لا توجد عمليات سابقة', style: TextStyle(color: Colors.grey)),
                           ),
                         );
                       }
@@ -211,26 +284,22 @@ class WalletPage extends ConsumerWidget {
                             const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final transaction = transactions[index];
-                          return DigitalTicket(
-                            title: transaction.title,
-                            date: transaction.date,
-                            amount: transaction.amount,
-                            status: 'مدفوع',
-                            type: transaction.type == _TransactionType.booking
-                                ? 'booking'
-                                : 'subscription',
-                            onTap: () {
-                              if (transaction.originalObject is BookingEntity) {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) => TransactionDetailsSheet(
-                                    booking: transaction.originalObject,
-                                  ),
-                                );
-                              }
-                            },
+                          // Determine style based on type
+                          // Booking -> Debit (Red arrow up-right)
+                          // Subscription -> Debit (Red arrow up-right)
+                          
+                          // If we had TopUp -> Credit (Green arrow down-left)
+                          // If we had Withdraw -> Debit (Red arrow up-right or different icon)
+                          
+                          final isCredit = false; // Currently all are debits (bookings/subs)
+                          
+                          return _buildTransactionItem(
+                             context,
+                             transaction.title,
+                             _formatDate(transaction.date), // Custom format to match "8:18 10/2" if possible
+                             transaction.amount.toStringAsFixed(2),
+                             isCredit,
+                             transaction.originalObject,
                           );
                         },
                       );
@@ -259,6 +328,11 @@ class WalletPage extends ConsumerWidget {
     bool isCredit,
     dynamic originalObject,
   ) {
+    // Colors from image
+    final iconBgColor = isCredit ? const Color(0xFFE8F5E9) : const Color(0xFFFEECEB); // Pale Green / Pale Red
+    final iconColor = isCredit ? const Color(0xFF4CAF50) : const Color(0xFFF56356); // Green / Salmon Red
+    final iconData = isCredit ? CupertinoIcons.arrow_down_left : CupertinoIcons.arrow_up_right;
+
     return GestureDetector(
       onTap: () {
         if (originalObject is BookingEntity) {
@@ -270,58 +344,71 @@ class WalletPage extends ConsumerWidget {
                 TransactionDetailsSheet(booking: originalObject),
           );
         }
-        // NOTE: Add subscription details sheet if needed
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+             BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
+            // Icon (Right in RTL)
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: isCredit
-                    ? AppTheme.successColor.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.1),
+                color: iconBgColor,
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isCredit
-                    ? CupertinoIcons.arrow_down_left
-                    : CupertinoIcons.arrow_up_right,
-                color: isCredit ? AppTheme.successColor : Colors.red,
+                iconData,
+                color: iconColor,
                 size: 20,
               ),
             ),
             const SizedBox(width: 16),
+            
+            // Title & Date
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: AppTheme.textTheme.bodyLarge?.copyWith(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     date,
-                    style: AppTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
+            
+            // Amount (Left in RTL)
             Text(
-              amount,
-              style: AppTheme.textTheme.bodyLarge?.copyWith(
+              '${isCredit ? '+' : '-'}$amount',
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                color: isCredit ? AppTheme.successColor : Colors.black,
+                fontSize: 18,
+                color: Colors.black, 
               ),
             ),
           ],
@@ -331,8 +418,25 @@ class WalletPage extends ConsumerWidget {
   }
 
   String _formatDate(DateTime date) {
-    // Simple date formatting, you might want to use intl package
-    return '${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    // Format: 18:44 9/2
+    return '${date.hour}:${date.minute.toString().padLeft(2, '0')} ${date.day}/${date.month}';
+  }
+}
+
+class _Rivet extends StatelessWidget {
+  const _Rivet();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      margin: const EdgeInsets.all(8),
+      decoration: const BoxDecoration(
+        color: Color(0xFF003300),
+        shape: BoxShape.circle,
+      ),
+    );
   }
 }
 

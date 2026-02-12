@@ -13,11 +13,11 @@ import '../../domain/entities/trip_type.dart';
 import '../providers/booking_provider.dart';
 import '../../../payment/presentation/pages/payment_page.dart';
 import '../widgets/student_packages_button.dart';
-
+import '../../domain/entities/schedule_entity.dart';
+import 'booking_success_page.dart';
 import '../widgets/booking_date_card.dart';
 import '../widgets/time_selection_card.dart';
 import '../../../home/presentation/providers/home_provider.dart';
-import '../../domain/entities/schedule_entity.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
   const BookingPage({super.key});
@@ -172,49 +172,17 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                         if (errorMessage == null) {
                           if (!context.mounted) return;
 
-                          // Show digital ticket
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => Dialog(
-                              backgroundColor: Colors.transparent,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  DigitalTicket(
-                                    title:
-                                        'حجز رحلة - ${bookingState.tripType.displayName}',
-                                    date: bookingState.selectedDate,
-                                    amount: amount,
-                                    status: 'مدفوع',
-                                    type: 'booking',
-                                  ),
-                                  const SizedBox(height: 16),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.pop(context); // Close dialog
-                                      Navigator.popUntil(
-                                        context,
-                                        (route) => route.isFirst,
-                                      ); // Go to home
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        CupertinoIcons.xmark,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          // Navigate to Success Page
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookingSuccessPage(
+                                amount: amount,
+                                tripType: bookingState.tripType.displayName,
+                                date: bookingState.selectedDate,
                               ),
                             ),
+                            (route) => route.isFirst,
                           );
                         } else {
                           if (!context.mounted) return;

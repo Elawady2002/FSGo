@@ -9,7 +9,6 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import 'saved_places_page.dart';
 import 'wallet_page.dart';
-import 'payment_methods_page.dart';
 import 'ride_history_page.dart';
 
 import 'help_center_page.dart';
@@ -105,17 +104,6 @@ class ProfilePage extends ConsumerWidget {
                 onTap: () => Navigator.push(
                   context,
                   CupertinoPageRoute(builder: (_) => const WalletPage()),
-                ),
-              ),
-              _MenuItem(
-                icon: CupertinoIcons.creditcard,
-                title: 'طرق الدفع',
-                subtitle: 'إدارة البطاقات والمحافظ الإلكترونية',
-                onTap: () => Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (_) => const PaymentMethodsPage(),
-                  ),
                 ),
               ),
             ]),

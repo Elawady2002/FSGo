@@ -159,6 +159,29 @@ class WalletNotifier extends StateNotifier<WalletState> {
   Future<void> refresh() async {
     await _loadBalance();
   }
+
+  Future<bool> requestTopUp({
+    required double amount,
+    required String method,
+    required String proofUrl,
+    required String senderPhone,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      // Simulate API call delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      AppLogger.info('Top Up Request: Amount=$amount, Method=$method, Phone=$senderPhone, Proof=$proofUrl');
+      
+      // In a real app, you would call repository.createTopUpRequest(...)
+      
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
 }
 
 // Provider
