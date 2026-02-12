@@ -6,8 +6,16 @@ import '../../../../core/utils/logger.dart';
 
 abstract class WalletRepository {
   Future<Either<Failure, double>> getBalance(String userId);
-  Future<Either<Failure, double>> deductAmount(String userId, double amount, String reason);
-  Future<Either<Failure, double>> addAmount(String userId, double amount, String reason);
+  Future<Either<Failure, double>> deductAmount(
+    String userId,
+    double amount,
+    String reason,
+  );
+  Future<Either<Failure, double>> addAmount(
+    String userId,
+    double amount,
+    String reason,
+  );
 }
 
 class WalletRepositoryImpl implements WalletRepository {
@@ -27,7 +35,7 @@ class WalletRepositoryImpl implements WalletRepository {
           .single();
 
       final balance = (response['wallet_balance'] as num?)?.toDouble() ?? 0.0;
-      
+
       AppLogger.info('✅ Balance fetched: $balance');
       return Right(balance);
     } catch (e) {

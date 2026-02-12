@@ -26,215 +26,234 @@ class DigitalTicket extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
-            children: [
-              // Dashed border effect
-              CustomPaint(
-                painter: DashedBorderPainter(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                  strokeWidth: 2,
-                  dashWidth: 8,
-                  dashSpace: 4,
+      child:
+          Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
                     children: [
-                      // Header Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Status Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor().withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _getStatusIcon(),
-                                  size: 14,
-                                  color: _getStatusColor(),
+                      // Dashed border effect
+                      CustomPaint(
+                        painter: DashedBorderPainter(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                          strokeWidth: 2,
+                          dashWidth: 8,
+                          dashSpace: 4,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header Row
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Status Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor().withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _getStatusIcon(),
+                                          size: 14,
+                                          color: _getStatusColor(),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          status,
+                                          style: AppTheme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: _getStatusColor(),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Type Icon
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryColor.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      type == 'booking'
+                                          ? CupertinoIcons.car_fill
+                                          : CupertinoIcons.star_fill,
+                                      color: AppTheme.primaryColor,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Title
+                              Text(
+                                title,
+                                style: AppTheme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  status,
-                                  style: AppTheme.textTheme.bodySmall?.copyWith(
-                                    color: _getStatusColor(),
-                                    fontWeight: FontWeight.bold,
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              // Date
+                              Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.calendar,
+                                    size: 16,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatDate(date),
+                                    style: AppTheme.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Divider
+                              Container(
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      AppTheme.primaryColor.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      Colors.transparent,
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
 
-                          // Type Icon
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              type == 'booking'
-                                  ? CupertinoIcons.car_fill
-                                  : CupertinoIcons.star_fill,
-                              color: AppTheme.primaryColor,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
+                              const SizedBox(height: 20),
 
-                      const SizedBox(height: 20),
-
-                      // Title
-                      Text(
-                        title,
-                        style: AppTheme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Date
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.calendar,
-                            size: 16,
-                            color: AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _formatDate(date),
-                            style: AppTheme.textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Divider
-                      Container(
-                        height: 1,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              AppTheme.primaryColor.withValues(alpha: 0.3),
-                              Colors.transparent,
+                              // Amount Row
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'المبلغ',
+                                    style: AppTheme.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                  ),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        amount.toStringAsFixed(2),
+                                        style: AppTheme.textTheme.headlineMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.primaryColor,
+                                            ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'ج.م',
+                                        style: AppTheme.textTheme.bodyLarge
+                                            ?.copyWith(
+                                              color: AppTheme.textSecondary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 20),
-
-                      // Amount Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'المبلغ',
-                            style: AppTheme.textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                      // Shimmer effect overlay (optional)
+                      if (status == 'مدفوع')
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child:
+                                Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Colors.white.withValues(alpha: 0),
+                                            Colors.white.withValues(alpha: 0.1),
+                                            Colors.white.withValues(alpha: 0),
+                                          ],
+                                          stops: const [0.0, 0.5, 1.0],
+                                        ),
+                                      ),
+                                    )
+                                    .animate(
+                                      onPlay: (controller) =>
+                                          controller.repeat(),
+                                    )
+                                    .shimmer(
+                                      duration: 2000.ms,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
                           ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                amount.toStringAsFixed(2),
-                                style: AppTheme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'ج.م',
-                                style: AppTheme.textTheme.bodyLarge?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
                     ],
                   ),
                 ),
+              )
+              .animate()
+              .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+              .scale(
+                begin: const Offset(0.95, 0.95),
+                end: const Offset(1.0, 1.0),
+                duration: 400.ms,
+                curve: Curves.easeOut,
               ),
-
-              // Shimmer effect overlay (optional)
-              if (status == 'مدفوع')
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0),
-                            Colors.white.withValues(alpha: 0.1),
-                            Colors.white.withValues(alpha: 0),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    )
-                        .animate(
-                          onPlay: (controller) => controller.repeat(),
-                        )
-                        .shimmer(
-                          duration: 2000.ms,
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      )
-          .animate()
-          .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-          .scale(
-            begin: const Offset(0.95, 0.95),
-            end: const Offset(1.0, 1.0),
-            duration: 400.ms,
-            curve: Curves.easeOut,
-          ),
     );
   }
 

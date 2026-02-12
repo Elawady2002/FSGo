@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../booking/presentation/providers/booking_provider.dart';
-import '../../../booking/domain/entities/booking_entity.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
-import '../../../subscription/domain/entities/subscription_entity.dart';
+import 'package:my_app/l10n/app_localizations.dart';
+import 'package:my_app/core/theme/app_theme.dart';
+import 'package:my_app/features/booking/presentation/providers/booking_provider.dart';
+import 'package:my_app/features/booking/domain/entities/booking_entity.dart';
+import 'package:my_app/features/subscription/presentation/providers/subscription_provider.dart';
+import 'package:my_app/features/subscription/domain/entities/subscription_entity.dart';
 
 class RideHistoryPage extends ConsumerStatefulWidget {
   const RideHistoryPage({super.key});
@@ -32,35 +33,69 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isAr = Directionality.of(context) == TextDirection.rtl;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.chevron_right, color: Colors.black),
+          icon: Icon(
+            isAr ? CupertinoIcons.chevron_right : CupertinoIcons.chevron_left,
+            color: Colors.black,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'سجل الرحلات',
+          l10n.rideHistory,
           style: AppTheme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
         ),
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primaryDark,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppTheme.primaryColor,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(text: 'القادمة'),
-            Tab(text: 'السابقة'),
-            Tab(text: 'الاشتراكات'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey.shade500,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              tabs: [
+                Tab(text: l10n.upcoming),
+                Tab(text: l10n.past),
+                Tab(text: l10n.subscriptions),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -82,27 +117,27 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
         final upcomingBookings = bookings
             .where(
               (b) =>
-                  b.bookingDate.isAfter(DateTime.now()) &&
+                  b.bookingDate.isAfter(
+                    DateTime.now().subtract(const Duration(days: 1)),
+                  ) &&
                   (b.status == BookingStatus.pending ||
                       b.status == BookingStatus.confirmed),
             )
             .toList();
 
         if (upcomingBookings.isEmpty) {
-          return _buildEmptyState('لا توجد رحلات قادمة');
+          return _buildEmptyState(
+            AppLocalizations.of(context)!.noUpcomingRides,
+          );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(20),
+        return _buildAnimatedList(
           itemCount: upcomingBookings.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final booking = upcomingBookings[index];
-            return _buildRideCard(booking);
-          },
+          itemBuilder: (context, index) =>
+              _buildRideCard(upcomingBookings[index]),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CupertinoActivityIndicator()),
       error: (error, stack) => _buildErrorState(),
     );
   }
@@ -115,27 +150,24 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
         final pastBookings = bookings
             .where(
               (b) =>
-                  b.bookingDate.isBefore(DateTime.now()) ||
+                  b.bookingDate.isBefore(
+                    DateTime.now().subtract(const Duration(days: 1)),
+                  ) ||
                   b.status == BookingStatus.cancelled ||
                   b.status == BookingStatus.completed,
             )
             .toList();
 
         if (pastBookings.isEmpty) {
-          return _buildEmptyState('لا توجد رحلات سابقة');
+          return _buildEmptyState(AppLocalizations.of(context)!.noPastRides);
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(20),
+        return _buildAnimatedList(
           itemCount: pastBookings.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final booking = pastBookings[index];
-            return _buildRideCard(booking);
-          },
+          itemBuilder: (context, index) => _buildRideCard(pastBookings[index]),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CupertinoActivityIndicator()),
       error: (error, stack) => _buildErrorState(),
     );
   }
@@ -146,97 +178,211 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
     return subscriptionsAsync.when(
       data: (subscriptions) {
         if (subscriptions.isEmpty) {
-          return _buildEmptyState('لا توجد اشتراكات');
+          return _buildEmptyState(
+            AppLocalizations.of(context)!.noSubscriptions,
+          );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(20),
+        return _buildAnimatedList(
           itemCount: subscriptions.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final subscription = subscriptions[index];
-            return _buildSubscriptionCard(subscription);
-          },
+          itemBuilder: (context, index) =>
+              _buildSubscriptionCard(subscriptions[index]),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CupertinoActivityIndicator()),
       error: (error, stack) => _buildErrorState(),
+    );
+  }
+
+  Widget _buildAnimatedList({
+    required int itemCount,
+    required Widget Function(BuildContext, int) itemBuilder,
+  }) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: itemCount,
+      separatorBuilder: (_, _) => const SizedBox(height: 20),
+      itemBuilder: (context, index) {
+        return TweenAnimationBuilder<double>(
+          duration: Duration(milliseconds: 400 + (index * 100)),
+          tween: Tween(begin: 0.0, end: 1.0),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 30 * (1 - value)),
+              child: Opacity(opacity: value, child: child),
+            );
+          },
+          child: itemBuilder(context, index),
+        );
+      },
     );
   }
 
   Widget _buildSubscriptionCard(SubscriptionEntity subscription) {
     final statusInfo = _getSubscriptionStatusInfo(subscription.status);
+    final totalDays = subscription.endDate
+        .difference(subscription.startDate)
+        .inDays;
+    final remainingDays = subscription.endDate
+        .difference(DateTime.now())
+        .inDays;
+    final progress = (totalDays - remainingDays) / totalDays;
+    final progressClamped = progress.clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      subscription.planType.displayName,
-                      style: AppTheme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusInfo['color'].withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        statusInfo['label'],
+                        style: TextStyle(
+                          color: statusInfo['color'],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
                     Text(
-                      'تاريخ البدء: ${subscription.startDate.day}/${subscription.startDate.month}/${subscription.startDate.year}',
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    Text(
-                      'تاريخ الانتهاء: ${subscription.endDate.day}/${subscription.endDate.month}/${subscription.endDate.year}',
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
+                      '${subscription.amount.toStringAsFixed(0)} ج.م',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${subscription.amount.toStringAsFixed(0)} ج.م',
-                    style: AppTheme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryDark,
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    _buildSubInfoItem(
+                      icon: CupertinoIcons.calendar,
+                      label: AppLocalizations.of(context)!.plan,
+                      value: subscription.planType.displayName,
+                    ),
+                    const Spacer(),
+                    _buildSubInfoItem(
+                      icon: CupertinoIcons.time,
+                      label: AppLocalizations.of(context)!.daysRemaining,
+                      value:
+                          '${remainingDays > 0 ? remainingDays : 0} ${AppLocalizations.of(context)!.day}',
+                      isEnd: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: progressClamped,
+                    minHeight: 8,
+                    backgroundColor: Colors.grey.shade100,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      remainingDays > 5 ? AppTheme.primaryColor : Colors.orange,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusInfo['color'].withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      statusInfo['label'],
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: statusInfo['color'],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(24),
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${AppLocalizations.of(context)!.from}: ${subscription.startDate.day}/${subscription.startDate.month}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '${AppLocalizations.of(context)!.to}: ${subscription.endDate.day}/${subscription.endDate.month}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSubInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isEnd = false,
+  }) {
+    return Column(
+      crossAxisAlignment: isEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isEnd) Icon(icon, size: 14, color: Colors.grey.shade400),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+            ),
+            if (isEnd) ...[
+              const SizedBox(width: 4),
+              Icon(icon, size: 14, color: Colors.grey.shade400),
+            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+      ],
     );
   }
 
@@ -244,86 +390,263 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
     final statusInfo = _getStatusInfo(booking.status);
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'التاريخ: ${booking.bookingDate.day}/${booking.bookingDate.month}/${booking.bookingDate.year}',
-                      style: AppTheme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'نوع الرحلة: ${_getTripTypeLabel(booking.tripType)}',
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${booking.totalPrice.toStringAsFixed(0)} ج.م',
-                    style: AppTheme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryDark,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusInfo['color'].withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      statusInfo['label'],
-                      style: AppTheme.textTheme.bodySmall?.copyWith(
-                        color: statusInfo['color'],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.ticket_fill,
+                      color: AppTheme.primaryDark,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${booking.bookingDate.day}/${booking.bookingDate.month}/${booking.bookingDate.year}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _getTripTypeLabel(booking.tripType),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${booking.totalPrice.toStringAsFixed(0)} ${AppLocalizations.of(context)!.egp}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusInfo['color'].withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          statusInfo['label'],
+                          style: TextStyle(
+                            color: statusInfo['color'],
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            _buildTicketDashedLine(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              child: Row(
+                children: [
+                  _buildTripDetailRow(
+                    icon: CupertinoIcons.time,
+                    title: AppLocalizations.of(context)!.departureTime,
+                    value: booking.departureTime ?? '7:00 AM',
+                  ),
+                  const Spacer(),
+                  if (booking.tripType == 'round_trip')
+                    _buildTripDetailRow(
+                      icon: CupertinoIcons.arrow_2_squarepath,
+                      title: AppLocalizations.of(context)!.returnTime,
+                      value: booking.returnTime ?? '4:00 PM',
+                      isEnd: true,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTicketDashedLine() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 10,
+          height: 20,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAFAFA),
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(10),
+                bottomRight: Radius.circular(10),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Flex(
+                direction: Axis.horizontal,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(
+                  (constraints.constrainWidth() / 10).floor(),
+                  (index) => SizedBox(
+                    width: 5,
+                    height: 1,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: Colors.grey.shade200),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        SizedBox(
+          width: 10,
+          height: 20,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAFAFA),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                bottomLeft: Radius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTripDetailRow({
+    required IconData icon,
+    required String title,
+    required String value,
+    bool isEnd = false,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (!isEnd) Icon(icon, size: 16, color: Colors.grey.shade400),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: isEnd
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+        if (isEnd) ...[
+          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: Colors.grey.shade400),
+        ],
+      ],
     );
   }
 
   Widget _buildEmptyState(String message) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(CupertinoIcons.ticket, size: 64, color: AppTheme.textSecondary),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: AppTheme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.textSecondary,
+      child: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 600),
+        tween: Tween(begin: 0.0, end: 1.0),
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.scale(scale: 0.8 + (0.2 * value), child: child),
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 20,
+                  ),
+                ],
+              ),
+              child: Icon(
+                CupertinoIcons.ticket,
+                size: 80,
+                color: Colors.grey.shade200,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -333,16 +656,18 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             CupertinoIcons.exclamationmark_triangle,
             size: 64,
             color: AppTheme.errorColor,
           ),
           const SizedBox(height: 16),
           Text(
-            'حدث خطأ في تحميل الرحلات',
-            style: AppTheme.textTheme.titleMedium?.copyWith(
-              color: AppTheme.errorColor,
+            AppLocalizations.of(context)!.errorLoadingData,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.red.shade400,
             ),
           ),
         ],
@@ -351,39 +676,42 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
   }
 
   Map<String, dynamic> _getStatusInfo(BookingStatus status) {
+    final l10n = AppLocalizations.of(context)!;
     switch (status) {
       case BookingStatus.confirmed:
-        return {'label': 'مؤكد', 'color': AppTheme.successColor};
+        return {'label': l10n.confirmed, 'color': AppTheme.successColor};
       case BookingStatus.pending:
-        return {'label': 'قيد الانتظار', 'color': Colors.orange};
+        return {'label': l10n.pending, 'color': Colors.orange};
       case BookingStatus.cancelled:
-        return {'label': 'ملغي', 'color': AppTheme.errorColor};
+        return {'label': l10n.cancelled, 'color': AppTheme.errorColor};
       case BookingStatus.completed:
-        return {'label': 'مكتمل', 'color': Colors.grey};
+        return {'label': l10n.completed, 'color': Colors.grey};
     }
   }
 
   String _getTripTypeLabel(String tripType) {
+    final l10n = AppLocalizations.of(context)!;
     switch (tripType) {
       case 'departure_only':
-        return 'ذهاب فقط';
+        return l10n.departure;
       case 'return_only':
-        return 'عودة فقط';
+        return l10n.returnText;
       case 'round_trip':
-        return 'ذهاب وعودة';
+        return l10n.roundTrip;
       default:
         return tripType;
     }
   }
 
   Map<String, dynamic> _getSubscriptionStatusInfo(SubscriptionStatus status) {
+    final l10n = AppLocalizations.of(context)!;
     switch (status) {
       case SubscriptionStatus.active:
-        return {'label': 'نشط', 'color': AppTheme.successColor};
+        return {'label': l10n.active, 'color': AppTheme.successColor};
       case SubscriptionStatus.pending:
-        return {'label': 'قيد المراجعة', 'color': Colors.orange};
+        return {'label': l10n.underReview, 'color': Colors.orange};
       case SubscriptionStatus.expired:
-        return {'label': 'منتهي', 'color': Colors.grey};
+        return {'label': l10n.expired, 'color': Colors.grey};
     }
   }
 }

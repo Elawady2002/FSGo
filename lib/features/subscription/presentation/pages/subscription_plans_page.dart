@@ -157,10 +157,7 @@ class _SubscriptionPlansPageState extends ConsumerState<SubscriptionPlansPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0),
-                    Colors.black,
-                  ],
+                  colors: [Colors.black.withValues(alpha: 0), Colors.black],
                 ),
               ),
               child: Column(
@@ -337,10 +334,7 @@ class _SubscriptionPlansPageState extends ConsumerState<SubscriptionPlansPage> {
                     width: 60,
                     child: Text(
                       '–',
-                      style: TextStyle(
-                        color: Colors.white30,
-                        fontSize: 18,
-                      ),
+                      style: TextStyle(color: Colors.white30, fontSize: 18),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -413,10 +407,9 @@ class _SubscriptionPlansPageState extends ConsumerState<SubscriptionPlansPage> {
       }
 
       // Deduct from wallet
-      final success = await ref.read(walletProvider.notifier).deductAmount(
-        amount,
-        'اشتراك ${selectedPlan['title']}',
-      );
+      final success = await ref
+          .read(walletProvider.notifier)
+          .deductAmount(amount, 'اشتراك ${selectedPlan['title']}');
 
       if (!success) {
         setState(() => _isProcessing = false);
@@ -426,7 +419,9 @@ class _SubscriptionPlansPageState extends ConsumerState<SubscriptionPlansPage> {
           context: context,
           builder: (context) => CupertinoAlertDialog(
             title: const Text('خطأ'),
-            content: const Text('حدث خطأ أثناء خصم المبلغ. يرجى المحاولة مرة أخرى.'),
+            content: const Text(
+              'حدث خطأ أثناء خصم المبلغ. يرجى المحاولة مرة أخرى.',
+            ),
             actions: [
               CupertinoDialogAction(
                 child: const Text('حسناً'),

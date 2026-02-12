@@ -52,19 +52,22 @@ class BookingSuccessPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Status Checkmarks
                   _buildStatusRow('تم الدفع بنجاح'),
                   const SizedBox(height: 12),
                   _buildStatusRow('تم حجز المقعد'),
                   const SizedBox(height: 12),
                   _buildStatusRow('الفاتورة جاهزة'),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Paid Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF9C4), // Light yellow
                       borderRadius: BorderRadius.circular(12),
@@ -77,9 +80,9 @@ class BookingSuccessPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Price
                   Text(
                     '${amount.toStringAsFixed(0)} جنيه',
@@ -88,9 +91,9 @@ class BookingSuccessPage extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Details
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -98,27 +101,30 @@ class BookingSuccessPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildDetailColumn('نوع الرحلة', tripType),
-                         _buildDetailColumn('التاريخ', DateFormat('d MMMM', 'ar').format(date)),
+                        _buildDetailColumn(
+                          'التاريخ',
+                          DateFormat('d MMMM', 'ar').format(date),
+                        ),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Dashed Line
                   CustomPaint(
                     painter: DashedLinePainter(),
                     size: const Size(double.infinity, 1),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Dismiss Hint
                   GestureDetector(
-                     onTap: () {
-                         Navigator.popUntil(context, (route) => route.isFirst);
-                     }, 
-                     child: Column(
+                    onTap: () {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                    child: Column(
                       children: [
                         Text(
                           'اسحب للرئيسية',
@@ -132,7 +138,7 @@ class BookingSuccessPage extends StatelessWidget {
                           color: AppTheme.textSecondary,
                         ),
                       ],
-                     ),
+                    ),
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -149,7 +155,8 @@ class BookingSuccessPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Text right, Icon left (checked RTL)
+        mainAxisAlignment: MainAxisAlignment
+            .spaceBetween, // Text right, Icon left (checked RTL)
         children: [
           Text(
             text,
@@ -174,7 +181,7 @@ class BookingSuccessPage extends StatelessWidget {
         Text(
           label,
           style: AppTheme.textTheme.bodySmall?.copyWith(
-             color: AppTheme.textSecondary,
+            color: AppTheme.textSecondary,
           ),
         ),
         const SizedBox(height: 4),

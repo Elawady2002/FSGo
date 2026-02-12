@@ -55,8 +55,8 @@ class BookingState extends _$BookingState {
   @override
   BookingStateModel build() {
     final now = DateTime.now();
-    final initialDate = now.hour >= 7 
-        ? DateTime(now.year, now.month, now.day + 1) 
+    final initialDate = now.hour >= 7
+        ? DateTime(now.year, now.month, now.day + 1)
         : now;
 
     return BookingStateModel(
@@ -127,7 +127,7 @@ class BookingState extends _$BookingState {
     debugPrint('   Pickup Station: ${pickupStation.nameAr}');
     debugPrint('   Arrival Station: ${arrivalStation?.nameAr}');
     debugPrint('   isToUniversity: $isToUniversity');
-    
+
     state = state.copyWith(
       selectedCity: city,
       selectedUniversity: university,
@@ -135,10 +135,9 @@ class BookingState extends _$BookingState {
       selectedArrivalStation: arrivalStation,
       isToUniversity: isToUniversity ?? state.isToUniversity,
     );
-    
+
     debugPrint('🟢 State updated - City now: ${state.selectedCity?.nameAr}');
   }
-
 
   bool get isSameDayBookingAllowed {
     final now = DateTime.now();
@@ -154,10 +153,10 @@ class BookingState extends _$BookingState {
 
   bool get isBookingComplete {
     // For the simplified UI, any selection is enough
-    return state.selectedDepartureSchedule != null || 
-           state.selectedReturnSchedule != null ||
-           state.selectedDepartureTime != null ||
-           state.selectedReturnTime != null;
+    return state.selectedDepartureSchedule != null ||
+        state.selectedReturnSchedule != null ||
+        state.selectedDepartureTime != null ||
+        state.selectedReturnTime != null;
   }
 
   double get totalPrice => state.tripType.price;
@@ -173,16 +172,19 @@ class BookingState extends _$BookingState {
 
     try {
       // Use selected schedule ID if available, otherwise use default
-      final scheduleId = state.selectedDepartureSchedule?.id ?? 
-                        state.selectedReturnSchedule?.id ?? 
-                        '00000000-0000-0000-0000-000000000000';
+      final scheduleId =
+          state.selectedDepartureSchedule?.id ??
+          state.selectedReturnSchedule?.id ??
+          '00000000-0000-0000-0000-000000000000';
 
       final result = await repository.createBooking(
         scheduleId: scheduleId,
         bookingDate: state.selectedDate,
         tripType: state.tripType.toDbValue(),
         pickupStationId: state.selectedStation?.id,
-        dropoffStationId: state.isToUniversity ? null : state.selectedArrivalStation?.id,
+        dropoffStationId: state.isToUniversity
+            ? null
+            : state.selectedArrivalStation?.id,
         departureTime: state.selectedDepartureTime,
         returnTime: state.selectedReturnTime,
         paymentProofImage: paymentProofImage,
@@ -213,7 +215,9 @@ class BookingState extends _$BookingState {
         bookingDate: state.selectedDate,
         tripType: state.tripType.toDbValue(),
         pickupStationId: state.selectedStation?.id,
-        dropoffStationId: state.isToUniversity ? null : state.selectedArrivalStation?.id,
+        dropoffStationId: state.isToUniversity
+            ? null
+            : state.selectedArrivalStation?.id,
         departureTime: state.selectedDepartureTime,
         returnTime: state.selectedReturnTime,
         totalPrice: totalPrice,
@@ -280,15 +284,15 @@ class BookingStateModel {
       selectedDepartureTime:
           selectedDepartureTime ?? this.selectedDepartureTime,
       selectedReturnTime: selectedReturnTime ?? this.selectedReturnTime,
-      selectedDepartureSchedule: 
+      selectedDepartureSchedule:
           selectedDepartureSchedule ?? this.selectedDepartureSchedule,
-      selectedReturnSchedule: 
+      selectedReturnSchedule:
           selectedReturnSchedule ?? this.selectedReturnSchedule,
       selectedCity: selectedCity ?? this.selectedCity,
       selectedUniversity: selectedUniversity ?? this.selectedUniversity,
       selectedStation: selectedStation ?? this.selectedStation,
-      selectedArrivalStation: selectedArrivalStation ?? this.selectedArrivalStation,
+      selectedArrivalStation:
+          selectedArrivalStation ?? this.selectedArrivalStation,
     );
   }
 }
-

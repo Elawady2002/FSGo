@@ -83,11 +83,16 @@ post_install do |installer|
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
       config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+      config.build_settings['ENABLE_HARDENED_RUNTIME'] = 'NO'
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
       
-      # Recommended settings for Xcode 15/16
+      # Absolute Recommended Settings for Xcode 16
       config.build_settings['ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS'] = 'YES'
       config.build_settings['CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED'] = 'YES'
-      config.build_settings['ENABLE_HARDENED_RUNTIME'] = 'NO'
+      config.build_settings['ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS'] = 'YES'
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
   
@@ -99,59 +104,82 @@ post_install do |installer|
     config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
     config.build_settings['ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS'] = 'YES'
     config.build_settings['CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED'] = 'YES'
+    config.build_settings['SWIFT_VERSION'] = '5.0'
   end
 
-  # Set Upgrade Check versions for Pods project to latest (satisfies "Update to recommended settings")
+  # Force Upgrade Check versions and EXPLICIT Root sandboxing
   installer.pods_project.root_object.attributes['LastUpgradeCheck'] = '1600'
   installer.pods_project.root_object.attributes['LastSwiftUpdateCheck'] = '1600'
   installer.pods_project.root_object.attributes['LastTestingUpgradeCheck'] = '1600'
+  installer.pods_project.root_object.attributes['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
   installer.pods_project.save
 
-  # 4. Patch Embed/Copy Pods scripts (Actual files on disk)
-  installer.aggregate_targets.each do |target|
-    support_files_dir = target.support_files_dir
-    Dir.glob(File.join(support_files_dir, '*.sh')).each do |script_path|
-      puts "Patching script: #{script_path}"
+  # 4. Deep Patch all shell scripts AND Inject XCConfigs
+  pods_dir = File.join(File.dirname(__FILE__), 'Pods')
+  if Dir.exist?(pods_dir)
+    Dir.glob(File.join(pods_dir, '**/*.sh')).each do |script_path|
+      puts "Deep patching script: #{script_path}"
       script_content = File.read(script_path)
       
-      # Step 1: Fix readlink -f and realpath -mq with simple python-based realpath
-      # This replaces the shell call with a direct python execution for stability
-      updated_content = script_content.gsub(/readlink -f ["']\$([^"']+)["']/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$\1"')
-      updated_content = updated_content.gsub(/readlink -f \$([a-zA-Z0-9_]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" $\1')
-      updated_content = updated_content.gsub('readlink -f', 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))"')
-      updated_content = updated_content.gsub(/realpath -mq ["']\$([^"']+)["']/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$\1"')
-      updated_content = updated_content.gsub('realpath -mq', 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))"')
-
-      # Step 2: Ensure the script doesn't fail on code signing errors if not critical
-      # Sometimes codesign fails due to sandbox issues even when sandboxing is "off" in settings
-      # We don't want to swallow errors, but we do want to ensure our realpath fix is applied.
+      # Step A: Fix readlink/realpath with python3 (Ultra-aggressive)
+      updated_content = script_content.gsub(/readlink -f\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      updated_content = updated_content.gsub(/readlink\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      updated_content = updated_content.gsub(/realpath -mq\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      updated_content = updated_content.gsub(/realpath\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      
+      # Step B: Fix rsync --delete error in Xcode 16
+      updated_content = updated_content.gsub('rsync --delete', 'rsync')
+      
+      # Step C (Removed): Fixing common codesign errors by allowing Xcode to handle signing
+      # Reverted to original CocoaPods behavior for physical device compatibility.
 
       if script_content != updated_content
         File.write(script_path, updated_content)
-        puts "✅ Successfully patched #{File.basename(script_path)} with robust realpath"
       end
     end
+    
+    # Inject settings into .xcconfig files as a final safety measure
+    Dir.glob(File.join(pods_dir, '**/*.xcconfig')).each do |config_path|
+      content = File.read(config_path)
+      fixes = [
+        "ENABLE_USER_SCRIPT_SANDBOXING = NO",
+        "IPHONEOS_DEPLOYMENT_TARGET = 14.0",
+        "CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO"
+      ]
+      fixes.each do |fix|
+        unless content.include?(fix.split(' = ').first)
+          content << "\n#{fix}\n"
+        end
+      end
+      File.write(config_path, content)
+    end
+  end
 
-    # Also update Runner project targets directly
+  # 5. Update Runner project
+  target_user_project = nil
+  installer.aggregate_targets.each do |target|
+    target_user_project = target.user_project
     target.user_project.native_targets.each do |native_target|
       native_target.build_configurations.each do |config|
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
         config.build_settings['ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS'] = 'YES'
         config.build_settings['CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED'] = 'YES'
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-        # Satisfy recommended settings
-        config.build_settings['ENABLE_HARDENED_RUNTIME'] = 'NO'
         config.build_settings['SWIFT_VERSION'] = '5.0'
+        config.build_settings['ENABLE_HARDENED_RUNTIME'] = 'NO'
       end
     end
-
-    # Satisfaction for recommended settings at project level
-    target.user_project.build_configurations.each do |config|
-      config.build_settings['ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS'] = 'YES'
-      config.build_settings['CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED'] = 'YES'
-    end
     
-    target.user_project.root_object.attributes['LastUpgradeCheck'] = '1600'
-    target.user_project.save
+    target.user_project.build_configurations.each do |config|
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
+
+  if target_user_project
+    target_user_project.root_object.attributes['LastUpgradeCheck'] = '1600'
+    target_user_project.root_object.attributes['LastSwiftUpdateCheck'] = '1600'
+    target_user_project.root_object.attributes['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+    target_user_project.save
   end
 end

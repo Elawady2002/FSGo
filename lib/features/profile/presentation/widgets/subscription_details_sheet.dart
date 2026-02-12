@@ -57,7 +57,10 @@ class SubscriptionDetailsSheet extends StatelessWidget {
               'المبلغ',
               '${subscription.amount.toStringAsFixed(0)} ج.م',
             ),
-            _buildDetailRow('تاريخ البداية', _formatDate(subscription.startDate)),
+            _buildDetailRow(
+              'تاريخ البداية',
+              _formatDate(subscription.startDate),
+            ),
             _buildDetailRow('تاريخ النهاية', _formatDate(subscription.endDate)),
 
             if (subscription.transferNumber != null &&
@@ -192,9 +195,7 @@ class SubscriptionDetailsSheet extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'فشل تحميل الصورة',
-              style: AppTheme.textTheme.bodySmall?.copyWith(
-                color: Colors.grey,
-              ),
+              style: AppTheme.textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
           ],
         ),

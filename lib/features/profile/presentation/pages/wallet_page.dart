@@ -80,7 +80,10 @@ class WalletPage extends ConsumerWidget {
                     // Top Green Section (Balance)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 32,
+                        horizontal: 24,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryColor, // Brand Yellow
                         borderRadius: BorderRadius.circular(32),
@@ -91,7 +94,11 @@ class WalletPage extends ConsumerWidget {
                           const Positioned(top: 0, left: 0, child: _Rivet()),
                           const Positioned(top: 0, right: 0, child: _Rivet()),
                           const Positioned(bottom: 0, left: 0, child: _Rivet()),
-                          const Positioned(bottom: 0, right: 0, child: _Rivet()),
+                          const Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: _Rivet(),
+                          ),
 
                           // Content
                           Center(
@@ -105,7 +112,9 @@ class WalletPage extends ConsumerWidget {
                                         style: const TextStyle(
                                           fontSize: 40,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF003300), // Dark Green
+                                          color: Color(
+                                            0xFF003300,
+                                          ), // Dark Green
                                           letterSpacing: -1,
                                         ),
                                       ),
@@ -115,7 +124,9 @@ class WalletPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF003300).withOpacity(0.7),
+                                    color: const Color(
+                                      0xFF003300,
+                                    ).withOpacity(0.7),
                                   ),
                                 ),
                               ],
@@ -124,10 +135,13 @@ class WalletPage extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    
+
                     // Bottom Black Section (Actions)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 16,
+                      ),
                       child: Row(
                         children: [
                           // Top Up Button
@@ -138,7 +152,9 @@ class WalletPage extends ConsumerWidget {
                                 Navigator.push(
                                   context,
                                   CupertinoPageRoute(
-                                    builder: (_) => const TopUpAmountPage(isWithdraw: false),
+                                    builder: (_) => const TopUpAmountPage(
+                                      isWithdraw: false,
+                                    ),
                                   ),
                                 );
                               },
@@ -147,7 +163,11 @@ class WalletPage extends ConsumerWidget {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(CupertinoIcons.arrow_down_left, color: Colors.white, size: 24),
+                                    Icon(
+                                      CupertinoIcons.arrow_down_left,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
                                     SizedBox(height: 8),
                                     Text(
                                       'شحن',
@@ -162,14 +182,14 @@ class WalletPage extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          
+
                           // Divider
                           Container(
                             height: 40,
                             width: 1,
                             color: Colors.white.withOpacity(0.2),
                           ),
-                          
+
                           // Widthdraw Button
                           Expanded(
                             child: GestureDetector(
@@ -178,7 +198,8 @@ class WalletPage extends ConsumerWidget {
                                 Navigator.push(
                                   context,
                                   CupertinoPageRoute(
-                                    builder: (_) => const TopUpAmountPage(isWithdraw: true),
+                                    builder: (_) =>
+                                        const TopUpAmountPage(isWithdraw: true),
                                   ),
                                 );
                               },
@@ -187,7 +208,11 @@ class WalletPage extends ConsumerWidget {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(CupertinoIcons.arrow_up_right, color: Colors.white, size: 24), // Swap icon usually means exchange, but using up-right for withdraw
+                                    Icon(
+                                      CupertinoIcons.arrow_up_right,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ), // Swap icon usually means exchange, but using up-right for withdraw
                                     SizedBox(height: 8),
                                     Text(
                                       'سحب',
@@ -208,9 +233,9 @@ class WalletPage extends ConsumerWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 40),
-             
+
               // Transactions Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -271,7 +296,10 @@ class WalletPage extends ConsumerWidget {
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.all(40.0),
-                            child: Text('لا توجد عمليات سابقة', style: TextStyle(color: Colors.grey)),
+                            child: Text(
+                              'لا توجد عمليات سابقة',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           ),
                         );
                       }
@@ -287,19 +315,22 @@ class WalletPage extends ConsumerWidget {
                           // Determine style based on type
                           // Booking -> Debit (Red arrow up-right)
                           // Subscription -> Debit (Red arrow up-right)
-                          
+
                           // If we had TopUp -> Credit (Green arrow down-left)
                           // If we had Withdraw -> Debit (Red arrow up-right or different icon)
-                          
-                          final isCredit = false; // Currently all are debits (bookings/subs)
-                          
+
+                          final isCredit =
+                              false; // Currently all are debits (bookings/subs)
+
                           return _buildTransactionItem(
-                             context,
-                             transaction.title,
-                             _formatDate(transaction.date), // Custom format to match "8:18 10/2" if possible
-                             transaction.amount.toStringAsFixed(2),
-                             isCredit,
-                             transaction.originalObject,
+                            context,
+                            transaction.title,
+                            _formatDate(
+                              transaction.date,
+                            ), // Custom format to match "8:18 10/2" if possible
+                            transaction.amount.toStringAsFixed(2),
+                            isCredit,
+                            transaction.originalObject,
                           );
                         },
                       );
@@ -329,9 +360,15 @@ class WalletPage extends ConsumerWidget {
     dynamic originalObject,
   ) {
     // Colors from image
-    final iconBgColor = isCredit ? const Color(0xFFE8F5E9) : const Color(0xFFFEECEB); // Pale Green / Pale Red
-    final iconColor = isCredit ? const Color(0xFF4CAF50) : const Color(0xFFF56356); // Green / Salmon Red
-    final iconData = isCredit ? CupertinoIcons.arrow_down_left : CupertinoIcons.arrow_up_right;
+    final iconBgColor = isCredit
+        ? const Color(0xFFE8F5E9)
+        : const Color(0xFFFEECEB); // Pale Green / Pale Red
+    final iconColor = isCredit
+        ? const Color(0xFF4CAF50)
+        : const Color(0xFFF56356); // Green / Salmon Red
+    final iconData = isCredit
+        ? CupertinoIcons.arrow_down_left
+        : CupertinoIcons.arrow_up_right;
 
     return GestureDetector(
       onTap: () {
@@ -351,7 +388,7 @@ class WalletPage extends ConsumerWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-             BoxShadow(
+            BoxShadow(
               color: Colors.black.withOpacity(0.02),
               blurRadius: 10,
               offset: const Offset(0, 2),
@@ -368,14 +405,10 @@ class WalletPage extends ConsumerWidget {
                 color: iconBgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                iconData,
-                color: iconColor,
-                size: 20,
-              ),
+              child: Icon(iconData, color: iconColor, size: 20),
             ),
             const SizedBox(width: 16),
-            
+
             // Title & Date
             Expanded(
               child: Column(
@@ -401,14 +434,14 @@ class WalletPage extends ConsumerWidget {
                 ],
               ),
             ),
-            
+
             // Amount (Left in RTL)
             Text(
               '${isCredit ? '+' : '-'}$amount',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Colors.black, 
+                color: Colors.black,
               ),
             ),
           ],

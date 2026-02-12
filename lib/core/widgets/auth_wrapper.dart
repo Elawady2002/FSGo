@@ -12,12 +12,14 @@ class AuthWrapper extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    
+
     LoggerService.debug('AuthWrapper build called. State: $authState');
 
     return authState.when(
       data: (user) {
-        LoggerService.info('AuthWrapper: Data state, user is ${user?.fullName ?? 'null'}');
+        LoggerService.info(
+          'AuthWrapper: Data state, user is ${user?.fullName ?? 'null'}',
+        );
         if (user != null) {
           return const HomePage();
         } else {
@@ -26,18 +28,16 @@ class AuthWrapper extends ConsumerWidget {
       },
       loading: () {
         LoggerService.info('AuthWrapper: Loading state');
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
       error: (error, stackTrace) {
-        LoggerService.error('AuthWrapper error', error: error, stackTrace: stackTrace);
+        LoggerService.error(
+          'AuthWrapper error',
+          error: error,
+          stackTrace: stackTrace,
+        );
         return Scaffold(
-          body: Center(
-            child: Text('حدث خطأ أثناء تحميل البيانات: $error'),
-          ),
+          body: Center(child: Text('حدث خطأ أثناء تحميل البيانات: $error')),
         );
       },
     );

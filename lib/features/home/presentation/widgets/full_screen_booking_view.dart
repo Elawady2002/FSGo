@@ -111,7 +111,6 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
       return;
     }
 
-
     // Validate time selection based on trip type
     bool isValid = true;
     String validationError = '';

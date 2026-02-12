@@ -51,8 +51,9 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
 
   void _onAmountChanged() {
     setState(() {
-      _displayAmount =
-          _amountController.text.isEmpty ? '0' : _amountController.text;
+      _displayAmount = _amountController.text.isEmpty
+          ? '0'
+          : _amountController.text;
     });
   }
 
@@ -91,195 +92,195 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
 
   @override
   Widget build(BuildContext context) {
-    final bool hasAmount = _amountController.text.isNotEmpty &&
-        _amountController.text != '0';
+    final bool hasAmount =
+        _amountController.text.isNotEmpty && _amountController.text != '0';
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.chevron_right, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.isWithdraw ? 'سحب الرصيد' : 'شحن الرصيد',
-          style: AppTheme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+        backgroundColor: const Color(0xFFFAFAFA),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(CupertinoIcons.chevron_right, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
           ),
+          title: Text(
+            widget.isWithdraw ? 'سحب الرصيد' : 'شحن الرصيد',
+            style: AppTheme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
+        body: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
 
-            // ─── Amount Display Area ───
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  Text(
-                    widget.isWithdraw
-                        ? 'المبلغ المراد سحبه'
-                        : 'المبلغ المراد شحنه',
-                    style: AppTheme.textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+              // ─── Amount Display Area ───
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      widget.isWithdraw
+                          ? 'المبلغ المراد سحبه'
+                          : 'المبلغ المراد شحنه',
+                      style: AppTheme.textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // Main amount display — tap to toggle keyboard
-                  GestureDetector(
-                    onTap: () {
-                      if (_focusNode.hasFocus) {
-                        _focusNode.unfocus();
-                      } else {
-                        _focusNode.requestFocus();
-                      }
-                    },
-                    child: AnimatedBuilder(
-                      animation: _pulseAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _pulseAnimation.value,
-                          child: child,
-                        );
+                    // Main amount display — tap to toggle keyboard
+                    GestureDetector(
+                      onTap: () {
+                        if (_focusNode.hasFocus) {
+                          _focusNode.unfocus();
+                        } else {
+                          _focusNode.requestFocus();
+                        }
                       },
-                      child: SizedBox(
-                        height: 100,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Currency label
-                            AnimatedOpacity(
-                              opacity: hasAmount ? 1.0 : 0.4,
-                              duration: const Duration(milliseconds: 300),
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  'ج.م',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: hasAmount
-                                        ? AppTheme.primaryDark
-                                        : Colors.grey.shade400,
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: child,
+                          );
+                        },
+                        child: SizedBox(
+                          height: 100,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Currency label
+                              AnimatedOpacity(
+                                opacity: hasAmount ? 1.0 : 0.4,
+                                duration: const Duration(milliseconds: 300),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    'ج.م',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                      color: hasAmount
+                                          ? AppTheme.primaryDark
+                                          : Colors.grey.shade400,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
+                              const SizedBox(width: 8),
 
-                            // The animated number
-                            AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 250),
-                              curve: Curves.easeOutCubic,
-                              style: TextStyle(
-                                fontSize: _getFontSize(),
-                                fontWeight: FontWeight.w800,
-                                color: hasAmount
-                                    ? Colors.black
-                                    : Colors.grey.shade300,
-                                letterSpacing: -2,
-                                height: 1.0,
+                              // The animated number
+                              AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOutCubic,
+                                style: TextStyle(
+                                  fontSize: _getFontSize(),
+                                  fontWeight: FontWeight.w800,
+                                  color: hasAmount
+                                      ? Colors.black
+                                      : Colors.grey.shade300,
+                                  letterSpacing: -2,
+                                  height: 1.0,
+                                ),
+                                child: Text(_displayAmount),
                               ),
-                              child: Text(_displayAmount),
-                            ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Hidden TextField to capture keyboard input
+                    SizedBox(
+                      height: 0,
+                      child: Opacity(
+                        opacity: 0,
+                        child: TextField(
+                          controller: _amountController,
+                          focusNode: _focusNode,
+                          keyboardType: TextInputType.number,
+                          autofocus: true,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
                           ],
                         ),
                       ),
                     ),
-                  ),
 
-                  // Hidden TextField to capture keyboard input
-                  SizedBox(
-                    height: 0,
-                    child: Opacity(
-                      opacity: 0,
-                      child: TextField(
-                        controller: _amountController,
-                        focusNode: _focusNode,
-                        keyboardType: TextInputType.number,
-                        autofocus: true,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(6),
-                        ],
+                    // Subtle animated line under the amount
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      height: 3,
+                      width: hasAmount ? 80 : 40,
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: hasAmount
+                            ? AppTheme.primaryColor
+                            : Colors.grey.shade200,
                       ),
                     ),
-                  ),
 
-                  // Subtle animated line under the amount
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOutCubic,
-                    height: 3,
-                    width: hasAmount ? 80 : 40,
-                    margin: const EdgeInsets.only(top: 4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: hasAmount
-                          ? AppTheme.primaryColor
-                          : Colors.grey.shade200,
-                    ),
-                  ),
+                    const SizedBox(height: 28),
 
-                  const SizedBox(height: 28),
-
-                  // ─── Quick Selection Chips ───
-                  _buildQuickChips(),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 36),
-
-            // ─── Payment Methods ───
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'طريقة الدفع',
-                      style: AppTheme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPaymentMethodOption(
-                      'Vodafone Cash',
-                      'lib/assets/image/launcher_icons/vodafone_cash.png',
-                      isSelected: _selectedMethod == 'Vodafone Cash',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildPaymentMethodOption(
-                      'InstaPay',
-                      'lib/assets/image/launcher_icons/instapay.png',
-                      isSelected: _selectedMethod == 'InstaPay',
-                    ),
+                    // ─── Quick Selection Chips ───
+                    _buildQuickChips(),
                   ],
                 ),
               ),
-            ),
 
-            // ─── Continue Button ───
-            _buildContinueButton(hasAmount),
-          ],
+              const SizedBox(height: 36),
+
+              // ─── Payment Methods ───
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'طريقة الدفع',
+                        style: AppTheme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildPaymentMethodOption(
+                        'Vodafone Cash',
+                        'lib/assets/image/launcher_icons/vodafone_cash.png',
+                        isSelected: _selectedMethod == 'Vodafone Cash',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPaymentMethodOption(
+                        'InstaPay',
+                        'lib/assets/image/launcher_icons/instapay.png',
+                        isSelected: _selectedMethod == 'InstaPay',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ─── Continue Button ───
+              _buildContinueButton(hasAmount),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -296,10 +297,7 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppTheme.primaryColor.withValues(alpha: 0.15)
@@ -418,7 +416,9 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor.withValues(alpha: 0.06) : Colors.white,
+          color: isSelected
+              ? AppTheme.primaryColor.withValues(alpha: 0.06)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
@@ -443,8 +443,10 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
                 imagePath,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.account_balance_wallet,
-                      color: Colors.grey);
+                  return const Icon(
+                    Icons.account_balance_wallet,
+                    color: Colors.grey,
+                  );
                 },
               ),
             ),

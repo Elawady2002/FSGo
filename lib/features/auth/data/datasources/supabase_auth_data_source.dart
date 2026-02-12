@@ -226,9 +226,11 @@ class SupabaseAuthDataSource {
       try {
         final authUser = session.user;
         final metadata = authUser.userMetadata ?? {};
-        
+
         // 1. Emit initial user data from Auth metadata immediately to avoid blocking the UI
-        LoggerService.info('Auth: Emitting initial user from metadata for ${authUser.id}');
+        LoggerService.info(
+          'Auth: Emitting initial user from metadata for ${authUser.id}',
+        );
         yield UserModel(
           id: authUser.id,
           email: authUser.email ?? '',

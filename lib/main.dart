@@ -1,51 +1,115 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:my_app/l10n/app_localizations.dart';
+
 import 'core/theme/app_theme.dart';
-import 'core/config/supabase_config.dart';
 import 'core/widgets/auth_wrapper.dart';
-import 'core/services/logger_service.dart';
-import 'dart:async';
-import 'package:intl/date_symbol_data_local.dart';
+import 'core/providers/locale_provider.dart';
+import 'core/providers/app_startup_provider.dart';
+
 void main() {
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      // Initialize date formatting for Arabic
-      await initializeDateFormatting('ar', null);
+  WidgetsFlutterBinding.ensureInitialized();
 
-      try {
-        LoggerService.info('STARTING INITIALIZATION');
-        // Load environment variables
-        LoggerService.info('Loading .env...');
-        await dotenv.load(fileName: '.env');
-        LoggerService.info('Environment variables loaded successfully');
-
-        // Initialize Supabase
-        LoggerService.info('Initializing Supabase...');
-        await SupabaseConfig.initialize();
-        LoggerService.info('Supabase initialized successfully');
-      } catch (error, stack) {
-        LoggerService.error(
-          'CRITICAL ERROR during initialization',
-          error: error,
-          stackTrace: stack,
-        );
-        // You might want to show an error screen here
-        // For now, we'll continue to allow the app to run
-      }
-
-      runApp(const ProviderScope(child: MyApp()));
-    },
-    (error, stack) {
-      LoggerService.error(
-        'CRITICAL ERROR: Caught error in runZonedGuarded',
-        error: error,
-        stackTrace: stack,
-      );
-    },
+  // Set initial status bar style
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ),
   );
+
+  runApp(const ProviderScope(child: AppStartupWidget()));
+}
+
+class AppStartupWidget extends ConsumerWidget {
+  const AppStartupWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final startupAsync = ref.watch(appStartupProvider);
+
+    return startupAsync.when(
+      data: (_) => const MyApp(),
+      loading: () => const _SplashScreen(),
+      error: (error, stack) => _ErrorScreen(error: error),
+    );
+  }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo or App Name
+              Text(
+                'Fi El Sekka',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                  letterSpacing: -1,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppTheme.primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorScreen extends StatelessWidget {
+  final Object error;
+  const _ErrorScreen({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Initialization Error',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends ConsumerWidget {
@@ -53,20 +117,21 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+
     return MaterialApp(
       title: 'Fi El Sekka',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      locale: locale,
       // Localization Configuration
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ar', 'EG'), // Egyptian Arabic
-      ],
-      locale: const Locale('ar', 'EG'), // Force Arabic
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const AuthWrapper(),
     );
   }

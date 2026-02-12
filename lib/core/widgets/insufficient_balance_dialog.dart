@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/custom_button.dart';
-import '../../features/profile/presentation/widgets/top_up_sheet.dart';
-import '../../features/payment/presentation/pages/payment_page.dart';
+import 'package:my_app/core/theme/app_theme.dart';
+import 'package:my_app/core/widgets/custom_button.dart';
+import 'package:my_app/l10n/app_localizations.dart';
+import 'package:my_app/features/profile/presentation/widgets/top_up_sheet.dart';
+import 'package:my_app/features/payment/presentation/pages/payment_page.dart';
 
 class InsufficientBalanceDialog extends StatelessWidget {
   final double currentBalance;
@@ -17,12 +18,11 @@ class InsufficientBalanceDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final shortage = requiredAmount - currentBalance;
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -48,13 +48,11 @@ class InsufficientBalanceDialog extends StatelessWidget {
               ),
             ),
 
-
-
             const SizedBox(height: 20),
 
             // Title
             Text(
-              'رصيد غير كافي',
+              l10n.insufficientBalance,
               textAlign: TextAlign.center,
               style: AppTheme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
@@ -65,7 +63,7 @@ class InsufficientBalanceDialog extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              'رصيدك الحالي لا يكفي لإتمام العملية.\nيرجى شحن المحفظة للمتابعة.',
+              l10n.insufficientBalanceDesc,
               textAlign: TextAlign.center,
               style: AppTheme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.textSecondary,
@@ -76,30 +74,30 @@ class InsufficientBalanceDialog extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Removed details container as requested
-
             const SizedBox(height: 24),
 
             // Button
             SizedBox(
               width: double.infinity,
               child: CustomButton(
-                text: 'شحن الرصيد',
+                text: l10n.topUp,
                 onPressed: () async {
                   Navigator.pop(context); // Close this dialog first
-                  
-                  final result = await showModalBottomSheet<Map<String, String>>(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const TopUpSheet(),
-                  );
+
+                  final result =
+                      await showModalBottomSheet<Map<String, String>>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const TopUpSheet(),
+                      );
 
                   if (result != null && context.mounted) {
                     Navigator.push(
                       context,
                       CupertinoPageRoute(
                         builder: (_) => PaymentPage(
-                          planName: 'شحن الرصيد',
+                          planName: l10n.topUp,
                           amount: result['amount']!,
                           isSubscription: false,
                           selectedMethod: result['method'],
@@ -118,5 +116,3 @@ class InsufficientBalanceDialog extends StatelessWidget {
     );
   }
 }
-
-

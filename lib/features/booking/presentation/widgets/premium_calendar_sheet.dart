@@ -60,13 +60,19 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
 
   void _goToPreviousMonth() {
     setState(() {
-      _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month - 1);
+      _displayedMonth = DateTime(
+        _displayedMonth.year,
+        _displayedMonth.month - 1,
+      );
     });
   }
 
   void _goToNextMonth() {
     setState(() {
-      _displayedMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1);
+      _displayedMonth = DateTime(
+        _displayedMonth.year,
+        _displayedMonth.month + 1,
+      );
     });
   }
 
@@ -76,7 +82,9 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   bool _isSelected(DateTime date) {
@@ -86,32 +94,50 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
   }
 
   List<DateTime> _getDaysInMonth() {
-    final firstDayOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month, 1);
-    final lastDayOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0);
-    
+    final firstDayOfMonth = DateTime(
+      _displayedMonth.year,
+      _displayedMonth.month,
+      1,
+    );
+    final lastDayOfMonth = DateTime(
+      _displayedMonth.year,
+      _displayedMonth.month + 1,
+      0,
+    );
+
     // Get the weekday of the first day (0 = Sunday in intl, but we want Saturday as first day for Arabic)
     // In Arabic calendar, Saturday is the first day of the week
-    int startOffset = (firstDayOfMonth.weekday % 7); // Saturday = 6, we need 0 offset for Saturday
-    
+    int startOffset =
+        (firstDayOfMonth.weekday %
+        7); // Saturday = 6, we need 0 offset for Saturday
+
     final days = <DateTime>[];
-    
+
     // Add empty slots for days before the first day of the month
     for (int i = 0; i < startOffset; i++) {
       days.add(DateTime(0)); // Placeholder for empty cells
     }
-    
+
     // Add all days of the month
     for (int day = 1; day <= lastDayOfMonth.day; day++) {
       days.add(DateTime(_displayedMonth.year, _displayedMonth.month, day));
     }
-    
+
     return days;
   }
 
   @override
   Widget build(BuildContext context) {
     final days = _getDaysInMonth();
-    final weekDays = ['س', 'ح', 'ن', 'ث', 'ر', 'خ', 'ج']; // Arabic weekday abbreviations (Sat-Fri)
+    final weekDays = [
+      'س',
+      'ح',
+      'ن',
+      'ث',
+      'ر',
+      'خ',
+      'ج',
+    ]; // Arabic weekday abbreviations (Sat-Fri)
 
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
@@ -133,7 +159,7 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Header with month navigation
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -162,28 +188,32 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Weekday headers
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: weekDays.map((day) => SizedBox(
-                width: 40,
-                child: Center(
-                  child: Text(
-                    day,
-                    style: AppTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w600,
+              children: weekDays
+                  .map(
+                    (day) => SizedBox(
+                      width: 40,
+                      child: Center(
+                        child: Text(
+                          day,
+                          style: AppTheme.textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )).toList(),
+                  )
+                  .toList(),
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Calendar grid
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -198,30 +228,32 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
               itemCount: days.length,
               itemBuilder: (context, index) {
                 final date = days[index];
-                
+
                 // Empty cell
                 if (date.year == 0) {
                   return const SizedBox();
                 }
-                
+
                 final isSelectable = _isDateSelectable(date);
                 final isSelected = _isSelected(date);
                 final isToday = _isToday(date);
-                
+
                 return GestureDetector(
-                  onTap: isSelectable ? () {
-                    setState(() {
-                      _selectedDate = date;
-                    });
-                  } : null,
+                  onTap: isSelectable
+                      ? () {
+                          setState(() {
+                            _selectedDate = date;
+                          });
+                        }
+                      : null,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppTheme.primaryColor
                           : isToday
-                              ? AppTheme.primaryColor.withValues(alpha: 0.1)
-                              : Colors.transparent,
+                          ? AppTheme.primaryColor.withValues(alpha: 0.1)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                       border: isToday && !isSelected
                           ? Border.all(color: AppTheme.primaryColor, width: 1.5)
@@ -234,8 +266,8 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
                           color: isSelected
                               ? Colors.black
                               : isSelectable
-                                  ? Colors.black
-                                  : Colors.grey.shade400,
+                              ? Colors.black
+                              : Colors.grey.shade400,
                           fontWeight: isSelected || isToday
                               ? FontWeight.bold
                               : FontWeight.w500,
@@ -248,7 +280,7 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Selected date display
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -284,7 +316,10 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        DateFormat('EEEE، d MMMM yyyy', 'ar').format(_selectedDate),
+                        DateFormat(
+                          'EEEE، d MMMM yyyy',
+                          'ar',
+                        ).format(_selectedDate),
                         style: AppTheme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
@@ -297,7 +332,7 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Confirm button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -332,7 +367,10 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
     );
   }
 
-  Widget _buildNavButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildNavButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -341,11 +379,7 @@ class _PremiumCalendarSheetState extends State<PremiumCalendarSheet> {
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icon,
-          color: Colors.black87,
-          size: 20,
-        ),
+        child: Icon(icon, color: Colors.black87, size: 20),
       ),
     );
   }

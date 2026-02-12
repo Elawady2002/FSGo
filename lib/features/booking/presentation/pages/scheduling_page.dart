@@ -142,7 +142,9 @@ class _SchedulingPageState extends ConsumerState<SchedulingPage> {
                 times: _returnTimes,
                 selectedTime: bookingState.selectedReturnTime,
                 onSelect: (time) {
-                  ref.read(bookingStateProvider.notifier).selectReturnTime(time);
+                  ref
+                      .read(bookingStateProvider.notifier)
+                      .selectReturnTime(time);
                 },
               ).animate().fadeIn(delay: 600.ms),
 
@@ -162,7 +164,10 @@ class _SchedulingPageState extends ConsumerState<SchedulingPage> {
                           SnackBar(
                             content: Row(
                               children: [
-                                const Icon(Icons.check_circle_outline, color: Colors.white),
+                                const Icon(
+                                  Icons.check_circle_outline,
+                                  color: Colors.white,
+                                ),
                                 const SizedBox(width: 12),
                                 const Text('تم تحديد المواعيد بنجاح'),
                               ],
@@ -170,7 +175,9 @@ class _SchedulingPageState extends ConsumerState<SchedulingPage> {
                             backgroundColor: AppTheme.primaryColor,
                             behavior: SnackBarBehavior.floating,
                             margin: const EdgeInsets.all(20),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                         );
                       }

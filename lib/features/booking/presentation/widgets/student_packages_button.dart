@@ -12,9 +12,7 @@ class StudentPackagesButton extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          CupertinoPageRoute(
-            builder: (_) => const SubscriptionPlansPage(),
-          ),
+          CupertinoPageRoute(builder: (_) => const SubscriptionPlansPage()),
         );
       },
       child: Container(

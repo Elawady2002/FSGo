@@ -83,7 +83,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
               bottom: false,
               child: Column(
                 children: [
-
                   // Payment Methods Selector
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -133,7 +132,8 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                       children: [
                         _buildPaymentMethod(
                           title: 'تحويل انستا باي',
-                          imagePath: 'lib/assets/image/launcher_icons/instapay.png',
+                          imagePath:
+                              'lib/assets/image/launcher_icons/instapay.png',
                           accountName: 'Fi El Sekka',
                           accountNumber: 'user@instapay',
                           instructions:
@@ -159,16 +159,18 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
           // Confirm Button Bottom Bar
           Container(
             padding: EdgeInsets.fromLTRB(
-              24, 
-              20, 
-              24, 
-              MediaQuery.of(context).padding.bottom > 0 
-                ? MediaQuery.of(context).padding.bottom + 8 
-                : 24
+              24,
+              20,
+              24,
+              MediaQuery.of(context).padding.bottom > 0
+                  ? MediaQuery.of(context).padding.bottom + 8
+                  : 24,
             ),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.08),
@@ -294,9 +296,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
 
                         if (error != null) {
                           // Show error
-                          AppLogger.error(
-                            '❌ Booking creation failed: $error',
-                          );
+                          AppLogger.error('❌ Booking creation failed: $error');
                           if (!mounted) return;
 
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -325,33 +325,42 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                   if (!mounted) return;
                   if (!context.mounted) return;
 
-                    // Invalidate providers to refresh home page
-                    ref.invalidate(userBookingsProvider);
-                    ref.invalidate(upcomingBookingProvider);
-                    if (widget.isSubscription) {
-                      ref.invalidate(activeSubscriptionProvider);
-                    }
+                  // Invalidate providers to refresh home page
+                  ref.invalidate(userBookingsProvider);
+                  ref.invalidate(upcomingBookingProvider);
+                  if (widget.isSubscription) {
+                    ref.invalidate(activeSubscriptionProvider);
+                  }
 
-                    // Go back to home
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                  // Go back to home
+                  Navigator.popUntil(context, (route) => route.isFirst);
 
-                    // Show success notification
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            const Icon(CupertinoIcons.check_mark_circled_solid, color: Colors.white),
-                            const SizedBox(width: 12),
-                            Text(widget.isSubscription ? 'تم تفعيل الاشتراك بنجاح' : 'تم الحجز بنجاح'),
-                          ],
-                        ),
-                        backgroundColor: AppTheme.primaryColor,
-                        behavior: SnackBarBehavior.floating,
-                        margin: const EdgeInsets.all(20),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  // Show success notification
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.check_mark_circled_solid,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            widget.isSubscription
+                                ? 'تم تفعيل الاشتراك بنجاح'
+                                : 'تم الحجز بنجاح',
+                          ),
+                        ],
                       ),
-                    );
-                  } else {
+                      backgroundColor: AppTheme.primaryColor,
+                      behavior: SnackBarBehavior.floating,
+                      margin: const EdgeInsets.all(20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  );
+                } else {
                   AppLogger.warning('❌ Payment was not confirmed');
                 }
               },
@@ -402,9 +411,17 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
               ),
             ),
             const SizedBox(height: 32),
-            _buildCopyableField('اسم الحساب', accountName, CupertinoIcons.person_fill),
+            _buildCopyableField(
+              'اسم الحساب',
+              accountName,
+              CupertinoIcons.person_fill,
+            ),
             const SizedBox(height: 20),
-            _buildCopyableField('رقم الحساب / العنوان', accountNumber, CupertinoIcons.tag_fill),
+            _buildCopyableField(
+              'رقم الحساب / العنوان',
+              accountNumber,
+              CupertinoIcons.tag_fill,
+            ),
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(16),
@@ -486,7 +503,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                     SnackBar(
                       content: Row(
                         children: [
-                          const Icon(CupertinoIcons.check_mark_circled_solid, color: Colors.white, size: 20),
+                          const Icon(
+                            CupertinoIcons.check_mark_circled_solid,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           const SizedBox(width: 12),
                           Text('تم نسخ $label بنجاح'),
                         ],

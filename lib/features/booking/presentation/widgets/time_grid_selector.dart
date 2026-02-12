@@ -33,10 +33,7 @@ class TimeGridSelector extends StatelessWidget {
             decoration: TextDecoration.none,
           ),
           backgroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

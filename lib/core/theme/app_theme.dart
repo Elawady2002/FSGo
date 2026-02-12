@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
@@ -16,7 +17,9 @@ class AppTheme {
 
   static const Color textPrimary = Color(0xFF000000);
   static const Color textSecondary = Color(0xFF666666);
-  static const Color textTertiary = Color(0xFF757575); // Darkened for better contrast
+  static const Color textTertiary = Color(
+    0xFF757575,
+  ); // Darkened for better contrast
 
   static const Color dividerColor = Color(0xFFE0E0E0);
   static const Color errorColor = Color(0xFFFF3B30);
@@ -165,6 +168,7 @@ class AppTheme {
         ),
         iconTheme: IconThemeData(color: textPrimary),
         scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
 
       cupertinoOverrideTheme: const CupertinoThemeData(

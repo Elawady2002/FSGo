@@ -5,12 +5,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/theme/app_theme.dart';
-
-import '../../../booking/domain/entities/booking_entity.dart';
-import '../../../subscription/domain/entities/subscription_entity.dart';
-import '../../../subscription/domain/entities/subscription_schedule_entity.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:my_app/core/theme/app_theme.dart';
+import 'package:my_app/features/booking/domain/entities/booking_entity.dart';
+import 'package:my_app/features/subscription/domain/entities/subscription_entity.dart';
+import 'package:my_app/features/subscription/domain/entities/subscription_schedule_entity.dart';
+import 'package:my_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:my_app/core/providers/locale_provider.dart';
+import 'package:my_app/l10n/app_localizations.dart';
 import 'full_screen_booking_view.dart';
 
 class ActiveSubscriptionCard extends ConsumerStatefulWidget {
@@ -323,7 +324,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'قريباً',
+                  AppLocalizations.of(context)!.soon,
                   style: AppTheme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -348,7 +349,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
 
                 children: [
                   Text(
-                    'تاريخ البداية',
+                    AppLocalizations.of(context)!.startDate,
                     style: AppTheme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white70,
                       fontSize: 14, // Increased from 12
@@ -356,7 +357,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _formatDateSafe(widget.subscription.startDate),
+                    _formatDateSafe(context, widget.subscription.startDate),
                     style: AppTheme.textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -372,7 +373,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
 
                 children: [
                   Text(
-                    'نوع الرحلة',
+                    AppLocalizations.of(context)!.tripType,
                     style: AppTheme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white70,
                       fontSize: 14,
@@ -380,7 +381,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _getTripTypeLabel(widget.subscription.tripType),
+                    _getTripTypeLabel(context, widget.subscription.tripType),
                     style: AppTheme.textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -409,7 +410,12 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
               // Text (Left of dot)
               Expanded(
                 child: Text(
-                  'من منطقتك إلى ${_universityName ?? "الجامعة"}',
+                  AppLocalizations.of(context)!.fromYourAreaTo(
+                    _universityName ??
+                        (ref.read(localeProvider).languageCode == 'ar'
+                            ? "الجامعة"
+                            : "University"),
+                  ),
                   style: AppTheme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -437,22 +443,24 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
     });
   }
 
-  String _getTripTypeLabel(String tripType) {
+  String _getTripTypeLabel(BuildContext context, String tripType) {
+    final l10n = AppLocalizations.of(context)!;
     switch (tripType) {
       case 'departure_only':
-        return 'ذهاب فقط';
+        return l10n.departureOnly;
       case 'return_only':
-        return 'عودة فقط';
+        return l10n.returnOnly;
       case 'round_trip':
-        return 'ذهاب وعودة';
+        return l10n.roundTrip;
       default:
         return tripType;
     }
   }
 
-  String _formatDateSafe(DateTime date) {
+  String _formatDateSafe(BuildContext context, DateTime date) {
     try {
-      return DateFormat('d MMMM', 'ar').format(date);
+      final locale = ref.read(localeProvider).languageCode;
+      return DateFormat('d MMMM', locale).format(date);
     } catch (e) {
       // Fallback if locale data is missing
       return "${date.day}/${date.month}";

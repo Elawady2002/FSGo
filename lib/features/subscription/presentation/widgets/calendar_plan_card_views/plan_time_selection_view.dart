@@ -95,7 +95,10 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                       ),
                     ),
                     Text(
-                      DateFormat('EEEE، d MMMM', 'ar').format(widget.selectedDate),
+                      DateFormat(
+                        'EEEE، d MMMM',
+                        'ar',
+                      ).format(widget.selectedDate),
                       style: AppTheme.textTheme.bodySmall?.copyWith(
                         color: Colors.white70,
                       ),
@@ -249,7 +252,9 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: isSelected
                       ? [
@@ -296,7 +301,9 @@ class _PlanTimeSelectionViewState extends State<PlanTimeSelectionView> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05),
+                color: isSelected
+                    ? AppTheme.primaryColor
+                    : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: isSelected
                     ? Border.all(color: AppTheme.primaryColor, width: 2)

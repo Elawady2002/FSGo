@@ -17,12 +17,12 @@ class BookingDateCard extends StatelessWidget {
   void _showDatePicker(BuildContext context) async {
     final now = DateTime.now();
     // If it's after 7 AM, today is not allowed
-    final firstAllowedDate = now.hour >= 7 
-        ? DateTime(now.year, now.month, now.day + 1) 
+    final firstAllowedDate = now.hour >= 7
+        ? DateTime(now.year, now.month, now.day + 1)
         : DateTime(now.year, now.month, now.day);
-    
-    final initialDate = selectedDate.isBefore(firstAllowedDate) 
-        ? firstAllowedDate 
+
+    final initialDate = selectedDate.isBefore(firstAllowedDate)
+        ? firstAllowedDate
         : selectedDate;
 
     final pickedDate = await PremiumCalendarSheet.show(

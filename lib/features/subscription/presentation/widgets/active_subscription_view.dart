@@ -10,10 +10,7 @@ import '../providers/subscription_provider.dart';
 class ActiveSubscriptionView extends ConsumerStatefulWidget {
   final SubscriptionEntity subscription;
 
-  const ActiveSubscriptionView({
-    super.key,
-    required this.subscription,
-  });
+  const ActiveSubscriptionView({super.key, required this.subscription});
 
   @override
   ConsumerState<ActiveSubscriptionView> createState() =>
@@ -25,7 +22,8 @@ class _ActiveSubscriptionViewState
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('d MMM yyyy', 'ar');
-    final planName = widget.subscription.planType == SubscriptionPlanType.monthly
+    final planName =
+        widget.subscription.planType == SubscriptionPlanType.monthly
         ? 'باقة الشهر'
         : 'باقة الترم';
 
@@ -75,7 +73,8 @@ class _ActiveSubscriptionViewState
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: widget.subscription.status == SubscriptionStatus.active
+                    color:
+                        widget.subscription.status == SubscriptionStatus.active
                         ? const Color(0xFFFEF08A)
                         : Colors.orange.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),

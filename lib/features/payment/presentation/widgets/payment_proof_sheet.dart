@@ -261,10 +261,7 @@ class _PaymentProofSheetState extends State<PaymentProofSheet> {
                   });
 
                   // Show error to user
-                  showTopNotification(
-                    context,
-                    'حدث خطأ: ${e.toString()}',
-                  );
+                  showTopNotification(context, 'حدث خطأ: ${e.toString()}');
                 }
               }
             },

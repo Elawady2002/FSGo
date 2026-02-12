@@ -75,7 +75,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
 
                   // Trip Type Selector
 
-
                   // Trip Detail Summary
                   _buildTripSummaryCard(bookingState),
                   const SizedBox(height: 24),
@@ -89,7 +88,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                   ),
 
                   // Schedule Selection
-                  ..._buildScheduleSections(context, ref, bookingState, bookingNotifier),
+                  ..._buildScheduleSections(
+                    context,
+                    ref,
+                    bookingState,
+                    bookingNotifier,
+                  ),
 
                   const SizedBox(height: 100),
                 ],
@@ -144,9 +148,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                         final success = await ref
                             .read(walletProvider.notifier)
                             .deductAmount(
-                          amount,
-                          'حجز رحلة - ${bookingState.tripType.displayName}',
-                        );
+                              amount,
+                              'حجز رحلة - ${bookingState.tripType.displayName}',
+                            );
 
                         if (!success) {
                           if (!context.mounted) return;
@@ -164,10 +168,10 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                         final errorMessage = await ref
                             .read(bookingStateProvider.notifier)
                             .createBooking(
-                          repository,
-                          paymentProofImage: null,
-                          transferNumber: null,
-                        );
+                              repository,
+                              paymentProofImage: null,
+                              transferNumber: null,
+                            );
 
                         if (errorMessage == null) {
                           if (!context.mounted) return;
@@ -220,7 +224,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     return routesAsync.when(
       data: (routes) {
         if (routes.isEmpty) {
-          return [const Center(child: Text('لا يوجد رحلات متاحة لهذه الجامعة'))];
+          return [
+            const Center(child: Text('لا يوجد رحلات متاحة لهذه الجامعة')),
+          ];
         }
 
         // For now, we take the first route. Ideally, we match by station or let user select.
@@ -231,7 +237,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
           schedulesAsync.when(
             data: (schedules) {
               final allSchedules = schedules;
-              final selectedSchedule = state.selectedDepartureSchedule ?? state.selectedReturnSchedule;
+              final selectedSchedule =
+                  state.selectedDepartureSchedule ??
+                  state.selectedReturnSchedule;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,19 +249,21 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                   const SizedBox(height: 16),
                   TimeSelectionCard(
                     title: 'اختار ميعاد الرحلة',
-                    selectedTime: selectedSchedule != null 
-                        ? _formatTime(selectedSchedule.departureTime) 
+                    selectedTime: selectedSchedule != null
+                        ? _formatTime(selectedSchedule.departureTime)
                         : null,
                     icon: CupertinoIcons.clock,
                     onTap: () {
-                      final items = allSchedules.map((s) => _formatTime(s.departureTime)).toList();
+                      final items = allSchedules
+                          .map((s) => _formatTime(s.departureTime))
+                          .toList();
                       _showTimePicker(
                         title: 'موعد الرحلة',
                         items: items,
                         onSelect: (time) {
                           if (time != null) {
                             final schedule = allSchedules.firstWhere(
-                              (s) => _formatTime(s.departureTime) == time
+                              (s) => _formatTime(s.departureTime) == time,
                             );
                             bookingNotifier.selectDepartureSchedule(schedule);
                           }
@@ -275,7 +285,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   }
 
   String _formatTime(String time) {
-    // Basic formatting from "HH:mm" to "h:mm a" if needed, 
+    // Basic formatting from "HH:mm" to "h:mm a" if needed,
     // but the entity says "departureTime" is String.
     try {
       final parts = time.split(':');
@@ -414,7 +424,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   }
 
   Widget _buildTripSummaryCard(BookingStateModel state) {
-    String destinationName = state.isToUniversity 
+    String destinationName = state.isToUniversity
         ? (state.selectedUniversity?.nameAr ?? 'الجامعة')
         : (state.selectedArrivalStation?.nameAr ?? 'موقف الوصول');
 
@@ -438,13 +448,25 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             label: 'المدينة',
             value: state.selectedCity?.nameAr ?? '-',
           ),
-          Divider(height: 1, color: Colors.grey.shade100, indent: 64, endIndent: 20),
+          Divider(
+            height: 1,
+            color: Colors.grey.shade100,
+            indent: 64,
+            endIndent: 20,
+          ),
           _buildSummaryRow(
-            icon: state.isToUniversity ? CupertinoIcons.book_fill : CupertinoIcons.pin_fill,
+            icon: state.isToUniversity
+                ? CupertinoIcons.book_fill
+                : CupertinoIcons.pin_fill,
             label: state.isToUniversity ? 'الجامعة' : 'موقف الوصول',
             value: destinationName,
           ),
-          Divider(height: 1, color: Colors.grey.shade100, indent: 64, endIndent: 20),
+          Divider(
+            height: 1,
+            color: Colors.grey.shade100,
+            indent: 64,
+            endIndent: 20,
+          ),
           _buildSummaryRow(
             icon: CupertinoIcons.location_fill,
             label: 'محطة الركوب',

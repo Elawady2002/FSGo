@@ -15,15 +15,11 @@ class Auth extends _$Auth {
 
   /// Login with email and password
   Future<String?> login(String email, String password) async {
-    final result = await ref.read(authRepositoryProvider).signIn(
-          email: email,
-          password: password,
-        );
+    final result = await ref
+        .read(authRepositoryProvider)
+        .signIn(email: email, password: password);
 
-    return result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Sign up with email and password
@@ -35,7 +31,9 @@ class Auth extends _$Auth {
     String? studentId,
     String? universityId,
   }) async {
-    final result = await ref.read(authRepositoryProvider).signUp(
+    final result = await ref
+        .read(authRepositoryProvider)
+        .signUp(
           email: email,
           password: password,
           fullName: name,
@@ -44,35 +42,25 @@ class Auth extends _$Auth {
           universityId: universityId,
         );
 
-    return result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Verify OTP code
   Future<String?> verifyOtp(String otp, String email) async {
-    final result = await ref.read(authRepositoryProvider).verifyOtp(
-          email: email,
-          otp: otp,
-        );
+    final result = await ref
+        .read(authRepositoryProvider)
+        .verifyOtp(email: email, otp: otp);
 
-    return result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Resend OTP code
   Future<String?> resendOtp(String email) async {
-    final result = await ref.read(authRepositoryProvider).resendOtp(
-          email: email,
-        );
+    final result = await ref
+        .read(authRepositoryProvider)
+        .resendOtp(email: email);
 
-    return result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Update user profile
@@ -86,17 +74,16 @@ class Auth extends _$Auth {
       return 'User not authenticated';
     }
 
-    final result = await ref.read(authRepositoryProvider).updateProfile(
+    final result = await ref
+        .read(authRepositoryProvider)
+        .updateProfile(
           userId: currentUser.id,
           fullName: fullName,
           phone: phone,
           avatarUrl: avatarUrl,
         );
 
-    return result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Upload profile image
@@ -107,10 +94,9 @@ class Auth extends _$Auth {
     }
 
     // 1. Upload image
-    final uploadResult = await ref.read(authRepositoryProvider).uploadProfileImage(
-          image: image,
-          userId: currentUser.id,
-        );
+    final uploadResult = await ref
+        .read(authRepositoryProvider)
+        .uploadProfileImage(image: image, userId: currentUser.id);
 
     return uploadResult.fold((failure) => failure.message, (imageUrl) async {
       // 2. Update user profile with new image URL
@@ -141,10 +127,7 @@ class Auth extends _$Auth {
   Future<String?> logout() async {
     final result = await ref.read(authRepositoryProvider).signOut();
 
-    return result.fold(
-      (failure) => failure.message,
-      (_) => null,
-    );
+    return result.fold((failure) => failure.message, (_) => null);
   }
 
   /// Check if user is authenticated (Helper for synchronous checks, but prefer watching state)
@@ -153,4 +136,3 @@ class Auth extends _$Auth {
   /// Get current user (Helper)
   UserEntity? get currentUser => state.value;
 }
-

@@ -9,17 +9,9 @@ class WalletState {
   final bool isLoading;
   final String? error;
 
-  const WalletState({
-    this.balance = 0.0,
-    this.isLoading = false,
-    this.error,
-  });
+  const WalletState({this.balance = 0.0, this.isLoading = false, this.error});
 
-  WalletState copyWith({
-    double? balance,
-    bool? isLoading,
-    String? error,
-  }) {
+  WalletState copyWith({double? balance, bool? isLoading, String? error}) {
     return WalletState(
       balance: balance ?? this.balance,
       isLoading: isLoading ?? this.isLoading,
@@ -39,17 +31,14 @@ class WalletNotifier extends StateNotifier<WalletState> {
 
   Future<void> _loadBalance() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final result = await _repository.getBalance(_userId);
-      
+
       result.fold(
         (failure) {
           AppLogger.error('Failed to load wallet balance: ${failure.message}');
-          state = state.copyWith(
-            isLoading: false,
-            error: failure.message,
-          );
+          state = state.copyWith(isLoading: false, error: failure.message);
         },
         (balance) {
           AppLogger.info('Wallet balance loaded: $balance');
@@ -78,23 +67,18 @@ class WalletNotifier extends StateNotifier<WalletState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final result = await _repository.deductAmount(
-        _userId,
-        amount,
-        reason,
-      );
+      final result = await _repository.deductAmount(_userId, amount, reason);
 
       return result.fold(
         (failure) {
           AppLogger.error('Failed to deduct amount: ${failure.message}');
-          state = state.copyWith(
-            isLoading: false,
-            error: failure.message,
-          );
+          state = state.copyWith(isLoading: false, error: failure.message);
           return false;
         },
         (newBalance) {
-          AppLogger.info('Amount deducted successfully. New balance: $newBalance');
+          AppLogger.info(
+            'Amount deducted successfully. New balance: $newBalance',
+          );
           state = state.copyWith(
             balance: newBalance,
             isLoading: false,
@@ -105,10 +89,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       );
     } catch (e) {
       AppLogger.error('Error deducting amount: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: 'حدث خطأ في خصم المبلغ',
-      );
+      state = state.copyWith(isLoading: false, error: 'حدث خطأ في خصم المبلغ');
       return false;
     }
   }
@@ -117,19 +98,12 @@ class WalletNotifier extends StateNotifier<WalletState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final result = await _repository.addAmount(
-        _userId,
-        amount,
-        reason,
-      );
+      final result = await _repository.addAmount(_userId, amount, reason);
 
       return result.fold(
         (failure) {
           AppLogger.error('Failed to add amount: ${failure.message}');
-          state = state.copyWith(
-            isLoading: false,
-            error: failure.message,
-          );
+          state = state.copyWith(isLoading: false, error: failure.message);
           return false;
         },
         (newBalance) {
@@ -170,11 +144,13 @@ class WalletNotifier extends StateNotifier<WalletState> {
     try {
       // Simulate API call delay
       await Future.delayed(const Duration(seconds: 1));
-      
-      AppLogger.info('Top Up Request: Amount=$amount, Method=$method, Phone=$senderPhone, Proof=$proofUrl');
-      
+
+      AppLogger.info(
+        'Top Up Request: Amount=$amount, Method=$method, Phone=$senderPhone, Proof=$proofUrl',
+      );
+
       // In a real app, you would call repository.createTopUpRequest(...)
-      
+
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
@@ -185,7 +161,9 @@ class WalletNotifier extends StateNotifier<WalletState> {
 }
 
 // Provider
-final walletProvider = StateNotifierProvider<WalletNotifier, WalletState>((ref) {
+final walletProvider = StateNotifierProvider<WalletNotifier, WalletState>((
+  ref,
+) {
   final user = ref.watch(authProvider).value;
   if (user == null) {
     throw Exception('User not authenticated');

@@ -3,14 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/theme/app_theme.dart';
+import 'package:my_app/core/theme/app_theme.dart';
+import 'package:my_app/l10n/app_localizations.dart';
+import 'package:my_app/core/providers/locale_provider.dart';
 import 'personal_data_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/login_page.dart';
-import 'saved_places_page.dart';
 import 'wallet_page.dart';
 import 'ride_history_page.dart';
-
 import 'help_center_page.dart';
 import '../../../subscription/presentation/pages/my_subscription_page.dart';
 
@@ -30,7 +30,7 @@ class ProfilePage extends ConsumerWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'الملف الشخصي',
+          AppLocalizations.of(context)!.profile,
           style: AppTheme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -47,12 +47,17 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 32),
 
             // Account & Settings
-            _buildSectionTitle('الحساب والإعدادات'),
+            _buildSectionTitle(
+              ref,
+              AppLocalizations.of(context)!.appName,
+            ), // Or any other title
             _buildSection([
               _MenuItem(
                 icon: CupertinoIcons.ticket,
-                title: 'اشتراكي',
-                subtitle: 'إدارة اشتراكك الحالي',
+                title: AppLocalizations.of(context)!.mySubscription,
+                subtitle: ref.read(localeProvider).languageCode == 'ar'
+                    ? 'إدارة اشتراكك الحالي'
+                    : 'Manage your current subscription',
                 onTap: () => Navigator.push(
                   context,
                   CupertinoPageRoute(
@@ -62,31 +67,26 @@ class ProfilePage extends ConsumerWidget {
               ),
               _MenuItem(
                 icon: CupertinoIcons.person,
-                title: 'البيانات الشخصية',
-                subtitle: 'الاسم، رقم الهاتف، البريد الإلكتروني',
+                title: AppLocalizations.of(context)!.personalData,
+                subtitle: ref.read(localeProvider).languageCode == 'ar'
+                    ? 'الاسم، رقم الهاتف، البريد الإلكتروني'
+                    : 'Name, phone, email',
                 onTap: () => Navigator.push(
                   context,
                   CupertinoPageRoute(builder: (_) => const PersonalDataPage()),
                 ),
               ),
               _MenuItem(
-                icon: CupertinoIcons.location,
-                title: 'الأماكن المحفوظة',
-                subtitle: 'المنزل، العمل، الجامعة',
-                onTap: () => Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (_) => const SavedPlacesPage()),
-                ),
-              ),
-              _MenuItem(
                 icon: CupertinoIcons.globe,
-                title: 'اللغة',
-                trailingText: 'العربية',
-                onTap: () => _showLanguageSheet(context),
+                title: AppLocalizations.of(context)!.language,
+                trailingText: ref.watch(localeProvider).languageCode == 'ar'
+                    ? 'العربية'
+                    : 'English',
+                onTap: () => _showLanguageSheet(context, ref),
               ),
               _MenuItem(
                 icon: CupertinoIcons.bell,
-                title: 'الإشعارات',
+                title: AppLocalizations.of(context)!.notifications,
                 isSwitch: true,
                 onTap: () {},
               ),
@@ -94,12 +94,12 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Wallet & Payments
-            _buildSectionTitle('المحفظة والدفع'),
+            _buildSectionTitle(ref, AppLocalizations.of(context)!.wallet),
             _buildSection([
               _MenuItem(
                 icon: CupertinoIcons.money_dollar_circle,
-                title: 'رصيد المحفظة',
-                trailingText: '150 ج.م',
+                title: AppLocalizations.of(context)!.walletBalance,
+                trailingText: '150 ${AppLocalizations.of(context)!.egp}',
                 trailingTextColor: AppTheme.primaryDark,
                 onTap: () => Navigator.push(
                   context,
@@ -110,27 +110,28 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Activity
-            _buildSectionTitle('النشاط'),
+            _buildSectionTitle(ref, AppLocalizations.of(context)!.rideHistory),
             _buildSection([
               _MenuItem(
                 icon: CupertinoIcons.ticket,
-                title: 'سجل الرحلات',
-                subtitle: 'عرض الرحلات السابقة والقادمة',
+                title: AppLocalizations.of(context)!.rideHistory,
+                subtitle: ref.read(localeProvider).languageCode == 'ar'
+                    ? 'عرض الرحلات السابقة والقادمة'
+                    : 'View past and upcoming rides',
                 onTap: () => Navigator.push(
                   context,
                   CupertinoPageRoute(builder: (_) => const RideHistoryPage()),
                 ),
               ),
-
             ]),
             const SizedBox(height: 24),
 
             // Support & Legal
-            _buildSectionTitle('الدعم والمساعدة'),
+            _buildSectionTitle(ref, AppLocalizations.of(context)!.helpCenter),
             _buildSection([
               _MenuItem(
                 icon: CupertinoIcons.question_circle,
-                title: 'مركز المساعدة',
+                title: AppLocalizations.of(context)!.helpCenter,
                 onTap: () => Navigator.push(
                   context,
                   CupertinoPageRoute(builder: (_) => const HelpCenterPage()),
@@ -138,14 +139,14 @@ class ProfilePage extends ConsumerWidget {
               ),
               _MenuItem(
                 icon: CupertinoIcons.phone,
-                title: 'تواصل معنا',
+                title: AppLocalizations.of(context)!.contactUs,
                 onTap: () {
                   _showContactDialog(context);
                 },
               ),
               _MenuItem(
                 icon: CupertinoIcons.doc_text,
-                title: 'الشروط والأحكام',
+                title: AppLocalizations.of(context)!.termsAndConditions,
                 onTap: () {
                   _showTermsDialog(context);
                 },
@@ -170,7 +171,7 @@ class ProfilePage extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  'تسجيل الخروج',
+                  AppLocalizations.of(context)!.logout,
                   style: AppTheme.textTheme.bodyLarge?.copyWith(
                     color: const Color(0xFFFF3B30),
                     fontWeight: FontWeight.bold,
@@ -192,7 +193,9 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
-  void _showLanguageSheet(BuildContext context) {
+  void _showLanguageSheet(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.read(localeProvider);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -215,20 +218,33 @@ class ProfilePage extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'اختر اللغة',
+              AppLocalizations.of(context)!.chooseLanguage,
               style: AppTheme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
-              title: const Text('العربية'),
-              trailing: const Icon(Icons.check, color: AppTheme.primaryColor),
-              onTap: () => Navigator.pop(context),
+              title: Text(AppLocalizations.of(context)!.arabic),
+              trailing: currentLocale.languageCode == 'ar'
+                  ? const Icon(Icons.check_circle, color: AppTheme.primaryColor)
+                  : null,
+              onTap: () {
+                ref
+                    .read(localeProvider.notifier)
+                    .setLocale(const Locale('ar', 'EG'));
+                Navigator.pop(context);
+              },
             ),
             ListTile(
-              title: const Text('English'),
-              onTap: () => Navigator.pop(context),
+              title: Text(AppLocalizations.of(context)!.english),
+              trailing: currentLocale.languageCode == 'en'
+                  ? const Icon(Icons.check_circle, color: AppTheme.primaryColor)
+                  : null,
+              onTap: () {
+                ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                Navigator.pop(context);
+              },
             ),
             const SizedBox(height: 32),
           ],
@@ -352,11 +368,12 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(WidgetRef ref, String title) {
+    final isAr = ref.read(localeProvider).languageCode == 'ar';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8, right: 12),
+      padding: const EdgeInsets.only(bottom: 8, right: 12, left: 12),
       child: Align(
-        alignment: Alignment.centerRight,
+        alignment: isAr ? Alignment.centerRight : Alignment.centerLeft,
         child: Text(
           title,
           style: AppTheme.textTheme.bodyMedium?.copyWith(

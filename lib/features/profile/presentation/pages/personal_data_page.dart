@@ -41,9 +41,13 @@ class _PersonalDataPageState extends ConsumerState<PersonalDataPage>
       CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
     );
 
-    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
-      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
-    );
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     _entranceController.forward();
   }
@@ -71,7 +75,9 @@ class _PersonalDataPageState extends ConsumerState<PersonalDataPage>
     setState(() => _isLoading = true);
 
     try {
-      final error = await ref.read(authProvider.notifier).updateProfile(
+      final error = await ref
+          .read(authProvider.notifier)
+          .updateProfile(
             fullName: _nameController.text.trim(),
             phone: _phoneController.text.trim(),
             avatarUrl: ref.read(authProvider).valueOrNull?.avatarUrl,
@@ -99,7 +105,10 @@ class _PersonalDataPageState extends ConsumerState<PersonalDataPage>
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(fontWeight: FontWeight.w600)),
+        content: Text(
+          message,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         backgroundColor: isError ? Colors.red.shade600 : AppTheme.primaryColor,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(20),
@@ -139,8 +148,6 @@ class _PersonalDataPageState extends ConsumerState<PersonalDataPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-
                   _buildModernField(
                     label: 'الاسم بالكامل',
                     controller: _nameController,
@@ -224,10 +231,16 @@ class _PersonalDataPageState extends ConsumerState<PersonalDataPage>
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.5), width: 1.5),
+                borderSide: BorderSide(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
               ),
             ),
           ),

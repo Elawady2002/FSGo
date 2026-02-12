@@ -59,19 +59,14 @@ class _TopUpSheetState extends State<TopUpSheet> {
               TextField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 textAlign: TextAlign.center,
                 style: AppTheme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: InputDecoration(
                   hintText: '0',
-                  suffix: Text(
-                    'ج.م',
-                    style: AppTheme.textTheme.bodyLarge,
-                  ),
+                  suffix: Text('ج.م', style: AppTheme.textTheme.bodyLarge),
                   filled: true,
                   fillColor: const Color(0xFFF5F5F7),
                   border: OutlineInputBorder(
@@ -96,13 +91,9 @@ class _TopUpSheetState extends State<TopUpSheet> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildMethodButton('InstaPay'),
-                  ),
+                  Expanded(child: _buildMethodButton('InstaPay')),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildMethodButton('Vodafone Cash'),
-                  ),
+                  Expanded(child: _buildMethodButton('Vodafone Cash')),
                 ],
               ),
               const SizedBox(height: 24),

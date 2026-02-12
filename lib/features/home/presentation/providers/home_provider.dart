@@ -77,11 +77,8 @@ Future<List<RouteEntity>> routes(Ref ref, String? universityId) async {
 
   final repository = ref.watch(homeRepositoryProvider);
   final result = await repository.getRoutes(universityId);
-  
-  final routes = result.fold(
-    (failure) => <RouteEntity>[],
-    (routes) => routes,
-  );
+
+  final routes = result.fold((failure) => <RouteEntity>[], (routes) => routes);
 
   if (routes.isEmpty) {
     return [
@@ -96,7 +93,7 @@ Future<List<RouteEntity>> routes(Ref ref, String? universityId) async {
       ),
     ];
   }
-  
+
   return routes;
 }
 
@@ -104,7 +101,7 @@ Future<List<RouteEntity>> routes(Ref ref, String? universityId) async {
 Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
   final repository = ref.watch(homeRepositoryProvider);
   final result = await repository.getSchedules(routeId);
-  
+
   final schedules = result.fold(
     (failure) => <ScheduleEntity>[],
     (schedules) => schedules,
@@ -118,7 +115,15 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
         routeId: routeId,
         direction: RouteDirection.toUniversity,
         departureTime: '07:00',
-        availableDays: const ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        availableDays: const [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
         capacity: 15,
         pricePerTrip: 45,
         isActive: true,
@@ -128,7 +133,15 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
         routeId: routeId,
         direction: RouteDirection.toUniversity,
         departureTime: '07:30',
-        availableDays: const ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        availableDays: const [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
         capacity: 15,
         pricePerTrip: 45,
         isActive: true,
@@ -138,7 +151,15 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
         routeId: routeId,
         direction: RouteDirection.toUniversity,
         departureTime: '08:00',
-        availableDays: const ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        availableDays: const [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
         capacity: 15,
         pricePerTrip: 45,
         isActive: true,
@@ -149,7 +170,15 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
         routeId: routeId,
         direction: RouteDirection.fromUniversity,
         departureTime: '15:00',
-        availableDays: const ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        availableDays: const [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
         capacity: 15,
         pricePerTrip: 45,
         isActive: true,
@@ -159,13 +188,21 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
         routeId: routeId,
         direction: RouteDirection.fromUniversity,
         departureTime: '16:00',
-        availableDays: const ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        availableDays: const [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
         capacity: 15,
         pricePerTrip: 45,
         isActive: true,
       ),
     ];
   }
-  
+
   return schedules;
 }

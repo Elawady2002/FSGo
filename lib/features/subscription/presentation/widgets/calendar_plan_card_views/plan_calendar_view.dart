@@ -224,7 +224,9 @@ class _PlanCalendarViewState extends State<PlanCalendarView> {
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: isToday
-                                    ? AppTheme.primaryColor.withValues(alpha: 0.2)
+                                    ? AppTheme.primaryColor.withValues(
+                                        alpha: 0.2,
+                                      )
                                     : (isAvailable
                                           ? Colors.white.withValues(alpha: 0.05)
                                           : Colors.transparent),
