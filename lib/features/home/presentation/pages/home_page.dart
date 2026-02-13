@@ -611,19 +611,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     required String value,
     required bool isLast,
   }) {
-    final isAr = ref.watch(localeProvider).languageCode == 'ar';
     return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isAr) ...[
-            _buildLocationIconColumn(icon, iconColor, isLast),
-            const SizedBox(width: 16),
-          ],
+          _buildLocationIconColumn(icon, iconColor, isLast),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment: isAr
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
@@ -642,10 +638,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
             ),
           ),
-          if (isAr) ...[
-            const SizedBox(width: 16),
-            _buildLocationIconColumn(icon, iconColor, isLast),
-          ],
         ],
       ),
     );
