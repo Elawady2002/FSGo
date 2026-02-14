@@ -66,7 +66,22 @@ class BookingState extends _$BookingState {
       selectedDate: initialDate,
       selectedDepartureTime: null,
       selectedReturnTime: null,
+      selectionType: BookingSelectionType.seat,
+      passengerCount: 1,
+      splitPreference: true,
     );
+  }
+
+  void setSelectionType(BookingSelectionType value) {
+    state = state.copyWith(selectionType: value);
+  }
+
+  void setPassengerCount(int value) {
+    state = state.copyWith(passengerCount: value);
+  }
+
+  void setSplitPreference(bool value) {
+    state = state.copyWith(splitPreference: value);
   }
 
   void setIsToUniversity(bool value) {
@@ -190,6 +205,9 @@ class BookingState extends _$BookingState {
         paymentProofImage: paymentProofImage,
         transferNumber: transferNumber,
         totalPrice: totalPrice,
+        selectionType: state.selectionType,
+        passengerCount: state.passengerCount,
+        splitPreference: state.splitPreference,
       );
 
       return result.fold(
@@ -221,6 +239,9 @@ class BookingState extends _$BookingState {
         departureTime: state.selectedDepartureTime,
         returnTime: state.selectedReturnTime,
         totalPrice: totalPrice,
+        selectionType: state.selectionType,
+        passengerCount: state.passengerCount,
+        splitPreference: state.splitPreference,
       );
 
       return result.fold(
@@ -246,6 +267,9 @@ class BookingStateModel {
   final UniversityEntity? selectedUniversity;
   final StationEntity? selectedStation;
   final StationEntity? selectedArrivalStation;
+  final BookingSelectionType selectionType;
+  final int passengerCount;
+  final bool splitPreference;
 
   BookingStateModel({
     required this.tripType,
@@ -260,6 +284,9 @@ class BookingStateModel {
     this.selectedUniversity,
     this.selectedStation,
     this.selectedArrivalStation,
+    this.selectionType = BookingSelectionType.seat,
+    this.passengerCount = 1,
+    this.splitPreference = true,
   });
 
   BookingStateModel copyWith({
@@ -275,6 +302,9 @@ class BookingStateModel {
     UniversityEntity? selectedUniversity,
     StationEntity? selectedStation,
     StationEntity? selectedArrivalStation,
+    BookingSelectionType? selectionType,
+    int? passengerCount,
+    bool? splitPreference,
   }) {
     return BookingStateModel(
       tripType: tripType ?? this.tripType,
@@ -293,6 +323,9 @@ class BookingStateModel {
       selectedStation: selectedStation ?? this.selectedStation,
       selectedArrivalStation:
           selectedArrivalStation ?? this.selectedArrivalStation,
+      selectionType: selectionType ?? this.selectionType,
+      passengerCount: passengerCount ?? this.passengerCount,
+      splitPreference: splitPreference ?? this.splitPreference,
     );
   }
 }

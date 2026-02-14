@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/utils/logger.dart';
+import '../../domain/entities/booking_entity.dart';
 import '../models/booking_model.dart';
 
 abstract class BookingDataSource {
@@ -16,6 +17,9 @@ abstract class BookingDataSource {
     String? paymentProofImage,
     String? transferNumber,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
   });
 
   /// Create a booking from a subscription
@@ -45,6 +49,15 @@ abstract class BookingDataSource {
     String? departureTime,
     String? returnTime,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
+  });
+
+  Future<BookingModel> transferBooking({
+    required String bookingId,
+    String? targetUserId,
+    String? targetPhoneNumber,
   });
 }
 
@@ -64,6 +77,9 @@ class BookingDataSourceImpl implements BookingDataSource {
     String? paymentProofImage,
     String? transferNumber,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
   }) async {
     try {
       final now = DateTime.now();
@@ -82,6 +98,9 @@ class BookingDataSourceImpl implements BookingDataSource {
             'transfer_number': transferNumber,
             'status': 'pending',
             'payment_status': 'unpaid',
+            'selection_type': selectionType.toJson(),
+            'passenger_count': passengerCount,
+            'split_preference': splitPreference,
             'total_price': totalPrice,
             'created_at': now.toIso8601String(),
             'updated_at': now.toIso8601String(),
@@ -313,6 +332,9 @@ class BookingDataSourceImpl implements BookingDataSource {
     String? departureTime,
     String? returnTime,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
   }) async {
     try {
       final now = DateTime.now();
@@ -324,11 +346,11 @@ class BookingDataSourceImpl implements BookingDataSource {
           .from('bookings')
           .update({
             'booking_date': bookingDate.toIso8601String(),
-            'trip_type': tripType,
-            'pickup_station_id': pickupStationId,
-            'dropoff_station_id': dropoffStationId,
             'departure_time': departureTime,
             'return_time': returnTime,
+            'selection_type': selectionType.toJson(),
+            'passenger_count': passengerCount,
+            'split_preference': splitPreference,
             'total_price': totalPrice,
             'updated_at': now.toIso8601String(),
           })
@@ -346,6 +368,41 @@ class BookingDataSourceImpl implements BookingDataSource {
     } catch (e) {
       AppLogger.error('❌ Unexpected error updating booking: $e');
       throw Exception('Unexpected error during booking update: $e');
+    }
+  }
+
+  @override
+  Future<BookingModel> transferBooking({
+    required String bookingId,
+    String? targetUserId,
+    String? targetPhoneNumber,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final updates = {
+        'updated_at': now.toIso8601String(),
+      };
+
+      if (targetUserId != null) {
+        updates['user_id'] = targetUserId;
+      } else if (targetPhoneNumber != null) {
+        // Handle pending transfer by phone number if needed
+        // For now, we'll just update the user_id if we have it
+        // In a real app, you might have a 'pending_transfers' table
+      }
+
+      final response = await _client
+          .from('bookings')
+          .update(updates)
+          .eq('id', bookingId)
+          .select()
+          .single();
+
+      return BookingModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      throw Exception('Database error transferring booking: ${e.message}');
+    } catch (e) {
+      throw Exception('Unexpected error during booking transfer: $e');
     }
   }
 }

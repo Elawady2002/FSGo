@@ -157,5 +157,19 @@
   "departure": "ذهاب",
   "returnText": "عودة",
   "selectDestination": "اختار وجهتك",
-  "now": "الآن"
+  "now": "الآن",
+  "bookingType": "نوع الحجز",
+  "individualSeat": "مقعد فردي",
+  "fullCar": "سيارة كاملة",
+  "passengerCount": "عدد الركاب",
+  "preferences": "التفضيلات",
+  "sameCar": "في نفس السيارة",
+  "splitCars": "سيارات مختلفة",
+  "transferTicket": "تحويل التذكرة",
+  "transferToFriend": "تحويل إلى صديق",
+  "phoneNumber": "رقم الهاتف",
+  "inviteFriend": "دعوة صديق",
+  "inviteFriendDesc": "لو صاحبك مش مسجل لسه، ابعتله لينك الدعوة",
+  "transferNow": "تحويل الآن",
+  "shareInviteLink": "مشاركة رابط الدعوة"
 }

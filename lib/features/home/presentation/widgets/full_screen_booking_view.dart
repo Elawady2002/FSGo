@@ -12,6 +12,7 @@ import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../subscription/domain/entities/subscription_schedule_entity.dart';
 import '../../../subscription/domain/entities/subscription_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../../core/domain/entities/user_entity.dart';
 
 enum FullScreenView { bookingList, timeEditor }
@@ -44,6 +45,9 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
   String _editingTripType = 'round_trip';
   String? _editingDepartureTime;
   String? _editingReturnTime;
+  BookingSelectionType _selectionType = BookingSelectionType.seat;
+  int _passengerCount = 1;
+  bool _splitPreference = true;
   late DateTime _selectedDate;
   late DateTime _currentMonth;
   late ScrollController _dateScrollController;
@@ -184,6 +188,9 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
           'status': 'confirmed',
           'payment_status': 'paid',
           'total_price': price,
+          'selection_type': _selectionType.toJson(),
+          'passenger_count': _passengerCount,
+          'split_preference': _splitPreference,
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         });
@@ -200,6 +207,9 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
               'departure_time': _toDbTime(_editingDepartureTime),
               'return_time': _toDbTime(_editingReturnTime),
               'total_price': price,
+              'selection_type': _selectionType.toJson(),
+              'passenger_count': _passengerCount,
+              'split_preference': _splitPreference,
               'updated_at': DateTime.now().toIso8601String(),
             })
             .eq('id', _selectedBooking!.id)
@@ -460,6 +470,9 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
       _editingTripType = 'departure_only';
       _editingDepartureTime = null;
       _editingReturnTime = null;
+      _selectionType = BookingSelectionType.seat;
+      _passengerCount = 1;
+      _splitPreference = true;
       _currentView = FullScreenView.timeEditor;
     });
   }
@@ -606,6 +619,9 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
                           _editingReturnTime = _normalizeTime(
                             bookings[index].returnTime,
                           );
+                          _selectionType = BookingSelectionType.fromJson(bookings[index].selectionType);
+                          _passengerCount = bookings[index].passengerCount;
+                          _splitPreference = bookings[index].splitPreference;
                           _currentView = FullScreenView.timeEditor;
                         });
                       },
@@ -618,6 +634,7 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
   }
 
   Widget _buildTimeEditorView() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // Header
@@ -679,6 +696,51 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Selection Type Toggle
+                _buildSectionTitle(l10n.bookingType),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTypeCard(
+                        title: l10n.individualSeat,
+                        isSelected: _selectionType == BookingSelectionType.seat,
+                        icon: CupertinoIcons.person,
+                        onTap: () => setState(() => _selectionType = BookingSelectionType.seat),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildTypeCard(
+                        title: l10n.fullCar,
+                        isSelected: _selectionType == BookingSelectionType.fullCar,
+                        icon: CupertinoIcons.car_fill,
+                        onTap: () => setState(() {
+                          _selectionType = BookingSelectionType.fullCar;
+                          _passengerCount = 4; // Assuming 4 for full car
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                if (_selectionType == BookingSelectionType.seat) ...[
+                  // Passenger Count
+                  _buildSectionTitle(l10n.passengerCount),
+                  const SizedBox(height: 12),
+                  _buildPassengerCounter(),
+                  const SizedBox(height: 24),
+
+                  if (_passengerCount > 1) ...[
+                    // Split Preference
+                    _buildSectionTitle(l10n.preferences),
+                    const SizedBox(height: 12),
+                    _buildPreferenceToggle(l10n),
+                    const SizedBox(height: 24),
+                  ],
+                ],
+
                 // Departure times
                 if (_editingTripType == 'departure_only' ||
                     _editingTripType == 'round_trip') ...[
@@ -786,6 +848,159 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
             fontSize: 15,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: AppTheme.textTheme.titleMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w800,
+        fontSize: 19,
+      ),
+    );
+  }
+
+  Widget _buildTypeCard({
+    required String title,
+    required bool isSelected,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: isSelected ? null : Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.black : Colors.white,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: AppTheme.textTheme.bodyMedium?.copyWith(
+                color: isSelected ? Colors.black : Colors.white70,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPassengerCounter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: _passengerCount > 1
+                ? () => setState(() => _passengerCount--)
+                : null,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(CupertinoIcons.minus, color: Colors.white, size: 20),
+            ),
+          ),
+          Text(
+            '$_passengerCount',
+            style: AppTheme.textTheme.headlineMedium?.copyWith(
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          GestureDetector(
+            onTap: _passengerCount < 4
+                ? () => setState(() => _passengerCount++)
+                : null,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(CupertinoIcons.add, color: Colors.white, size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferenceToggle(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _splitPreference = true),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: _splitPreference ? AppTheme.primaryColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.sameCar,
+                    style: TextStyle(
+                      color: _splitPreference ? Colors.black : Colors.white70,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _splitPreference = false),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: !_splitPreference ? AppTheme.primaryColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.splitCars,
+                    style: TextStyle(
+                      color: !_splitPreference ? Colors.black : Colors.white70,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

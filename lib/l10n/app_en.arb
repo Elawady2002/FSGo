@@ -157,5 +157,19 @@
   "departure": "Departure",
   "returnText": "Return",
   "selectDestination": "Select Destination",
-  "now": "Now"
+  "now": "Now",
+  "bookingType": "Booking Type",
+  "individualSeat": "Individual Seat",
+  "fullCar": "Full Car",
+  "passengerCount": "Passenger Count",
+  "preferences": "Preferences",
+  "sameCar": "Same Car",
+  "splitCars": "Split Cars",
+  "transferTicket": "Transfer Ticket",
+  "transferToFriend": "Transfer to Friend",
+  "phoneNumber": "Phone Number",
+  "inviteFriend": "Invite Friend",
+  "inviteFriendDesc": "If your friend isn't registered, send them an invite link",
+  "transferNow": "Transfer Now",
+  "shareInviteLink": "Share Invite Link"
 }

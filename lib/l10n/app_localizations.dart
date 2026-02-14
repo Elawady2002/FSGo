@@ -829,6 +829,90 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الآن'**
   String get now;
+
+  /// No description provided for @bookingType.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع الحجز'**
+  String get bookingType;
+
+  /// No description provided for @individualSeat.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقعد فردي'**
+  String get individualSeat;
+
+  /// No description provided for @fullCar.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيارة كاملة'**
+  String get fullCar;
+
+  /// No description provided for @passengerCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد الركاب'**
+  String get passengerCount;
+
+  /// No description provided for @preferences.
+  ///
+  /// In ar, this message translates to:
+  /// **'التفضيلات'**
+  String get preferences;
+
+  /// No description provided for @sameCar.
+  ///
+  /// In ar, this message translates to:
+  /// **'في نفس السيارة'**
+  String get sameCar;
+
+  /// No description provided for @splitCars.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيارات مختلفة'**
+  String get splitCars;
+
+  /// No description provided for @transferTicket.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويل التذكرة'**
+  String get transferTicket;
+
+  /// No description provided for @transferToFriend.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويل إلى صديق'**
+  String get transferToFriend;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الهاتف'**
+  String get phoneNumber;
+
+  /// No description provided for @inviteFriend.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعوة صديق'**
+  String get inviteFriend;
+
+  /// No description provided for @inviteFriendDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'لو صاحبك مش مسجل لسه، ابعتله لينك الدعوة'**
+  String get inviteFriendDesc;
+
+  /// No description provided for @transferNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويل الآن'**
+  String get transferNow;
+
+  /// No description provided for @shareInviteLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة رابط الدعوة'**
+  String get shareInviteLink;
 }
 
 class _AppLocalizationsDelegate

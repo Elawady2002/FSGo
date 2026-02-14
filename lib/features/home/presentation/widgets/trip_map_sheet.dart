@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../tracking/presentation/providers/tracking_provider.dart';
+import 'package:my_app/l10n/app_localizations.dart';
+import '../../../booking/presentation/widgets/transfer_ticket_sheet.dart';
 
 class TripMapSheet extends ConsumerStatefulWidget {
   final BookingEntity booking;
@@ -324,10 +326,16 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> {
             ],
           ),
         ),
-        // Call Button
+        const SizedBox(width: 8),
+        // Transfer Button
         GestureDetector(
           onTap: () {
-            // Logic for calling
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => TransferTicketSheet(booking: widget.booking),
+            );
           },
           child: Container(
             padding: const EdgeInsets.all(12),
@@ -336,7 +344,7 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> {
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
-              CupertinoIcons.phone_fill,
+              CupertinoIcons.arrow_right_arrow_left,
               color: AppTheme.primaryColor,
               size: 20,
             ),

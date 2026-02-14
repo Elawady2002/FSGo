@@ -383,4 +383,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get now => 'Now';
+
+  @override
+  String get bookingType => 'Booking Type';
+
+  @override
+  String get individualSeat => 'Individual Seat';
+
+  @override
+  String get fullCar => 'Full Car';
+
+  @override
+  String get passengerCount => 'Passenger Count';
+
+  @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get sameCar => 'Same Car';
+
+  @override
+  String get splitCars => 'Split Cars';
+
+  @override
+  String get transferTicket => 'Transfer Ticket';
+
+  @override
+  String get transferToFriend => 'Transfer to Friend';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get inviteFriend => 'Invite Friend';
+
+  @override
+  String get inviteFriendDesc =>
+      'If your friend isn\'t registered, send them an invite link';
+
+  @override
+  String get transferNow => 'Transfer Now';
+
+  @override
+  String get shareInviteLink => 'Share Invite Link';
 }

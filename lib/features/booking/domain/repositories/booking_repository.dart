@@ -23,6 +23,9 @@ abstract class BookingRepository {
     String? paymentProofImage,
     String? transferNumber,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
   });
 
   /// Get all bookings for the current user
@@ -40,6 +43,21 @@ abstract class BookingRepository {
     String? departureTime,
     String? returnTime,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
+  });
+
+  /// Transfer a booking to another user
+  Future<Either<Failure, BookingEntity>> transferBooking({
+    required String bookingId,
+    String? targetUserId,
+    String? targetPhoneNumber,
+  });
+
+  /// Generate an invitation link for a booking
+  Future<Either<Failure, String>> generateInviteLink({
+    required String bookingId,
   });
 
   /// Cancel a booking

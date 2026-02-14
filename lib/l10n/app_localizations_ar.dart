@@ -382,4 +382,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get now => 'الآن';
+
+  @override
+  String get bookingType => 'نوع الحجز';
+
+  @override
+  String get individualSeat => 'مقعد فردي';
+
+  @override
+  String get fullCar => 'سيارة كاملة';
+
+  @override
+  String get passengerCount => 'عدد الركاب';
+
+  @override
+  String get preferences => 'التفضيلات';
+
+  @override
+  String get sameCar => 'في نفس السيارة';
+
+  @override
+  String get splitCars => 'سيارات مختلفة';
+
+  @override
+  String get transferTicket => 'تحويل التذكرة';
+
+  @override
+  String get transferToFriend => 'تحويل إلى صديق';
+
+  @override
+  String get phoneNumber => 'رقم الهاتف';
+
+  @override
+  String get inviteFriend => 'دعوة صديق';
+
+  @override
+  String get inviteFriendDesc => 'لو صاحبك مش مسجل لسه، ابعتله لينك الدعوة';
+
+  @override
+  String get transferNow => 'تحويل الآن';
+
+  @override
+  String get shareInviteLink => 'مشاركة رابط الدعوة';
 }

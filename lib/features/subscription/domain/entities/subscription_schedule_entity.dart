@@ -8,8 +8,15 @@ class SubscriptionScheduleEntity extends Equatable {
   final String tripType; // departure_only, return_only, round_trip
   final String? departureTime;
   final String? returnTime;
+  final String selectionType; // seat, full_car
+  final int passengerCount;
+  final bool splitPreference;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  // Advanced booking fields
+  final int? advancedBookingDays;
+  final String? advancedBookingCutoffTime;
 
   const SubscriptionScheduleEntity({
     required this.id,
@@ -18,8 +25,13 @@ class SubscriptionScheduleEntity extends Equatable {
     required this.tripType,
     this.departureTime,
     this.returnTime,
+    this.selectionType = 'seat',
+    this.passengerCount = 1,
+    this.splitPreference = true,
     required this.createdAt,
     required this.updatedAt,
+    this.advancedBookingDays,
+    this.advancedBookingCutoffTime,
   });
 
   @override
@@ -30,6 +42,9 @@ class SubscriptionScheduleEntity extends Equatable {
     tripType,
     departureTime,
     returnTime,
+    selectionType,
+    passengerCount,
+    splitPreference,
     createdAt,
     updatedAt,
   ];
@@ -43,6 +58,9 @@ class SubscriptionScheduleEntity extends Equatable {
       tripType: json['trip_type'] as String,
       departureTime: json['departure_time'] as String?,
       returnTime: json['return_time'] as String?,
+      selectionType: (json['selection_type'] as String?) ?? 'seat',
+      passengerCount: (json['passenger_count'] as int?) ?? 1,
+      splitPreference: (json['split_preference'] as bool?) ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -57,6 +75,9 @@ class SubscriptionScheduleEntity extends Equatable {
       'trip_type': tripType,
       'departure_time': departureTime,
       'return_time': returnTime,
+      'selection_type': selectionType,
+      'passenger_count': passengerCount,
+      'split_preference': splitPreference,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -70,6 +91,9 @@ class SubscriptionScheduleEntity extends Equatable {
     String? tripType,
     String? departureTime,
     String? returnTime,
+    String? selectionType,
+    int? passengerCount,
+    bool? splitPreference,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -80,6 +104,9 @@ class SubscriptionScheduleEntity extends Equatable {
       tripType: tripType ?? this.tripType,
       departureTime: departureTime ?? this.departureTime,
       returnTime: returnTime ?? this.returnTime,
+      selectionType: selectionType ?? this.selectionType,
+      passengerCount: passengerCount ?? this.passengerCount,
+      splitPreference: splitPreference ?? this.splitPreference,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

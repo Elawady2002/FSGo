@@ -15,6 +15,9 @@ class BookingModel extends BookingEntity {
     super.returnTime,
     super.paymentProofImage,
     super.transferNumber,
+    super.selectionType = BookingSelectionType.seat,
+    super.passengerCount = 1,
+    super.splitPreference = true,
     required super.status,
     required super.paymentStatus,
     required super.totalPrice,
@@ -45,6 +48,11 @@ class BookingModel extends BookingEntity {
       paymentStatus: PaymentStatus.fromJson(
         (json['payment_status'] as String?) ?? 'unpaid',
       ), // Handle null
+      selectionType: BookingSelectionType.fromJson(
+        (json['selection_type'] as String?) ?? 'seat',
+      ),
+      passengerCount: (json['passenger_count'] as int?) ?? 1,
+      splitPreference: (json['split_preference'] as bool?) ?? true,
       totalPrice:
           (json['total_price'] as num?)?.toDouble() ?? 0.0, // Handle null
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -69,6 +77,9 @@ class BookingModel extends BookingEntity {
       'transfer_number': transferNumber,
       'status': status.toJson(),
       'payment_status': paymentStatus.toJson(),
+      'selection_type': selectionType.toJson(),
+      'passenger_count': passengerCount,
+      'split_preference': splitPreference,
       'total_price': totalPrice,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -92,6 +103,9 @@ class BookingModel extends BookingEntity {
       transferNumber: entity.transferNumber,
       status: entity.status,
       paymentStatus: entity.paymentStatus,
+      selectionType: entity.selectionType,
+      passengerCount: entity.passengerCount,
+      splitPreference: entity.splitPreference,
       totalPrice: entity.totalPrice,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

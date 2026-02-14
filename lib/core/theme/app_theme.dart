@@ -127,12 +127,79 @@ class AppTheme {
         decorationColor: Colors.transparent,
         height: 1.3,
       ),
-      // Removed headline styles as per instruction.
-      // In Material 3, headline styles are typically mapped to display and title.
-      // Explicitly setting them to null to ensure they are not used.
-      headlineLarge: null,
-      headlineMedium: null,
-      headlineSmall: null,
+      // Material 3 mappings
+      headlineLarge: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
+      ),
+    ),
+  );
+
+  static InputDecoration inputDecoration({
+    String? hintText,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      filled: true,
+      fillColor: const Color(0xFFF5F5F5).withValues(alpha: 0.1),
+      hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.white54, fontSize: 16),
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: primaryColor, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
+
+  static ButtonStyle get primaryButtonStyle => ElevatedButton.styleFrom(
+    backgroundColor: primaryColor,
+    foregroundColor: Colors.black,
+    elevation: 0,
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
+    ),
+    textStyle: const TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+    ),
+  );
+
+  static ButtonStyle get secondaryButtonStyle => OutlinedButton.styleFrom(
+    foregroundColor: Colors.white,
+    side: const BorderSide(color: Colors.white24, width: 1.5),
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
+    ),
+    textStyle: const TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
     ),
   );
 
@@ -179,39 +246,43 @@ class AppTheme {
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(buttonRadius),
-          ),
-          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
+        style: elevatedButtonThemeData,
       ),
 
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: const Color(0xFFF5F5F5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
-        ),
-        hintStyle: const TextStyle(color: textTertiary, fontSize: 17),
-      ),
+      inputDecorationTheme: inputDecorationThemeData,
     );
   }
+
+  static ButtonStyle get elevatedButtonThemeData => ElevatedButton.styleFrom(
+    backgroundColor: primaryColor,
+    foregroundColor: Colors.black,
+    elevation: 0,
+    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(buttonRadius),
+    ),
+    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+  );
+
+  static InputDecorationTheme get inputDecorationThemeData => InputDecorationTheme(
+    filled: true,
+    fillColor: const Color(0xFFF5F5F5),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: primaryColor, width: 2),
+    ),
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: 16,
+    ),
+    hintStyle: const TextStyle(color: textTertiary, fontSize: 17),
+  );
 }

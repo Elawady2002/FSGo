@@ -17,6 +17,21 @@ enum BookingStatus {
   }
 }
 
+/// Booking selection type
+enum BookingSelectionType {
+  seat,
+  fullCar;
+
+  String toJson() => name;
+
+  static BookingSelectionType fromJson(String value) {
+    return BookingSelectionType.values.firstWhere(
+      (type) => type.name == value,
+      orElse: () => BookingSelectionType.seat,
+    );
+  }
+}
+
 /// Payment status enumeration
 enum PaymentStatus {
   unpaid,
@@ -49,6 +64,9 @@ class BookingEntity extends Equatable {
   final String? returnTime; // e.g., 'PM 3:00'
   final String? paymentProofImage;
   final String? transferNumber;
+  final BookingSelectionType selectionType;
+  final int passengerCount;
+  final bool splitPreference; // true for "Same Car", false for "Split"
   final BookingStatus status;
   final PaymentStatus paymentStatus;
   final double totalPrice;
@@ -58,7 +76,7 @@ class BookingEntity extends Equatable {
   const BookingEntity({
     required this.id,
     required this.userId,
-    this.scheduleId, // Made optional
+    this.scheduleId,
     this.subscriptionId,
     required this.bookingDate,
     required this.tripType,
@@ -68,6 +86,9 @@ class BookingEntity extends Equatable {
     this.returnTime,
     this.paymentProofImage,
     this.transferNumber,
+    this.selectionType = BookingSelectionType.seat,
+    this.passengerCount = 1,
+    this.splitPreference = true,
     required this.status,
     required this.paymentStatus,
     required this.totalPrice,
@@ -89,6 +110,9 @@ class BookingEntity extends Equatable {
     returnTime,
     paymentProofImage,
     transferNumber,
+    selectionType,
+    passengerCount,
+    splitPreference,
     status,
     paymentStatus,
     totalPrice,

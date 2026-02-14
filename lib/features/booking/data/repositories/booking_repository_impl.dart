@@ -23,6 +23,9 @@ class BookingRepositoryImpl implements BookingRepository {
     String? paymentProofImage,
     String? transferNumber,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
   }) async {
     try {
       final userId = _getUserId();
@@ -38,6 +41,9 @@ class BookingRepositoryImpl implements BookingRepository {
         paymentProofImage: paymentProofImage,
         transferNumber: transferNumber,
         totalPrice: totalPrice,
+        selectionType: selectionType,
+        passengerCount: passengerCount,
+        splitPreference: splitPreference,
       );
       return Right(booking);
     } catch (e) {
@@ -87,6 +93,9 @@ class BookingRepositoryImpl implements BookingRepository {
     String? departureTime,
     String? returnTime,
     required double totalPrice,
+    BookingSelectionType selectionType = BookingSelectionType.seat,
+    int passengerCount = 1,
+    bool splitPreference = true,
   }) async {
     try {
       final booking = await _dataSource.updateBooking(
@@ -98,8 +107,43 @@ class BookingRepositoryImpl implements BookingRepository {
         departureTime: departureTime,
         returnTime: returnTime,
         totalPrice: totalPrice,
+        selectionType: selectionType,
+        passengerCount: passengerCount,
+        splitPreference: splitPreference,
       );
       return Right(booking);
+    } catch (e) {
+      return Left(_handleError(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BookingEntity>> transferBooking({
+    required String bookingId,
+    String? targetUserId,
+    String? targetPhoneNumber,
+  }) async {
+    try {
+      final booking = await _dataSource.transferBooking(
+        bookingId: bookingId,
+        targetUserId: targetUserId,
+        targetPhoneNumber: targetPhoneNumber,
+      );
+      return Right(booking);
+    } catch (e) {
+      return Left(_handleError(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> generateInviteLink({
+    required String bookingId,
+  }) async {
+    try {
+      // In a real app, this would use a deep linking service like Firebase Dynamic Links
+      // For now, we'll generate a simple URL with the booking ID
+      final inviteLink = 'https://fielsekka.app/invite?bookingId=$bookingId';
+      return Right(inviteLink);
     } catch (e) {
       return Left(_handleError(e));
     }
