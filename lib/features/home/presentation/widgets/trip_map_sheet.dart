@@ -96,8 +96,6 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final trackingState = ref.watch(trackingStateProvider);
-    final busLocation = trackingState.busLocation;
     final user = ref.watch(authProvider).valueOrNull;
     final avatarUrl = user?.avatarUrl;
 
@@ -187,7 +185,7 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
               borderRadius: BorderRadius.circular(24), // Match Route Card corners (all around)
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -223,7 +221,7 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppTheme.primaryColor.withOpacity(0.2),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.2),
                   width: 2,
                 ),
                 image: const DecorationImage(
@@ -310,23 +308,7 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
     );
   }
 
-  Widget _buildBusMarker() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.primaryColor,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Icon(CupertinoIcons.bus, color: Colors.black, size: 24),
-    );
-  }
+
 
   Widget _buildRouteTimeline(String? avatarUrl) {
     return AnimatedContainer(

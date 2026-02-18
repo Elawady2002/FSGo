@@ -368,48 +368,56 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  String _getMonthName(BuildContext context, int month) {
-    final l10n = AppLocalizations.of(context)!;
-    final months = [
-      l10n.january,
-      l10n.february,
-      l10n.march,
-      l10n.april,
-      l10n.may,
-      l10n.june,
-      l10n.july,
-      l10n.august,
-      l10n.september,
-      l10n.october,
-      l10n.november,
-      l10n.december,
-    ];
-    return months[month - 1];
-  }
 
-  String _getTripTypeLabel(BuildContext context, String tripType) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (tripType) {
-      case 'departure_only':
-        return l10n.departureOnly;
-      case 'return_only':
-        return l10n.returnOnly;
-      case 'round_trip':
-        return l10n.roundTrip;
-      default:
-        return tripType;
-    }
-  }
 
   Widget _buildRouteInfoCard(BookingEntity booking) {
     final l10n = AppLocalizations.of(context)!;
-    // Determine route based on trip type
-    String from = l10n.madinaty;
-    String to = l10n.guc;
+    final stations = ref.watch(allStationsProvider).valueOrNull ?? [];
+    final universities = ref.watch(allUniversitiesProvider).valueOrNull ?? [];
+    final lang = ref.watch(localeProvider).languageCode;
 
-    if (booking.tripType == 'return_only') {
-      from = l10n.guc;
-      to = l10n.madinaty;
+    // Format time to 12-hour with Arabic indicator (Forcing English digits)
+    String? formattedTime;
+    if (booking.departureTime != null) {
+      try {
+        final timeParts = booking.departureTime!.split(':');
+        if (timeParts.length >= 2) {
+          final hour = int.parse(timeParts[0]);
+          final minute = int.parse(timeParts[1]);
+          final period = hour < 12 ? 'ص' : 'م';
+          final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+          formattedTime = '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+        }
+      } catch (e) {
+        formattedTime = booking.departureTime;
+      }
+    }
+
+    final pickupStation = stations.where((s) => s.id == booking.pickupStationId).firstOrNull;
+    final dropoffStation = stations.where((s) => s.id == booking.dropoffStationId).firstOrNull;
+
+    final universityName = universities.isNotEmpty
+        ? universities.first.getLocalizedName(lang)
+        : 'الجامعة';
+
+    String routeFrom = '';
+    String routeTo = '';
+
+    if (booking.tripType == 'departure_only') {
+      routeFrom = pickupStation?.getLocalizedName(lang) ?? l10n.madinaty;
+      if (booking.dropoffStationId != null && dropoffStation != null) {
+        routeTo = dropoffStation.getLocalizedName(lang);
+      } else {
+        routeTo = universityName;
+      }
+    } else if (booking.tripType == 'return_only') {
+      routeFrom = universityName;
+      routeTo = dropoffStation?.getLocalizedName(lang) ??
+          pickupStation?.getLocalizedName(lang) ??
+          l10n.madinaty;
+    } else {
+      routeFrom = pickupStation?.getLocalizedName(lang) ?? l10n.madinaty;
+      routeTo = universityName;
     }
 
     return GestureDetector(
@@ -434,7 +442,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               icon: CupertinoIcons.circle_fill,
               iconColor: AppTheme.primaryColor,
               label: l10n.from,
-              value: from,
+              value: formattedTime != null ? '$formattedTime · $routeFrom' : routeFrom,
               isLast: false,
             ),
             _buildLocationRow(
@@ -443,7 +451,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               icon: CupertinoIcons.location_solid,
               iconColor: Colors.black,
               label: l10n.to,
-              value: to,
+              value: routeTo,
               isLast: true,
             ),
           ],

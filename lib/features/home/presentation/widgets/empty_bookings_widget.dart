@@ -30,7 +30,7 @@ class EmptyBookingsWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "لا توجد رحلات حاليا", // Or use l10n.noBookedTrips if suitable, but user asked for specific text
+              l10n.noBookedTrips,
               // Using l10n.noBookedTrips as it's cleaner, checking l10n first or hardcoding per request.
               // Given the request specifically asked for "message simple in the middle... no trips for example"
               // I will use a simple localized string if available or fallback.

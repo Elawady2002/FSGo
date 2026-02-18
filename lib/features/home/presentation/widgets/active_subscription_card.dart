@@ -153,6 +153,8 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
           tripType: (booking['trip_type'] as String?) ?? 'round_trip',
           departureTime: booking['departure_time'] as String?,
           returnTime: booking['return_time'] as String?,
+          pickupStationId: booking['pickup_station_id'] as String?,
+          dropoffStationId: booking['dropoff_station_id'] as String?,
           createdAt: DateTime.parse(booking['created_at'] as String),
           updatedAt: booking['updated_at'] != null
               ? DateTime.parse(booking['updated_at'] as String)
@@ -169,6 +171,8 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
           tripType: booking.tripType,
           departureTime: booking.departureTime,
           returnTime: booking.returnTime,
+          pickupStationId: booking.pickupStationId,
+          dropoffStationId: booking.dropoffStationId,
           createdAt: booking.createdAt,
           updatedAt: booking.updatedAt,
         );
@@ -325,6 +329,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
   // ── Front Face (original card, untouched) ───────────────────────────────────
   Widget _buildFront() {
     return Container(
+      height: 280, // Fixed height to match back face and prevent jumping
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.circular(24),
@@ -344,116 +349,132 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
   }
 
   Widget _buildDetailsContent() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       key: const ValueKey('details'),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top Row: Badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCCFF00),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.soon,
-                  style: AppTheme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ).animate().fadeIn().slideX(begin: -0.2, end: 0),
+          // Top Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Row: Badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCCFF00),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.soon,
+                        style: AppTheme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn().slideX(begin: -0.2, end: 0),
 
-          const SizedBox(height: 40),
+                const SizedBox(height: 32),
 
-          // Dates Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.startDate,
-                    style: AppTheme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                      fontSize: 14,
+                // Dates Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.startDate,
+                          style: AppTheme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _formatDateSafe(
+                              context, widget.subscription.startDate),
+                          style: AppTheme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _formatDateSafe(context, widget.subscription.startDate),
-                    style: AppTheme.textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.tripType,
+                          style: AppTheme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _getTripTypeLabel(
+                              context, widget.subscription.tripType),
+                          style: AppTheme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.tripType,
-                    style: AppTheme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _getTripTypeLabel(context, widget.subscription.tripType),
-                    style: AppTheme.textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
           const Divider(color: Colors.white24, height: 1),
           const SizedBox(height: 16),
 
           // Route Info
-          Row(
-            children: [
-              const Icon(
-                CupertinoIcons.location_fill,
-                color: Color(0xFFCCFF00),
-                size: 18,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  AppLocalizations.of(context)!.fromYourAreaTo(
-                    _universityName ??
-                        (ref.read(localeProvider).languageCode == 'ar'
-                            ? "الجامعة"
-                            : "University"),
-                  ),
-                  style: AppTheme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+          SizedBox(
+            height: 24,
+            child: Row(
+              children: [
+                const Icon(
+                  CupertinoIcons.location_fill,
+                  color: Color(0xFFCCFF00),
+                  size: 18,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.subscription.dropoffStationId != null
+                        ? l10n.stationToStation
+                        : l10n.fromYourAreaTo(
+                            _universityName ??
+                                (ref.read(localeProvider).languageCode == 'ar'
+                                    ? "الجامعة"
+                                    : "University"),
+                          ),
+                    style: AppTheme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
         ],
       ),
@@ -466,6 +487,7 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
     final shortId = '#${subscriptionId.substring(0, 8).toUpperCase()}';
 
     return Container(
+      height: 280, // Same fixed height as front face
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.circular(24),
@@ -481,137 +503,157 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
         borderRadius: BorderRadius.circular(24),
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Row(
+          child: Column(
             children: [
-              // QR Code on white background
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: QrImageView(
-                  data: subscriptionId,
-                  version: QrVersions.auto,
-                  size: 120,
-                  foregroundColor: Colors.black,
+              // Info + QR
+              Expanded(
+                child: Row(
+                  children: [
+                    // Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFCCFF00),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              'تذكرة الاشتراك',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Subscription ID
+                          Text(
+                            shortId,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Start Date
+                          Row(
+                            children: [
+                              const Icon(
+                                CupertinoIcons.calendar,
+                                color: Colors.white54,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _formatDateSafe(
+                                  context,
+                                  widget.subscription.startDate,
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Route
+                          Row(
+                            children: [
+                              const Icon(
+                                CupertinoIcons.location_fill,
+                                color: Color(0xFFCCFF00),
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  AppLocalizations.of(context)!.fromYourAreaTo(
+                                    _universityName ??
+                                        (ref.read(localeProvider).languageCode == 'ar'
+                                            ? "الجامعة"
+                                            : "University"),
+                                  ),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // QR Code on white background
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: QrImageView(
+                        data: subscriptionId,
+                        version: QrVersions.auto,
+                        size: 120,
+                        eyeStyle: const QrEyeStyle(
+                          eyeShape: QrEyeShape.square,
+                          color: Colors.black,
+                        ),
+                        dataModuleStyle: const QrDataModuleStyle(
+                          dataModuleShape: QrDataModuleShape.square,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(width: 20),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white24, height: 1),
+              const SizedBox(height: 16),
 
-              // Info beside QR
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Hint
+              SizedBox(
+                height: 24,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCCFF00),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'تذكرة الاشتراك',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
+                  children: const [
+                    Icon(
+                      CupertinoIcons.arrow_left_right,
+                      color: Colors.white24,
+                      size: 12,
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Subscription ID
+                    SizedBox(width: 4),
                     Text(
-                      shortId,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        letterSpacing: 1.5,
+                      'اسحب للرجوع',
+                      style: TextStyle(
+                        color: Colors.white24,
+                        fontSize: 10,
                       ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Start Date
-                    Row(
-                      children: [
-                        const Icon(
-                          CupertinoIcons.calendar,
-                          color: Colors.white54,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          _formatDateSafe(
-                            context,
-                            widget.subscription.startDate,
-                          ),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Route
-                    Row(
-                      children: [
-                        const Icon(
-                          CupertinoIcons.location_fill,
-                          color: Color(0xFFCCFF00),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            AppLocalizations.of(context)!.fromYourAreaTo(
-                              _universityName ??
-                                  (ref.read(localeProvider).languageCode == 'ar'
-                                      ? "الجامعة"
-                                      : "University"),
-                            ),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // Hint
-                    Row(
-                      children: const [
-                        Icon(
-                          CupertinoIcons.arrow_left_right,
-                          color: Colors.white24,
-                          size: 12,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'اسحب للرجوع',
-                          style: TextStyle(
-                            color: Colors.white24,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -639,6 +681,9 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
 
   String _getTripTypeLabel(BuildContext context, String tripType) {
     final l10n = AppLocalizations.of(context)!;
+    if (widget.subscription.dropoffStationId != null) {
+      return l10n.stationToStation;
+    }
     switch (tripType) {
       case 'departure_only':
         return l10n.departureOnly;

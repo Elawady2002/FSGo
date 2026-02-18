@@ -114,7 +114,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get date => 'امتى؟';
 
   @override
-  String get tripType => 'اختار رحلتك';
+  String get tripType => 'نوع الرحلة';
 
   @override
   String get departureOnly => 'إلى الجامعة';

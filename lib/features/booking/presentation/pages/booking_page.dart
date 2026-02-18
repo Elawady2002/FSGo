@@ -312,7 +312,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       final hour = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
       final dt = DateTime(2022, 1, 1, hour, minute);
-      return DateFormat('h:mm a', 'ar_EG').format(dt).w;
+      return DateFormat('h:mm a', 'ar_EG').format(dt).w
+          .replaceAll('صباحاً', 'ص')
+          .replaceAll('مساءً', 'م');
     } catch (e) {
       return time;
     }
@@ -714,7 +716,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                     ],
                   ),
                   Text(
-                    '${(state.tripType.price * state.passengerCount).toStringAsFixed(0)} EGP',
+                    'EGP ${(state.tripType.price * state.passengerCount).toStringAsFixed(0)}',
                     style: AppTheme.textTheme.titleLarge?.copyWith(
                       color: isLadies ? Colors.white : AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,

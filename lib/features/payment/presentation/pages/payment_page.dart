@@ -296,8 +296,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage>
                         if (error != null) {
                           // Show error
                           AppLogger.error('❌ Booking creation failed: $error');
-                          if (!mounted) return;
-
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(error),

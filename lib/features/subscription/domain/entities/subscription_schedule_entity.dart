@@ -18,6 +18,9 @@ class SubscriptionScheduleEntity extends Equatable {
   final int? advancedBookingDays;
   final String? advancedBookingCutoffTime;
 
+  final String? pickupStationId;
+  final String? dropoffStationId;
+
   const SubscriptionScheduleEntity({
     required this.id,
     required this.subscriptionId,
@@ -32,6 +35,8 @@ class SubscriptionScheduleEntity extends Equatable {
     required this.updatedAt,
     this.advancedBookingDays,
     this.advancedBookingCutoffTime,
+    this.pickupStationId,
+    this.dropoffStationId,
   });
 
   @override
@@ -47,6 +52,8 @@ class SubscriptionScheduleEntity extends Equatable {
     splitPreference,
     createdAt,
     updatedAt,
+    pickupStationId,
+    dropoffStationId,
   ];
 
   /// Create entity from JSON
@@ -63,6 +70,8 @@ class SubscriptionScheduleEntity extends Equatable {
       splitPreference: (json['split_preference'] as bool?) ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      pickupStationId: json['pickup_station_id'] as String?,
+      dropoffStationId: json['dropoff_station_id'] as String?,
     );
   }
 
@@ -80,6 +89,8 @@ class SubscriptionScheduleEntity extends Equatable {
       'split_preference': splitPreference,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'pickup_station_id': pickupStationId,
+      'dropoff_station_id': dropoffStationId,
     };
   }
 
@@ -96,6 +107,8 @@ class SubscriptionScheduleEntity extends Equatable {
     bool? splitPreference,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? pickupStationId,
+    String? dropoffStationId,
   }) {
     return SubscriptionScheduleEntity(
       id: id ?? this.id,
@@ -109,6 +122,8 @@ class SubscriptionScheduleEntity extends Equatable {
       splitPreference: splitPreference ?? this.splitPreference,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      pickupStationId: pickupStationId ?? this.pickupStationId,
+      dropoffStationId: dropoffStationId ?? this.dropoffStationId,
     );
   }
 }

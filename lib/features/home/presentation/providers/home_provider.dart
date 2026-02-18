@@ -206,3 +206,22 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
 
   return schedules;
 }
+@riverpod
+Future<List<StationEntity>> allStations(Ref ref) async {
+  final repository = ref.watch(homeRepositoryProvider);
+  final result = await repository.getAllStations();
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (stations) => stations,
+  );
+}
+
+@riverpod
+Future<List<UniversityEntity>> allUniversities(Ref ref) async {
+  final repository = ref.watch(homeRepositoryProvider);
+  final result = await repository.getAllUniversities();
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (universities) => universities,
+  );
+}

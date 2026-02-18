@@ -50,7 +50,7 @@ class _AnimatedProgressSliderState extends State<AnimatedProgressSlider>
     const Color inactiveColor = Color(0xFF424242); // Dark Grey
 
     final l10n = AppLocalizations.of(context)!;
-    final isRtlValue = Directionality.of(context) == TextDirection.rtl;
+
 
     return Material(
       color: Colors.transparent,

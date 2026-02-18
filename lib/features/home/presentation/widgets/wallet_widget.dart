@@ -52,8 +52,8 @@ class WalletWidget extends ConsumerWidget {
                     width: 10,
                     child: CupertinoActivityIndicator(radius: 5),
                   )
-                : Text(
-                    '${walletState.balance.toStringAsFixed(0)} EGP',
+                  : Text(
+                    'EGP ${walletState.balance.toStringAsFixed(0)}',
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 12,

@@ -16,4 +16,6 @@ abstract class HomeRepository {
   ); // Changed from universityId to cityId
   Future<Either<Failure, List<RouteEntity>>> getRoutes(String universityId);
   Future<Either<Failure, List<ScheduleEntity>>> getSchedules(String routeId);
+  Future<Either<Failure, List<StationEntity>>> getAllStations();
+  Future<Either<Failure, List<UniversityEntity>>> getAllUniversities();
 }

@@ -12,6 +12,8 @@ abstract class HomeRemoteDataSource {
     String cityId,
   ); // Changed from universityId to cityId
   Future<List<RouteModel>> getRoutes(String universityId);
+  Future<List<StationModel>> getAllStations();
+  Future<List<UniversityModel>> getAllUniversities();
   Future<List<ScheduleModel>> getSchedules(String routeId);
 }
 
@@ -78,5 +80,27 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         .order('departure_time');
 
     return (response as List).map((e) => ScheduleModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<List<StationModel>> getAllStations() async {
+    final response = await _client
+        .from('stations')
+        .select()
+        .eq('is_active', true)
+        .order('name_ar');
+
+    return (response as List).map((e) => StationModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<List<UniversityModel>> getAllUniversities() async {
+    final response = await _client
+        .from('universities')
+        .select()
+        .eq('is_active', true)
+        .order('name_ar');
+
+    return (response as List).map((e) => UniversityModel.fromJson(e)).toList();
   }
 }

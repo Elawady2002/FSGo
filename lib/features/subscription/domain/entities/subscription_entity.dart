@@ -86,6 +86,8 @@ class SubscriptionEntity extends Equatable {
   final bool allowLocationChange;
   final bool isInstallment;
   final String tripType;
+  final String? pickupStationId;
+  final String? dropoffStationId;
   // We don't include the list of installments here to keep the entity lightweight
   // Installments should be fetched separately when needed
 
@@ -103,6 +105,8 @@ class SubscriptionEntity extends Equatable {
     this.allowLocationChange = false,
     this.isInstallment = false,
     this.tripType = 'round_trip', // Default to round_trip
+    this.pickupStationId,
+    this.dropoffStationId,
   });
 
   @override
@@ -119,6 +123,8 @@ class SubscriptionEntity extends Equatable {
     allowLocationChange,
     isInstallment,
     tripType,
+    pickupStationId,
+    dropoffStationId,
   ];
 
   /// Check if subscription is active

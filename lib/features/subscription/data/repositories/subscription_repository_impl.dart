@@ -34,6 +34,9 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         paymentProofUrl: paymentProofUrl,
         transferNumber: transferNumber,
         isInstallment: isInstallment,
+        tripType: scheduleParams?.tripType,
+        pickupStationId: scheduleParams?.pickupStationId,
+        dropoffStationId: scheduleParams?.dropoffStationId,
       );
 
       AppLogger.info('✅ Subscription created with ID: $subscriptionId');
@@ -163,6 +166,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
           allowLocationChange: data['allow_location_change'] as bool? ?? false,
           isInstallment: data['is_installment'] as bool? ?? false,
           tripType: data['trip_type'] as String? ?? 'round_trip',
+          pickupStationId: data['pickup_station_id'] as String?,
+          dropoffStationId: data['dropoff_station_id'] as String?,
         );
       }).toList();
 

@@ -196,7 +196,7 @@ class _BookingSuccessPageState extends State<BookingSuccessPage>
 
                           // Price
                           Text(
-                            '${widget.amount.toStringAsFixed(0)} جنيه',
+                            'EGP ${widget.amount.toStringAsFixed(0)}',
                             style: AppTheme.textTheme.displayLarge?.copyWith(
                               fontSize: 42,
                               fontWeight: FontWeight.w800,

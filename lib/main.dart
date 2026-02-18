@@ -12,6 +12,11 @@ import 'core/providers/app_startup_provider.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Lock orientation to portrait
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   // Set initial status bar style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

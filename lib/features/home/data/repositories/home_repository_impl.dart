@@ -72,4 +72,24 @@ class HomeRepositoryImpl implements HomeRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<StationEntity>>> getAllStations() async {
+    try {
+      final stations = await remoteDataSource.getAllStations();
+      return Right(stations);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<UniversityEntity>>> getAllUniversities() async {
+    try {
+      final universities = await remoteDataSource.getAllUniversities();
+      return Right(universities);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }

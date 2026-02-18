@@ -7,6 +7,17 @@ enum TripType {
 
   const TripType(this.price);
 
+  String get displayName {
+    switch (this) {
+      case TripType.departureOnly:
+        return 'ذهاب فقط';
+      case TripType.returnOnly:
+        return 'عودة فقط';
+      case TripType.roundTrip:
+        return 'ذهاب وعودة';
+    }
+  }
+
   /// Convert enum to database format (snake_case)
   String toDbValue() {
     switch (this) {

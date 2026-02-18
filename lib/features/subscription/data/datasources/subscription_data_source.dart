@@ -10,6 +10,9 @@ abstract class SubscriptionDataSource {
     required String? paymentProofUrl,
     required String? transferNumber,
     bool isInstallment = false,
+    String? tripType,
+    String? pickupStationId,
+    String? dropoffStationId,
   });
 
   Future<Map<String, dynamic>?> getUserSubscription(String userId);
@@ -32,6 +35,9 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
     required String? paymentProofUrl,
     required String? transferNumber,
     bool isInstallment = false,
+    String? tripType,
+    String? pickupStationId,
+    String? dropoffStationId,
   }) async {
     try {
       final now = DateTime.now();
@@ -67,6 +73,9 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
             'is_installment': isInstallment,
             'allow_location_change': planType == SubscriptionPlanType.semester,
             'interest_rate': interestRate,
+            'trip_type': tripType,
+            'pickup_station_id': pickupStationId,
+            'dropoff_station_id': dropoffStationId,
           })
           .select()
           .single();
@@ -130,7 +139,6 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
           .single();
 
       AppLogger.info('📋 Current subscription data: $subscription');
-      final userId = subscription['user_id'] as String;
 
       // Update subscription status to expired and add cancellation metadata
       AppLogger.info('⏳ Updating subscription status to expired...');

@@ -455,7 +455,7 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
                         ? 'lib/assets/image/launcher_icons/vodafone_cash.png'
                         : 'lib/assets/image/launcher_icons/instapay.png',
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Icon(
+                    errorBuilder: (context, error, stackTrace) => Icon(
                       CupertinoIcons.money_dollar_circle,
                       color: Colors.grey.shade400,
                     ),

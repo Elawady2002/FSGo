@@ -354,6 +354,9 @@ class BookingDataSourceImpl implements BookingDataSource {
           .from('bookings')
           .update({
             'booking_date': bookingDate.toIso8601String(),
+            'trip_type': tripType,
+            'pickup_station_id': pickupStationId,
+            'dropoff_station_id': dropoffStationId,
             'departure_time': departureTime,
             'return_time': returnTime,
             'selection_type': selectionType.toJson(),

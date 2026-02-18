@@ -311,7 +311,7 @@ abstract class AppLocalizations {
   /// No description provided for @tripType.
   ///
   /// In ar, this message translates to:
-  /// **'اختار رحلتك'**
+  /// **'نوع الرحلة'**
   String get tripType;
 
   /// No description provided for @departureOnly.

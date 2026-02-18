@@ -184,6 +184,8 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
           // schedule_id is optional - not needed for subscription bookings
           'booking_date': bookingDate,
           'trip_type': _editingTripType,
+          'pickup_station_id': widget.subscription.pickupStationId,
+          'dropoff_station_id': widget.subscription.dropoffStationId,
           'departure_time': _toDbTime(_editingDepartureTime),
           'return_time': _toDbTime(_editingReturnTime),
           'status': 'confirmed',
@@ -205,6 +207,8 @@ class _FullScreenBookingViewState extends ConsumerState<FullScreenBookingView>
             .from('bookings')
             .update({
               'trip_type': _editingTripType,
+              'pickup_station_id': widget.subscription.pickupStationId,
+              'dropoff_station_id': widget.subscription.dropoffStationId,
               'departure_time': _toDbTime(_editingDepartureTime),
               'return_time': _toDbTime(_editingReturnTime),
               'total_price': price,
@@ -854,11 +858,13 @@ class _BookingCardItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      booking.tripType == 'round_trip'
-                          ? AppLocalizations.of(context)!.roundTrip
-                          : booking.tripType == 'departure_only'
-                          ? AppLocalizations.of(context)!.departureOnly
-                          : AppLocalizations.of(context)!.returnOnly,
+                      booking.dropoffStationId != null
+                          ? AppLocalizations.of(context)!.stationToStation
+                          : (booking.tripType == 'round_trip'
+                              ? AppLocalizations.of(context)!.roundTrip
+                              : booking.tripType == 'departure_only'
+                                  ? AppLocalizations.of(context)!.departureOnly
+                                  : AppLocalizations.of(context)!.returnOnly),
                       style: AppTheme.textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
