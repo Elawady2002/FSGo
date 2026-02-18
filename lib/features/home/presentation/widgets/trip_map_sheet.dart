@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -50,16 +51,41 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
   }
 
   Future<void> _getCurrentLocation() async {
-    setState(() {
-      // Fixed location near Madinaty for testing
-      _userLocation = const LatLng(30.0920, 31.6380);
-    });
+    bool serviceEnabled;
+    LocationPermission permission;
 
-    _fitBounds();
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    } 
+
+    final position = await Geolocator.getCurrentPosition();
+
+    if (mounted) {
+      setState(() {
+        _userLocation = LatLng(position.latitude, position.longitude);
+      });
+      _fitBounds();
+    }
   }
 
+  bool _isMapReady = false;
+
   void _fitBounds() {
-    if (_userLocation == null) return;
+    if (_userLocation == null || !_isMapReady) return;
 
     final bounds = LatLngBounds.fromPoints([_userLocation!, _stationLocation]);
 
@@ -280,7 +306,6 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
             ],
           ),
         ),
-        const SizedBox(width: 8),
       ],
     );
   }
@@ -302,55 +327,6 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
       child: const Icon(CupertinoIcons.bus, color: Colors.black, size: 24),
     );
   }
-
-  Widget _buildGooglePin({
-    required IconData icon,
-    required Color color,
-    required String label,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Icon(
-          CupertinoIcons.location_solid,
-          color: color,
-          size: 40,
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-
 
   Widget _buildRouteTimeline(String? avatarUrl) {
     return AnimatedContainer(
@@ -461,6 +437,9 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
   Widget _buildMapKit(String? avatarUrl) {
     final trackingState = ref.watch(trackingStateProvider);
     final busLocation = trackingState.busLocation;
+    final double distance = _userLocation != null 
+        ? _calculateDistance(_userLocation!, _stationLocation)
+        : 0.0;
 
     return Container(
       height: 150,
@@ -480,33 +459,31 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
             child: AbsorbPointer(
               child: FlutterMap(
               options: MapOptions(
-                initialCenter: busLocation,
+                onMapReady: () {
+                  _isMapReady = true;
+                  _fitBounds();
+                },
+                initialCenter: _userLocation ?? busLocation,
                 initialZoom: 15,
                 interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
               ),
               children: [
-                ColorFiltered(
-                  colorFilter: const ColorFilter.matrix([
-                    -1.0, 0.0, 0.0, 0.0, 255.0,
-                    0.0, -1.0, 0.0, 0.0, 255.0,
-                    0.0, 0.0, -1.0, 0.0, 255.0,
-                    0.0, 0.0, 0.0, 1.0, 0.0,
-                  ]),
-                  child: TileLayer(
-                    urlTemplate: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
-                    userAgentPackageName: 'com.abdallahalawdy.fi_el_sekka',
+                TileLayer(
+                  urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
+                  userAgentPackageName: 'com.abdallahalawdy.fi_el_sekka',
+                ),
+                if (_userLocation != null)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: [_userLocation!, _stationLocation],
+                        strokeWidth: 4.0,
+                        color: const Color(0xFF007AFF), // Pure Blue
+                        strokeCap: StrokeCap.round,
+                      ),
+                    ],
                   ),
-                ),
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: [busLocation, _stationLocation],
-                      strokeWidth: 4.0,
-                      color: const Color(0xFF007AFF), // Pure Blue
-                      strokeCap: StrokeCap.round,
-                    ),
-                  ],
-                ),
                 MarkerLayer(
                   markers: [
                     Marker(
@@ -519,21 +496,55 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
                         size: 30,
                       ),
                     ),
-                    Marker(
-                      point: busLocation,
-                      width: 50,
-                      height: 50,
-                      child: PulsingLiveMarker(
-                        controller: _pulseController,
-                        imageUrl: avatarUrl,
+                    if (_userLocation != null)
+                      Marker(
+                        point: _userLocation!,
+                        width: 50,
+                        height: 50,
+                        child: PulsingLiveMarker(
+                          controller: _pulseController,
+                          imageUrl: avatarUrl,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
             ),
             ),
           ),
+          // Distance Overlay (Bottom Center)
+          if (_userLocation != null)
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(CupertinoIcons.placemark_fill, color: AppTheme.primaryColor, size: 12),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${distance.toStringAsFixed(1)} كم للمحطة',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none, // Removes the yellow underline
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           // Top-most GestureDetector to catch the tap instantly
           Positioned.fill(
             child: Material(
@@ -677,11 +688,10 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
   }
 
   Widget _buildVehicleGallery() {
-    // Placeholder images for vehicle
     final vehicleImages = [
-      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957', // Bus
-      'https://images.unsplash.com/photo-1570125909232-eb263c188f7e', // Bus Interior
-      'https://images.unsplash.com/photo-1494515843206-f3117d3f51b7', // Bus Detail
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957',
+      'https://images.unsplash.com/photo-1570125909232-eb263c188f7e',
+      'https://images.unsplash.com/photo-1494515843206-f3117d3f51b7',
     ];
 
     return Column(
@@ -702,16 +712,17 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 120,
+          height: 180, // Increased height
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(), // Smoother scroll
             itemCount: vehicleImages.length,
             separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               return Container(
-                width: 160,
+                width: 240, // Increased width
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   color: Colors.grey.shade100,
                   border: Border.all(color: Colors.grey.shade200),
                 ),
@@ -719,15 +730,9 @@ class _TripMapSheetState extends ConsumerState<TripMapSheet> with SingleTickerPr
                 child: Image.network(
                   vehicleImages[index],
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Center(
-                      child: Icon(
-                        CupertinoIcons.photo,
-                        color: Colors.grey.shade400,
-                        size: 32,
-                      ),
-                    );
-                  },
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Icon(CupertinoIcons.photo, color: Colors.grey, size: 30),
+                  ),
                 ),
               );
             },

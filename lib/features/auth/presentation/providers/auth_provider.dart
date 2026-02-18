@@ -63,6 +63,15 @@ class Auth extends _$Auth {
     return result.fold((failure) => failure.message, (_) => null);
   }
 
+  /// Send reset password email
+  Future<String?> resetPassword(String email) async {
+    final result = await ref
+        .read(authRepositoryProvider)
+        .resetPassword(email: email);
+
+    return result.fold((failure) => failure.message, (_) => null);
+  }
+
   /// Update user profile
   Future<String?> updateProfile({
     required String fullName,

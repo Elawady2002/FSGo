@@ -284,6 +284,24 @@ abstract class AppLocalizations {
   /// **'قريباً'**
   String get soon;
 
+  /// No description provided for @tripRoute.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الرحلة'**
+  String get tripRoute;
+
+  /// No description provided for @guc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجامعة الألمانية (GUC)'**
+  String get guc;
+
+  /// No description provided for @madinaty.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدينتي'**
+  String get madinaty;
+
   /// No description provided for @date.
   ///
   /// In ar, this message translates to:
@@ -674,23 +692,17 @@ abstract class AppLocalizations {
   /// **'متابعة'**
   String get continueText;
 
-  /// No description provided for @madinaty.
-  ///
-  /// In ar, this message translates to:
-  /// **'مدينتي'**
-  String get madinaty;
-
-  /// No description provided for @guc.
-  ///
-  /// In ar, this message translates to:
-  /// **'الجامعة الألمانية (GUC)'**
-  String get guc;
-
   /// No description provided for @error.
   ///
   /// In ar, this message translates to:
   /// **'خطأ'**
   String get error;
+
+  /// No description provided for @scanQrCode.
+  ///
+  /// In ar, this message translates to:
+  /// **'امسح الكود'**
+  String get scanQrCode;
 
   /// No description provided for @noUpcomingRides.
   ///

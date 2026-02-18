@@ -26,6 +26,7 @@ class BookingRepositoryImpl implements BookingRepository {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   }) async {
     try {
       final userId = _getUserId();
@@ -44,6 +45,7 @@ class BookingRepositoryImpl implements BookingRepository {
         selectionType: selectionType,
         passengerCount: passengerCount,
         splitPreference: splitPreference,
+        isLadies: isLadies,
       );
       return Right(booking);
     } catch (e) {
@@ -96,6 +98,7 @@ class BookingRepositoryImpl implements BookingRepository {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   }) async {
     try {
       final booking = await _dataSource.updateBooking(
@@ -110,6 +113,7 @@ class BookingRepositoryImpl implements BookingRepository {
         selectionType: selectionType,
         passengerCount: passengerCount,
         splitPreference: splitPreference,
+        isLadies: isLadies,
       );
       return Right(booking);
     } catch (e) {

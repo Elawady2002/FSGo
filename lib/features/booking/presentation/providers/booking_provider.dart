@@ -213,6 +213,7 @@ class BookingState extends _$BookingState {
         selectionType: state.selectionType,
         passengerCount: state.passengerCount,
         splitPreference: state.splitPreference,
+        isLadies: state.isLadiesOnly,
       );
 
       return result.fold(
@@ -247,6 +248,7 @@ class BookingState extends _$BookingState {
         selectionType: state.selectionType,
         passengerCount: state.passengerCount,
         splitPreference: state.splitPreference,
+        isLadies: state.isLadiesOnly,
       );
 
       return result.fold(

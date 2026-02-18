@@ -160,10 +160,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           hintText: "كلمة السر",
                           prefixIcon: CupertinoIcons.lock,
                           isPassword: true,
-                          suffixIcon: Icon(
-                            CupertinoIcons.eye_slash,
-                            color: AppTheme.textSecondary,
-                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'الرجاء إدخال كلمة السر';

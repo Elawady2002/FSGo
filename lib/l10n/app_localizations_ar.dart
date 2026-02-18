@@ -102,6 +102,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get soon => 'قريباً';
 
   @override
+  String get tripRoute => 'مسار الرحلة';
+
+  @override
+  String get guc => 'الجامعة الألمانية (GUC)';
+
+  @override
+  String get madinaty => 'مدينتي';
+
+  @override
   String get date => 'امتى؟';
 
   @override
@@ -305,13 +314,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get continueText => 'متابعة';
 
   @override
-  String get madinaty => 'مدينتي';
-
-  @override
-  String get guc => 'الجامعة الألمانية (GUC)';
-
-  @override
   String get error => 'خطأ';
+
+  @override
+  String get scanQrCode => 'امسح الكود';
 
   @override
   String get noUpcomingRides => 'لا توجد رحلات قادمة';

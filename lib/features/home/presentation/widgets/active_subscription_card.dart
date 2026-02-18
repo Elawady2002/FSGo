@@ -1,3 +1,4 @@
+import 'dart:math' show pi;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/core/utils/digit_converter.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:my_app/core/theme/app_theme.dart';
 import 'package:my_app/features/booking/domain/entities/booking_entity.dart';
@@ -31,34 +33,44 @@ class ActiveSubscriptionCard extends ConsumerStatefulWidget {
 }
 
 class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   DateTime? _selectedDate;
-  // String? _selectedDepartureTime; // Removed as unused in new design
-  // String? _selectedReturnTime;    // Removed as unused in new design
-  // String _selectedTripType = 'round_trip'; // Removed unused field
   String? _universityName;
   Map<String, SubscriptionScheduleEntity> _schedules = {};
   double _dragOffsetY = 0.0;
   late AnimationController _springController;
   late Animation<double> _springAnimation;
 
+  // ── Flip Animation ──────────────────────────────────────────────────────────
+  late AnimationController _flipController;
+  late Animation<double> _flipAnimation;
+  bool _isFlipped = false;
+  double _dragStartX = 0;
+
   @override
   void initState() {
     super.initState();
-    // Default to today, but will be updated by _fetchSchedules
     _selectedDate = DateTime.now();
     _fetchSchedules();
     _fetchUniversityName();
+
     _springController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
+    );
+
+    _flipController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
   }
 
   @override
   void didUpdateWidget(ActiveSubscriptionCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Refresh calendar when regularBookings list changes
     if (oldWidget.regularBookings.length != widget.regularBookings.length) {
       _fetchSchedules();
     }
@@ -67,9 +79,37 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
   @override
   void dispose() {
     _springController.dispose();
+    _flipController.dispose();
     super.dispose();
   }
 
+  // ── Flip Handlers ───────────────────────────────────────────────────────────
+  void _onHorizontalDragStart(DragStartDetails details) {
+    _dragStartX = details.globalPosition.dx;
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    final dx = details.globalPosition.dx - _dragStartX;
+    final velocity = details.primaryVelocity ?? 0;
+    if (dx.abs() > 60 || velocity.abs() > 400) {
+      _flip();
+    }
+  }
+
+  void _flip() {
+    HapticFeedback.mediumImpact();
+    if (_isFlipped) {
+      _flipController.reverse().then((_) {
+        if (mounted) setState(() => _isFlipped = false);
+      });
+    } else {
+      _flipController.forward().then((_) {
+        if (mounted) setState(() => _isFlipped = true);
+      });
+    }
+  }
+
+  // ── Data Fetching ───────────────────────────────────────────────────────────
   Future<void> _fetchUniversityName() async {
     final user = ref.read(authProvider).valueOrNull;
     if (user?.universityId != null) {
@@ -96,7 +136,6 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
     try {
       final Map<String, SubscriptionScheduleEntity> schedulesMap = {};
 
-      // 1. Fetch subscription bookings from bookings table
       final response = await Supabase.instance.client
           .from('bookings')
           .select()
@@ -121,14 +160,11 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
         );
       }
 
-      // 2. Add regular bookings from widget.regularBookings
       for (var booking in widget.regularBookings) {
         final dateKey = booking.bookingDate.toIso8601String().split('T')[0];
-
-        // Convert BookingEntity to SubscriptionScheduleEntity
         schedulesMap[dateKey] = SubscriptionScheduleEntity(
           id: booking.id,
-          subscriptionId: '', // Empty for regular bookings
+          subscriptionId: '',
           tripDate: booking.bookingDate,
           tripType: booking.tripType,
           departureTime: booking.departureTime,
@@ -151,32 +187,22 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
 
   void _selectNearestTrip() {
     final now = DateTime.now();
-    // Sort dates
     final sortedDates = _schedules.keys.toList()
       ..sort((a, b) => DateTime.parse(a).compareTo(DateTime.parse(b)));
 
-    // Find first date after now (or today if not passed yet)
     String? nearestDateKey;
     for (var dateKey in sortedDates) {
       final date = DateTime.parse(dateKey);
-      // If date is today or future
       if (date.isAfter(now.subtract(const Duration(days: 1)))) {
         nearestDateKey = dateKey;
         break;
       }
     }
 
-    // If found, select it
     if (nearestDateKey != null) {
       final date = DateTime.parse(nearestDateKey);
-      final schedule = _schedules[nearestDateKey];
       setState(() {
         _selectedDate = date;
-        if (schedule != null) {
-          // _selectedTripType = schedule.tripType;
-          // _selectedDepartureTime = schedule.departureTime;
-          // _selectedReturnTime = schedule.returnTime;
-        }
       });
     }
   }
@@ -199,47 +225,30 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                 onDateSelected: (date) {
                   setState(() {
                     _selectedDate = date;
-                    final dateKey = date.toIso8601String().split('T')[0];
-                    final schedule = _schedules[dateKey];
-                    if (schedule != null) {
-                      // _selectedTripType = schedule.tripType;
-                      // _selectedDepartureTime = schedule.departureTime;
-                      // _selectedReturnTime = schedule.returnTime;
-                    }
                   });
                 },
                 onBookingTap: (booking) {
                   Navigator.of(context).pop();
-                  // Just update the displayed details on the card
                   setState(() {
                     _selectedDate = booking.tripDate;
-                    // _selectedTripType = booking.tripType;
-                    // _selectedDepartureTime = booking.departureTime;
-                    // _selectedReturnTime = booking.returnTime;
                   });
                 },
               );
             },
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-                  // Custom curve for realistic expansion
                   final curvedAnimation = CurvedAnimation(
                     parent: animation,
                     curve: Curves.easeOutCubic,
                   );
-
-                  // Scale from card size to full screen
                   final scaleAnimation = Tween<double>(
                     begin: 0.85,
                     end: 1.0,
                   ).animate(curvedAnimation);
-
-                  // Slide up slightly for natural feel
                   final slideAnimation = Tween<Offset>(
                     begin: const Offset(0, 0.1),
                     end: Offset.zero,
                   ).animate(curvedAnimation);
-
                   return SlideTransition(
                     position: slideAnimation,
                     child: ScaleTransition(
@@ -255,24 +264,25 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
           ),
         )
         .then((_) {
-          // Refresh schedules when returning from FullScreenBookingView
           debugPrint('🔄 Refreshing schedules after booking view closed...');
           _fetchSchedules();
         });
   }
 
+  // ── Build ───────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      // Vertical drag → open full screen (original behaviour)
       onVerticalDragStart: (_) => _playSound(),
       onVerticalDragUpdate: (details) {
+        if (_isFlipped) return; // don't allow vertical drag while flipped
         setState(() {
-          // Add resistance and allow dragging down (positive delta)
           _dragOffsetY += details.primaryDelta! * 0.6;
         });
       },
       onVerticalDragEnd: (details) {
-        // Trigger on Drag Down (positive offset/velocity)
+        if (_isFlipped) return;
         if (_dragOffsetY > 80 || details.primaryVelocity! > 300) {
           _openFullScreenView();
           _runSpringBack();
@@ -280,25 +290,55 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
           _runSpringBack();
         }
       },
+      // Horizontal drag → flip card
+      onHorizontalDragStart: _onHorizontalDragStart,
+      onHorizontalDragEnd: _onHorizontalDragEnd,
       child: Transform.translate(
         offset: Offset(0, _dragOffsetY),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: _buildDetailsContent(),
-          ),
+        child: AnimatedBuilder(
+          animation: _flipAnimation,
+          builder: (context, _) {
+            final angle = _flipAnimation.value * pi;
+            final showBack = _flipAnimation.value >= 0.5;
+
+            final transform = Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(angle);
+
+            return Transform(
+              transform: transform,
+              alignment: Alignment.center,
+              child: showBack
+                  ? Transform(
+                      transform: Matrix4.identity()..rotateY(pi),
+                      alignment: Alignment.center,
+                      child: _buildBack(),
+                    )
+                  : _buildFront(),
+            );
+          },
         ),
+      ),
+    );
+  }
+
+  // ── Front Face (original card, untouched) ───────────────────────────────────
+  Widget _buildFront() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: _buildDetailsContent(),
       ),
     );
   }
@@ -310,18 +350,17 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Top Row: Badge (Right) and Back Arrow (Left) in RTL
+          // Top Row: Badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Badge (First -> Right in RTL)
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCCFF00), // Lime green
+                  color: const Color(0xFFCCFF00),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -333,27 +372,23 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                   ),
                 ),
               ),
-              // Back Arrow (Second -> Left in RTL)
             ],
           ).animate().fadeIn().slideX(begin: -0.2, end: 0),
 
-          const SizedBox(height: 40), // Fixed spacing instead of Spacer
+          const SizedBox(height: 40),
+
           // Dates Row
-          // In RTL: First child is Right, Second child is Left.
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            // Center the columns
             children: [
-              // Start Date (Right side in RTL)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Text(
                     AppLocalizations.of(context)!.startDate,
                     style: AppTheme.textTheme.bodyMedium?.copyWith(
                       color: Colors.white70,
-                      fontSize: 14, // Increased from 12
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -362,16 +397,13 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
                     style: AppTheme.textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20, // Increased size
+                      fontSize: 20,
                     ),
                   ),
                 ],
               ),
-
-              // End Date (Left side in RTL)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Text(
                     AppLocalizations.of(context)!.tripType,
@@ -399,16 +431,14 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
           const SizedBox(height: 16),
 
           // Route Info
-          // In RTL: First child is Right, Second is Left.
           Row(
             children: [
-              Icon(
+              const Icon(
                 CupertinoIcons.location_fill,
-                color: const Color(0xFFCCFF00), // Lime green
+                color: Color(0xFFCCFF00),
                 size: 18,
               ),
               const SizedBox(width: 12),
-              // Text (Left of dot)
               Expanded(
                 child: Text(
                   AppLocalizations.of(context)!.fromYourAreaTo(
@@ -430,11 +460,174 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
     );
   }
 
+  // ── Back Face (QR Code, same black design) ──────────────────────────────────
+  Widget _buildBack() {
+    final subscriptionId = widget.subscription.id ?? 'NO-ID';
+    final shortId = '#${subscriptionId.substring(0, 8).toUpperCase()}';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Row(
+            children: [
+              // QR Code on white background
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: QrImageView(
+                  data: subscriptionId,
+                  version: QrVersions.auto,
+                  size: 120,
+                  foregroundColor: Colors.black,
+                ),
+              ),
+
+              const SizedBox(width: 20),
+
+              // Info beside QR
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCCFF00),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'تذكرة الاشتراك',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Subscription ID
+                    Text(
+                      shortId,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Start Date
+                    Row(
+                      children: [
+                        const Icon(
+                          CupertinoIcons.calendar,
+                          color: Colors.white54,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatDateSafe(
+                            context,
+                            widget.subscription.startDate,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Route
+                    Row(
+                      children: [
+                        const Icon(
+                          CupertinoIcons.location_fill,
+                          color: Color(0xFFCCFF00),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!.fromYourAreaTo(
+                              _universityName ??
+                                  (ref.read(localeProvider).languageCode == 'ar'
+                                      ? "الجامعة"
+                                      : "University"),
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(),
+
+                    // Hint
+                    Row(
+                      children: const [
+                        Icon(
+                          CupertinoIcons.arrow_left_right,
+                          color: Colors.white24,
+                          size: 12,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'اسحب للرجوع',
+                          style: TextStyle(
+                            color: Colors.white24,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
   void _runSpringBack() {
     _springAnimation = Tween<double>(begin: _dragOffsetY, end: 0.0).animate(
       CurvedAnimation(parent: _springController, curve: Curves.elasticOut),
     );
-
     _springController.reset();
     _springController.forward();
     _springController.addListener(() {
@@ -460,10 +653,8 @@ class _ActiveSubscriptionCardState extends ConsumerState<ActiveSubscriptionCard>
 
   String _formatDateSafe(BuildContext context, DateTime date) {
     try {
-      final locale = ref.read(localeProvider).languageCode;
       return DateFormat('d MMMM', 'ar_EG').format(date).w;
     } catch (e) {
-      // Fallback if locale data is missing
       return "${date.day}/${date.month}";
     }
   }

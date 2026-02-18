@@ -20,6 +20,7 @@ abstract class BookingDataSource {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   });
 
   /// Create a booking from a subscription
@@ -34,6 +35,7 @@ abstract class BookingDataSource {
     String? departureTime,
     String? returnTime,
     required double totalPrice,
+    bool isLadies = false,
   });
 
   Future<List<BookingModel>> getUserBookings(String userId);
@@ -52,6 +54,7 @@ abstract class BookingDataSource {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   });
 
   Future<BookingModel> transferBooking({
@@ -80,6 +83,7 @@ class BookingDataSourceImpl implements BookingDataSource {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   }) async {
     try {
       final now = DateTime.now();
@@ -102,6 +106,7 @@ class BookingDataSourceImpl implements BookingDataSource {
             'passenger_count': passengerCount,
             'split_preference': splitPreference,
             'total_price': totalPrice,
+            'is_ladies': isLadies,
             'created_at': now.toIso8601String(),
             'updated_at': now.toIso8601String(),
           })
@@ -134,6 +139,7 @@ class BookingDataSourceImpl implements BookingDataSource {
     String? departureTime,
     String? returnTime,
     required double totalPrice,
+    bool isLadies = false,
   }) async {
     try {
       final now = DateTime.now();
@@ -156,6 +162,7 @@ class BookingDataSourceImpl implements BookingDataSource {
             'status': 'pending', // Pending until admin approval
             'payment_status': 'paid', // Already paid via subscription
             'total_price': totalPrice,
+            'is_ladies': isLadies,
             'created_at': now.toIso8601String(),
             'updated_at': now.toIso8601String(),
           })
@@ -335,6 +342,7 @@ class BookingDataSourceImpl implements BookingDataSource {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   }) async {
     try {
       final now = DateTime.now();
@@ -352,6 +360,7 @@ class BookingDataSourceImpl implements BookingDataSource {
             'passenger_count': passengerCount,
             'split_preference': splitPreference,
             'total_price': totalPrice,
+            'is_ladies': isLadies,
             'updated_at': now.toIso8601String(),
           })
           .eq('id', bookingId)

@@ -21,6 +21,7 @@ final appStartupProvider = FutureProvider<void>((ref) async {
     LoggerService.info('Environment variables loaded');
   } catch (e) {
     LoggerService.error('Failed to load .env file', error: e);
+    throw Exception('Failed to load configuration: $e');
   }
 
   // 3. Initialize Supabase
@@ -29,7 +30,7 @@ final appStartupProvider = FutureProvider<void>((ref) async {
     LoggerService.info('Supabase initialized');
   } catch (e) {
     LoggerService.error('Failed to initialize Supabase', error: e);
-    // Continue anyway or handle error? For now, we continue.
+    throw Exception('Failed to initialize backend services: $e');
   }
 
   LoggerService.info('App Initialization Complete');

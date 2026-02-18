@@ -70,6 +70,7 @@ class BookingEntity extends Equatable {
   final BookingStatus status;
   final PaymentStatus paymentStatus;
   final double totalPrice;
+  final bool isLadies;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -92,6 +93,7 @@ class BookingEntity extends Equatable {
     required this.status,
     required this.paymentStatus,
     required this.totalPrice,
+    this.isLadies = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -116,6 +118,7 @@ class BookingEntity extends Equatable {
     status,
     paymentStatus,
     totalPrice,
+    isLadies,
     createdAt,
     updatedAt,
   ];

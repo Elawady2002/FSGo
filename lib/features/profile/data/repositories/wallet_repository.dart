@@ -16,12 +16,35 @@ abstract class WalletRepository {
     double amount,
     String reason,
   );
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTransactions(
+    String userId,
+  );
 }
 
 class WalletRepositoryImpl implements WalletRepository {
   final SupabaseClient _supabase;
 
   WalletRepositoryImpl(this._supabase);
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTransactions(
+    String userId,
+  ) async {
+    try {
+      AppLogger.info('📜 Fetching wallet transactions for user: $userId');
+
+      final response = await _supabase
+          .from('wallet_transactions')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      return Right(List<Map<String, dynamic>>.from(response));
+    } catch (e) {
+      AppLogger.error('❌ Error fetching transactions: $e');
+      return Left(ServerFailure(message: 'فشل في تحميل العمليات'));
+    }
+  }
 
   @override
   Future<Either<Failure, double>> getBalance(String userId) async {

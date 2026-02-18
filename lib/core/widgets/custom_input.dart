@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../theme/app_theme.dart';
 
-class CustomInput extends StatelessWidget {
+class CustomInput extends StatefulWidget {
   final String hintText;
   final IconData? prefixIcon;
   final bool isPassword;
@@ -24,7 +24,17 @@ class CustomInput extends StatelessWidget {
   });
 
   @override
+  State<CustomInput> createState() => _CustomInputState();
+}
+
+class _CustomInputState extends State<CustomInput> {
+  bool _obscure = true;
+
+  @override
   Widget build(BuildContext context) {
+    // Show built-in toggle only if it's a password field and no custom suffixIcon passed
+    final showBuiltInToggle = widget.isPassword && widget.suffixIcon == null;
+
     return Container(
       decoration: BoxDecoration(
         boxShadow: [
@@ -36,13 +46,13 @@ class CustomInput extends StatelessWidget {
         ],
       ),
       child: TextFormField(
-        controller: controller,
-        obscureText: isPassword,
-        keyboardType: keyboardType,
-        validator: validator,
+        controller: widget.controller,
+        obscureText: widget.isPassword ? _obscure : false,
+        keyboardType: widget.keyboardType,
+        validator: widget.validator,
         style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
         decoration: InputDecoration(
-          hintText: hintText,
+          hintText: widget.hintText,
           hintStyle: const TextStyle(color: CupertinoColors.systemGrey),
           fillColor: Colors.white,
           filled: true,
@@ -73,10 +83,18 @@ class CustomInput extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Colors.red, width: 1.5),
           ),
-          prefixIcon: prefixIcon != null
-              ? Icon(prefixIcon, color: CupertinoColors.systemGrey)
+          prefixIcon: widget.prefixIcon != null
+              ? Icon(widget.prefixIcon, color: CupertinoColors.systemGrey)
               : null,
-          suffixIcon: suffixIcon,
+          suffixIcon: showBuiltInToggle
+              ? GestureDetector(
+                  onTap: () => setState(() => _obscure = !_obscure),
+                  child: Icon(
+                    _obscure ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                )
+              : widget.suffixIcon,
         ),
       ),
     );

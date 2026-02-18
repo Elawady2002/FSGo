@@ -30,6 +30,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
   }
 
   Future<void> _loadBalance() async {
+    if (_userId.isEmpty) return; // Guard against unauthenticated calls
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -139,22 +140,42 @@ class WalletNotifier extends StateNotifier<WalletState> {
     required String method,
     required String proofUrl,
     required String senderPhone,
+    bool isWithdraw = false,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
+      final String reason = isWithdraw
+          ? 'سحب رصيد - $method ($senderPhone)'
+          : 'شحن رصيد - $method ($senderPhone)';
 
-      AppLogger.info(
-        'Top Up Request: Amount=$amount, Method=$method, Phone=$senderPhone, Proof=$proofUrl',
+      final result = isWithdraw
+          ? await _repository.deductAmount(_userId, amount, reason)
+          : await _repository.addAmount(_userId, amount, reason);
+
+      return result.fold(
+        (failure) {
+          AppLogger.error('Failed to process wallet request: ${failure.message}');
+          state = state.copyWith(isLoading: false, error: failure.message);
+          return false;
+        },
+        (newBalance) {
+          AppLogger.info(
+            'Wallet request processed successfully. New balance: $newBalance',
+          );
+          state = state.copyWith(
+            balance: newBalance,
+            isLoading: false,
+            error: null,
+          );
+          return true;
+        },
       );
-
-      // In a real app, you would call repository.createTopUpRequest(...)
-
-      state = state.copyWith(isLoading: false);
-      return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      AppLogger.error('Error processing wallet request: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: isWithdraw ? 'حدث خطأ في طلب السحب' : 'حدث خطأ في طلب الشحن',
+      );
       return false;
     }
   }
@@ -165,10 +186,26 @@ final walletProvider = StateNotifierProvider<WalletNotifier, WalletState>((
   ref,
 ) {
   final user = ref.watch(authProvider).value;
+  // Instead of throwing, return a notifier with a safe fallback
+  // This prevents the app from crashing if the provider is built before auth
   if (user == null) {
-    throw Exception('User not authenticated');
+    // Return a dummy notifier that does nothing or handles re-auth
+    final repository = ref.watch(walletRepositoryProvider);
+    return WalletNotifier(repository, ''); 
   }
 
   final repository = ref.watch(walletRepositoryProvider);
   return WalletNotifier(repository, user.id);
+});
+
+final walletTransactionsProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
+  final user = ref.watch(authProvider).value;
+  if (user == null) return [];
+
+  final repository = ref.watch(walletRepositoryProvider);
+  final result = await repository.getTransactions(user.id);
+
+  return result.fold((failure) => throw Exception(failure.message), (transactions) => transactions);
 });

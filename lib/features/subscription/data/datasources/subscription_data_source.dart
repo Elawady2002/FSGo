@@ -73,17 +73,6 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
 
       final subscriptionId = subscription['id'];
 
-      // Update user's profile with current subscription details
-      await _supabase
-          .from('users')
-          .update({
-            'subscription_type': planType.name,
-            'subscription_start_date': now.toIso8601String(),
-            'subscription_end_date': endDate.toIso8601String(),
-            'subscription_status': SubscriptionStatus.pending.name,
-          })
-          .eq('id', userId);
-
       AppLogger.info('✅ Subscription created successfully');
       return subscriptionId;
     } catch (e, stackTrace) {
@@ -116,7 +105,7 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
       final response = await _supabase
           .from('subscriptions')
           .select()
-          .eq('user_id', userId)
+          .eq('id', userId)
           .order('created_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(response as List);
@@ -143,27 +132,21 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
       AppLogger.info('📋 Current subscription data: $subscription');
       final userId = subscription['user_id'] as String;
 
-      // Update subscription status to expired
+      // Update subscription status to expired and add cancellation metadata
       AppLogger.info('⏳ Updating subscription status to expired...');
       await _supabase
           .from('subscriptions')
           .update({
             'status': SubscriptionStatus.expired.name,
             'updated_at': DateTime.now().toIso8601String(),
+            'cancelled_at': DateTime.now().toIso8601String(),
+            'cancellation_reason': 'User requested cancellation',
           })
           .eq('id', subscriptionId);
       AppLogger.info('✅ Subscription status updated');
 
-      // Update user's subscription status to expired
-      AppLogger.info('⏳ Updating user subscription status...');
-      await _supabase
-          .from('users')
-          .update({
-            'subscription_status': SubscriptionStatus.expired.name,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', userId);
-      AppLogger.info('✅ User subscription status updated');
+      // The 'trigger_sync_subscription_status' in the database will automatically
+      // update the user's status in the 'users' table.
 
       // Verify the update
       final verifySubscription = await _supabase

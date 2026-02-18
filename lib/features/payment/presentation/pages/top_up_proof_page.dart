@@ -163,6 +163,7 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
         method: widget.method,
         proofUrl: imageUrl ?? '',
         senderPhone: _senderPhoneController.text,
+        isWithdraw: widget.isWithdraw,
       );
 
       if (!mounted) return;

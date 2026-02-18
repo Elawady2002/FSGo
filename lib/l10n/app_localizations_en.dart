@@ -103,6 +103,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soon => 'Soon';
 
   @override
+  String get tripRoute => 'Trip Route';
+
+  @override
+  String get guc => 'German University (GUC)';
+
+  @override
+  String get madinaty => 'Madinaty';
+
+  @override
   String get date => 'Date';
 
   @override
@@ -306,13 +315,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueText => 'Continue';
 
   @override
-  String get madinaty => 'Madinaty';
-
-  @override
-  String get guc => 'German University (GUC)';
-
-  @override
   String get error => 'Error';
+
+  @override
+  String get scanQrCode => 'Scan QR Code';
 
   @override
   String get noUpcomingRides => 'No upcoming rides';

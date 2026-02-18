@@ -322,6 +322,17 @@ class SupabaseAuthDataSource {
     }
   }
 
+  /// Send password reset email
+  Future<void> resetPassword({required String email}) async {
+    try {
+      await _client.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      throw Exception('Failed to send reset password email: ${e.message}');
+    } catch (e) {
+      throw Exception('Unexpected error during password reset: $e');
+    }
+  }
+
   /// Update user profile
   Future<UserModel> updateProfile({
     required String userId,

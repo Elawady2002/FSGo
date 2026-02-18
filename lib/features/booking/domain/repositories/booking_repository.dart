@@ -26,6 +26,7 @@ abstract class BookingRepository {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   });
 
   /// Get all bookings for the current user
@@ -46,6 +47,7 @@ abstract class BookingRepository {
     BookingSelectionType selectionType = BookingSelectionType.seat,
     int passengerCount = 1,
     bool splitPreference = true,
+    bool isLadies = false,
   });
 
   /// Transfer a booking to another user

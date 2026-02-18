@@ -21,6 +21,7 @@ class BookingModel extends BookingEntity {
     required super.status,
     required super.paymentStatus,
     required super.totalPrice,
+    super.isLadies = false,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -55,6 +56,7 @@ class BookingModel extends BookingEntity {
       splitPreference: (json['split_preference'] as bool?) ?? true,
       totalPrice:
           (json['total_price'] as num?)?.toDouble() ?? 0.0, // Handle null
+      isLadies: (json['is_ladies'] as bool?) ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -81,6 +83,7 @@ class BookingModel extends BookingEntity {
       'passenger_count': passengerCount,
       'split_preference': splitPreference,
       'total_price': totalPrice,
+      'is_ladies': isLadies,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -107,6 +110,7 @@ class BookingModel extends BookingEntity {
       passengerCount: entity.passengerCount,
       splitPreference: entity.splitPreference,
       totalPrice: entity.totalPrice,
+      isLadies: entity.isLadies,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );

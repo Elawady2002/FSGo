@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_toast.dart';
 import '../providers/auth_provider.dart';
 import 'signup_page.dart';
+import 'forgot_password_page.dart';
 import '../../../home/presentation/pages/home_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -18,8 +19,8 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _emailController =
-      TextEditingController(); // Changed from phone to email for Supabase
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
@@ -31,10 +32,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showError('الرجاء إدخال البريد الإلكتروني وكلمة المرور');
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
@@ -47,7 +45,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         setState(() => _isLoading = false);
 
         if (error == null) {
-          // Success
           Navigator.pushReplacement(
             context,
             CupertinoPageRoute(builder: (_) => const HomePage()),
@@ -75,97 +72,136 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-              Text(
-                "أهلاً بيك!",
-                style: AppTheme.textTheme.displayLarge?.copyWith(
-                  color: Colors.black,
-                  decoration: TextDecoration.none,
-                ),
-              ).animate().fadeIn().slideX(),
-              const SizedBox(height: 8),
-              Text(
-                "سجل دخولك عشان تكمل رحلتك.",
-                style: AppTheme.textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ).animate().fadeIn(delay: 200.ms).slideX(),
-              const SizedBox(height: 48),
-              CustomInput(
-                controller: _emailController,
-                hintText: "البريد الإلكتروني", // Changed to Email
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: CupertinoIcons.mail,
-              ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 16),
-              CustomInput(
-                controller: _passwordController,
-                hintText: "كلمة السر",
-                isPassword: true,
-                prefixIcon: CupertinoIcons.lock,
-              ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 24),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    "نسيت كلمة السر؟",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.none,
-                    ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 40),
+                Text(
+                  "أهلاً بيك!",
+                  style: AppTheme.textTheme.displayLarge?.copyWith(
+                    color: Colors.black,
+                    decoration: TextDecoration.none,
                   ),
-                ),
-              ).animate().fadeIn(delay: 500.ms),
-              const SizedBox(height: 24),
-              _isLoading
-                  ? const Center(child: CupertinoActivityIndicator())
-                  : CustomButton(text: "تسجيل الدخول", onPressed: _handleLogin)
-                        .animate()
-                        .fadeIn(delay: 600.ms)
-                        .slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 24),
-              Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    "معندكش حساب؟ ",
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
-                      decoration: TextDecoration.none,
-                      decorationColor: Colors.transparent,
-                    ),
+                ).animate().fadeIn().slideX(),
+                const SizedBox(height: 8),
+                Text(
+                  "سجل دخولك عشان تكمل رحلتك.",
+                  style: AppTheme.textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
                   ),
-                  GestureDetector(
-                    onTap: () {
+                ).animate().fadeIn(delay: 200.ms).slideX(),
+                const SizedBox(height: 48),
+
+                // Email field with validation
+                CustomInput(
+                  controller: _emailController,
+                  hintText: "البريد الإلكتروني",
+                  keyboardType: TextInputType.emailAddress,
+                  prefixIcon: CupertinoIcons.mail,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'الرجاء إدخال البريد الإلكتروني';
+                    }
+                    if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
+                      return 'البريد الإلكتروني غير صحيح';
+                    }
+                    return null;
+                  },
+                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                const SizedBox(height: 16),
+
+                // Password field with validation
+                CustomInput(
+                  controller: _passwordController,
+                  hintText: "كلمة السر",
+                  isPassword: true,
+                  prefixIcon: CupertinoIcons.lock,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'الرجاء إدخال كلمة السر';
+                    }
+                    if (value.length < 6) {
+                      return 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
+                    }
+                    return null;
+                  },
+                ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+                const SizedBox(height: 16),
+
+                // Forgot password button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () {
                       Navigator.push(
                         context,
                         CupertinoPageRoute(
-                          builder: (context) => const SignupPage(),
+                          builder: (_) => const ForgotPasswordPage(),
                         ),
                       );
                     },
-                    child: Text(
-                      "سجل دلوقتي",
+                    child: const Text(
+                      "نسيت كلمة السر؟",
                       style: TextStyle(
                         color: Colors.black,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                ).animate().fadeIn(delay: 500.ms),
+                const SizedBox(height: 16),
+
+                // Login button
+                _isLoading
+                    ? const Center(child: CupertinoActivityIndicator())
+                    : CustomButton(text: "تسجيل الدخول", onPressed: _handleLogin)
+                          .animate()
+                          .fadeIn(delay: 600.ms)
+                          .slideY(begin: 0.2, end: 0),
+                const SizedBox(height: 24),
+
+                // Signup link
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "معندكش حساب؟ ",
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
                         fontSize: 14,
                         decoration: TextDecoration.none,
                         decorationColor: Colors.transparent,
                       ),
                     ),
-                  ),
-                ],
-              ).animate().fadeIn(delay: 700.ms),
-            ],
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) => const SignupPage(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "سجل دلوقتي",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          decoration: TextDecoration.none,
+                          decorationColor: Colors.transparent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 700.ms),
+              ],
+            ),
           ),
         ),
       ),

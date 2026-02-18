@@ -23,6 +23,8 @@ import '../widgets/active_subscription_card.dart';
 import '../widgets/wallet_widget.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../../subscription/presentation/widgets/subscription_plans_sheet.dart';
+import '../widgets/booking_carousel.dart';
+import '../widgets/empty_bookings_widget.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -237,36 +239,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         },
                       ),
 
-                      // Route Info - Only show if there is an upcoming booking
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final upcomingBookingAsync = ref.watch(
-                            upcomingBookingProvider,
-                          );
-                          return upcomingBookingAsync.when(
-                            data: (booking) {
-                              if (booking == null) {
-                                return const SizedBox.shrink();
-                              }
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 32),
-                                  _buildSectionTitle(
-                                    context,
-                                    ref,
-                                    l10n.routePath,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _buildRouteInfoCard(booking),
-                                ],
-                              );
-                            },
-                            loading: () => const SizedBox.shrink(),
-                            error: (e, s) => const SizedBox.shrink(),
-                          );
-                        },
-                      ),
+                      // Route Info - Removed as per new design
+
                     ],
                   ),
                 ),
@@ -324,176 +298,43 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildUpcomingTripCard() {
-    final upcomingBookingAsync = ref.watch(upcomingBookingProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final userBookingsAsync = ref.watch(userBookingsProvider);
 
-    return upcomingBookingAsync.when(
-      data: (booking) {
-        if (booking == null) {
-          // Empty state - no bookings - centered without container
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 60),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    CupertinoIcons.calendar_badge_minus,
-                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
-                    size: 120,
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    l10n.noBookedTrips,
-                    style: AppTheme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      l10n.bookNowDescription,
-                      textAlign: TextAlign.center,
-                      style: AppTheme.textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+    return userBookingsAsync.when(
+      data: (bookings) {
+        final now = DateTime.now();
+        final upcomingBookings = bookings.where((b) {
+          return !b.isCancelled &&
+              !b.isCompleted &&
+              (b.bookingDate.isAfter(now.subtract(const Duration(days: 1))) ||
+                  b.bookingDate.day == now.day);
+        }).toList();
+
+        if (upcomingBookings.isEmpty) {
+          return const EmptyBookingsWidget();
         }
 
-        // Has booking - display trip card
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            booking.status == BookingStatus.confirmed
-                                ? l10n.confirmed
-                                : l10n.soon,
-                            style: AppTheme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          CupertinoIcons.arrow_right_circle_fill,
-                          color: Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.date,
-                                style: AppTheme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${booking.bookingDate.day} ${_getMonthName(context, booking.bookingDate.month)}',
-                                style: AppTheme.textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.tripType,
-                                style: AppTheme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _getTripTypeLabel(context, booking.tripType),
-                                style: AppTheme.textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Divider(color: Colors.white24),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        const Icon(
-                          CupertinoIcons.money_dollar_circle,
-                          color: AppTheme.primaryColor,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            l10n.priceLabel(
-                              booking.totalPrice.toStringAsFixed(0),
-                            ),
-                            style: AppTheme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        // Sort by date ascending, pick nearest
+        upcomingBookings.sort((a, b) => a.bookingDate.compareTo(b.bookingDate));
+        final nearest = upcomingBookings.first;
+
+        return Column(
+          children: [
+            BookingCarousel(bookings: upcomingBookings),
+            const SizedBox(height: 16),
+            // Route info card below the booking card
+            _buildSectionTitle(
+              context,
+              ref,
+              AppLocalizations.of(context)!.tripRoute,
+            ),
+            const SizedBox(height: 12),
+            _buildRouteInfoCard(nearest),
+          ],
         );
       },
       loading: () => Container(
+        height: 240,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -516,7 +357,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.errorLoadingTrips,
+              AppLocalizations.of(context)!.errorLoadingTrips,
               style: AppTheme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

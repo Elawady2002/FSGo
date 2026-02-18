@@ -97,6 +97,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> resetPassword({required String email}) async {
+    try {
+      await _dataSource.resetPassword(email: email);
+      return const Right(null);
+    } catch (e) {
+      return Left(_handleError(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, UserEntity>> updateProfile({
     required String userId,
     required String fullName,

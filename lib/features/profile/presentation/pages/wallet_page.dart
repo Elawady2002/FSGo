@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
-import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../../payment/presentation/pages/top_up_amount_page.dart';
 
 import '../providers/wallet_provider.dart';
@@ -18,8 +16,7 @@ class WalletPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final walletState = ref.watch(walletProvider);
-    final bookingsAsync = ref.watch(userBookingsProvider);
-    final subscriptionsAsync = ref.watch(userSubscriptionsProvider);
+    final walletTransactionsAsync = ref.watch(walletTransactionsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
@@ -42,12 +39,8 @@ class WalletPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(walletProvider.notifier).refresh();
-          ref.invalidate(userBookingsProvider);
-          ref.invalidate(userSubscriptionsProvider);
-          await Future.wait([
-            ref.read(userBookingsProvider.future),
-            ref.read(userSubscriptionsProvider.future),
-          ]);
+          ref.invalidate(walletTransactionsProvider);
+          await ref.read(walletTransactionsProvider.future);
         },
         color: AppTheme.primaryColor,
         backgroundColor: Colors.white,
@@ -56,7 +49,7 @@ class WalletPage extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // New Wallet Card Design
+              // Wallet Card Design
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -80,12 +73,11 @@ class WalletPage extends ConsumerWidget {
                         horizontal: 24,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor, // Brand Yellow
+                        color: AppTheme.primaryColor,
                         borderRadius: BorderRadius.circular(32),
                       ),
                       child: Stack(
                         children: [
-                          // Rivets (Decorative dots)
                           const Positioned(top: 0, left: 0, child: _Rivet()),
                           const Positioned(top: 0, right: 0, child: _Rivet()),
                           const Positioned(bottom: 0, left: 0, child: _Rivet()),
@@ -95,11 +87,9 @@ class WalletPage extends ConsumerWidget {
                             child: _Rivet(),
                           ),
 
-                          // Content
                           Center(
                             child: Column(
                               children: [
-                                // Balance
                                 walletState.isLoading
                                     ? const CupertinoActivityIndicator()
                                     : Text(
@@ -107,9 +97,7 @@ class WalletPage extends ConsumerWidget {
                                         style: const TextStyle(
                                           fontSize: 40,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(
-                                            0xFF003300,
-                                          ), // Dark Green
+                                          color: Color(0xFF003300),
                                           letterSpacing: -1,
                                         ),
                                       ),
@@ -119,9 +107,8 @@ class WalletPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(
-                                      0xFF003300,
-                                    ).withOpacity(0.7),
+                                    color: const Color(0xFF003300)
+                                        .withOpacity(0.7),
                                   ),
                                 ),
                               ],
@@ -139,7 +126,6 @@ class WalletPage extends ConsumerWidget {
                       ),
                       child: Row(
                         children: [
-                          // Top Up Button
                           Expanded(
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
@@ -177,15 +163,11 @@ class WalletPage extends ConsumerWidget {
                               ),
                             ),
                           ),
-
-                          // Divider
                           Container(
                             height: 40,
                             width: 1,
                             color: Colors.white.withOpacity(0.2),
                           ),
-
-                          // Widthdraw Button
                           Expanded(
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
@@ -207,7 +189,7 @@ class WalletPage extends ConsumerWidget {
                                       CupertinoIcons.arrow_up_right,
                                       color: Colors.white,
                                       size: 24,
-                                    ), // Swap icon usually means exchange, but using up-right for withdraw
+                                    ),
                                     SizedBox(height: 8),
                                     Text(
                                       'سحب',
@@ -231,7 +213,6 @@ class WalletPage extends ConsumerWidget {
 
               const SizedBox(height: 40),
 
-              // Transactions Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -252,88 +233,42 @@ class WalletPage extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
 
-              // Transactions List
-              bookingsAsync.when(
-                data: (bookings) {
-                  return subscriptionsAsync.when(
-                    data: (subscriptions) {
-                      // Combine and sort transactions
-                      final transactions = <_TransactionItem>[];
+              walletTransactionsAsync.when(
+                data: (walletTransactions) {
+                  if (walletTransactions.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: Text(
+                          'لا توجد عمليات سابقة',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  }
 
-                      for (final booking in bookings) {
-                        transactions.add(
-                          _TransactionItem(
-                            title: 'حجز رحلة',
-                            date: booking.createdAt,
-                            amount: booking.totalPrice,
-                            originalObject: booking,
-                            type: _TransactionType.booking,
-                          ),
-                        );
-                      }
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: walletTransactions.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final tx = walletTransactions[index];
+                      final isCredit = tx['type'] == 'credit';
+                      final amount = (tx['amount'] as num).toDouble();
+                      final reason = tx['reason'] as String;
+                      final createdAt = DateTime.parse(tx['created_at']);
 
-                      for (final subscription in subscriptions) {
-                        transactions.add(
-                          _TransactionItem(
-                            title:
-                                'اشتراك ${subscription.planType.displayName}',
-                            date: subscription.createdAt,
-                            amount: subscription.amount,
-                            originalObject: subscription,
-                            type: _TransactionType.subscription,
-                          ),
-                        );
-                      }
-
-                      transactions.sort((a, b) => b.date.compareTo(a.date));
-
-                      if (transactions.isEmpty) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(40.0),
-                            child: Text(
-                              'لا توجد عمليات سابقة',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: transactions.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final transaction = transactions[index];
-                          // Determine style based on type
-                          // Booking -> Debit (Red arrow up-right)
-                          // Subscription -> Debit (Red arrow up-right)
-
-                          // If we had TopUp -> Credit (Green arrow down-left)
-                          // If we had Withdraw -> Debit (Red arrow up-right or different icon)
-
-                          final isCredit =
-                              false; // Currently all are debits (bookings/subs)
-
-                          return _buildTransactionItem(
-                            context,
-                            transaction.title,
-                            _formatDate(
-                              transaction.date,
-                            ), // Custom format to match "8:18 10/2" if possible
-                            transaction.amount.toStringAsFixed(2),
-                            isCredit,
-                            transaction.originalObject,
-                          );
-                        },
+                      return _buildTransactionItem(
+                        context,
+                        reason,
+                        _formatDate(createdAt),
+                        amount.toStringAsFixed(2),
+                        isCredit,
+                        null,
                       );
                     },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) =>
-                        Center(child: Text('Error: $error')),
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -354,13 +289,12 @@ class WalletPage extends ConsumerWidget {
     bool isCredit,
     dynamic originalObject,
   ) {
-    // Colors from image
     final iconBgColor = isCredit
         ? const Color(0xFFE8F5E9)
-        : const Color(0xFFFEECEB); // Pale Green / Pale Red
+        : const Color(0xFFFEECEB);
     final iconColor = isCredit
         ? const Color(0xFF4CAF50)
-        : const Color(0xFFF56356); // Green / Salmon Red
+        : const Color(0xFFF56356);
     final iconData = isCredit
         ? CupertinoIcons.arrow_down_left
         : CupertinoIcons.arrow_up_right;
@@ -392,7 +326,6 @@ class WalletPage extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            // Icon (Right in RTL)
             Container(
               width: 48,
               height: 48,
@@ -403,8 +336,6 @@ class WalletPage extends ConsumerWidget {
               child: Icon(iconData, color: iconColor, size: 20),
             ),
             const SizedBox(width: 16),
-
-            // Title & Date
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,8 +360,6 @@ class WalletPage extends ConsumerWidget {
                 ],
               ),
             ),
-
-            // Amount (Left in RTL)
             Text(
               '${isCredit ? '+' : '-'}$amount',
               style: const TextStyle(
@@ -446,7 +375,6 @@ class WalletPage extends ConsumerWidget {
   }
 
   String _formatDate(DateTime date) {
-    // Format: 18:44 9/2
     return '${date.hour}:${date.minute.toString().padLeft(2, '0')} ${date.day}/${date.month}';
   }
 }
@@ -466,22 +394,4 @@ class _Rivet extends StatelessWidget {
       ),
     );
   }
-}
-
-enum _TransactionType { booking, subscription }
-
-class _TransactionItem {
-  final String title;
-  final DateTime date;
-  final double amount;
-  final dynamic originalObject;
-  final _TransactionType type;
-
-  _TransactionItem({
-    required this.title,
-    required this.date,
-    required this.amount,
-    required this.originalObject,
-    required this.type,
-  });
 }

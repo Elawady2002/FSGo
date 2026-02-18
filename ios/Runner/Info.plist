@@ -49,8 +49,14 @@
 		<string>نحتاج موقعك لعرض الخريطة وتحديد نقاط الالتقاط</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>نحتاج موقعك لتتبع الباص والوصول في الوقت المناسب</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>نحتاج موقعك لتتبع الباص والوصول في الوقت المناسب حتى عند إغلاق التطبيق</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>نحتاج الوصول إلى الصور لرفع إثبات الدفع</string>
+		<string>نحتاج الوصول إلى الصور لرفع إثبات الدفع صورة شخصية</string>
+		<key>NSCameraUsageDescription</key>
+		<string>نحتاج الوصول للكاميرا لالتقاط صورة شخصية</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>نحتاج الوصول للميكروفون لتسجيل الفيديو (إن لزم الأمر)</string>
 		<key>io.flutter.embedded_views_preview</key>
 		<true/>
 		<key>UIStatusBarHidden</key>

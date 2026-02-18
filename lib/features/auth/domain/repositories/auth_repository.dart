@@ -42,6 +42,9 @@ abstract class AuthRepository {
   /// Resend OTP code
   Future<Either<Failure, void>> resendOtp({required String email});
 
+  /// Send password reset email
+  Future<Either<Failure, void>> resetPassword({required String email});
+
   /// Update user profile
   Future<Either<Failure, UserEntity>> updateProfile({
     required String userId,

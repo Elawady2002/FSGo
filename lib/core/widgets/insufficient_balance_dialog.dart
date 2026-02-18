@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_app/core/theme/app_theme.dart';
 import 'package:my_app/core/widgets/custom_button.dart';
 import 'package:my_app/l10n/app_localizations.dart';
-import 'package:my_app/features/profile/presentation/widgets/top_up_sheet.dart';
-import 'package:my_app/features/payment/presentation/pages/payment_page.dart';
+import 'package:my_app/features/payment/presentation/pages/top_up_amount_page.dart';
 
 class InsufficientBalanceDialog extends StatelessWidget {
   final double currentBalance;
@@ -76,35 +75,18 @@ class InsufficientBalanceDialog extends StatelessWidget {
             // Removed details container as requested
             const SizedBox(height: 24),
 
-            // Button
             SizedBox(
               width: double.infinity,
               child: CustomButton(
                 text: l10n.topUp,
-                onPressed: () async {
-                  Navigator.pop(context); // Close this dialog first
-
-                  final result =
-                      await showModalBottomSheet<Map<String, String>>(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const TopUpSheet(),
-                      );
-
-                  if (result != null && context.mounted) {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (_) => PaymentPage(
-                          planName: l10n.topUp,
-                          amount: result['amount']!,
-                          isSubscription: false,
-                          selectedMethod: result['method'],
-                        ),
-                      ),
-                    );
-                  }
+                onPressed: () {
+                  Navigator.pop(context); // Close this dialog
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) => const TopUpAmountPage(isWithdraw: false),
+                    ),
+                  );
                 },
                 backgroundColor: AppTheme.primaryColor,
                 textColor: Colors.black,
