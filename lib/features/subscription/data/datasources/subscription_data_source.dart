@@ -114,7 +114,7 @@ class SubscriptionDataSourceImpl implements SubscriptionDataSource {
       final response = await _supabase
           .from('subscriptions')
           .select()
-          .eq('id', userId)
+          .eq('user_id', userId)
           .order('created_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(response as List);

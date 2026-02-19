@@ -19,11 +19,10 @@ import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/trip_map_sheet.dart';
-import '../widgets/active_subscription_card.dart';
+import '../widgets/unified_trip_card.dart';
 import '../widgets/wallet_widget.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../../subscription/presentation/widgets/subscription_plans_sheet.dart';
-import '../widgets/booking_carousel.dart';
 import '../widgets/empty_bookings_widget.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -165,76 +164,79 @@ class _HomePageState extends ConsumerState<HomePage> {
                       // Check for active subscription first
                       Consumer(
                         builder: (context, ref, child) {
-                          final activeSubAsync = ref.watch(
-                            activeSubscriptionProvider,
-                          );
-                          final userBookingsAsync = ref.watch(
-                            userBookingsProvider,
-                          );
+                          final activeSubAsync = ref.watch(activeSubscriptionProvider);
+                          final userBookingsAsync = ref.watch(userBookingsProvider);
 
-                          return activeSubAsync.when(
-                            data: (subscription) {
-                              if (subscription != null) {
-                                // Get upcoming regular bookings (not from subscription)
-                                final upcomingBookings =
-                                    userBookingsAsync.value
-                                        ?.where(
-                                          (b) =>
-                                              b.bookingDate.isAfter(
-                                                DateTime.now(),
-                                              ) &&
-                                              b.subscriptionId == null,
-                                        )
-                                        .toList() ??
-                                    [];
+                          return userBookingsAsync.when(
+                            data: (bookings) {
+                              final now = DateTime.now();
+                              final upcomingBookings = bookings.where((b) {
+                                return !b.isCancelled &&
+                                    !b.isCompleted &&
+                                    (b.bookingDate.isAfter(now.subtract(const Duration(days: 1))) ||
+                                        b.bookingDate.day == now.day);
+                              }).toList();
+                              
+                              // Sort by date ascending, pick nearest
+                              upcomingBookings.sort((a, b) => a.bookingDate.compareTo(b.bookingDate));
+                              final nearestBooking = upcomingBookings.firstOrNull;
 
-                                // User has active subscription
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildSectionTitle(
-                                      context,
-                                      ref,
-                                      l10n.activeSubscription,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    ActiveSubscriptionCard(
-                                      subscription: subscription,
-                                      regularBookings: upcomingBookings,
-                                    ),
-                                  ],
-                                );
-                              }
-                              // No active subscription, show upcoming trip
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSectionTitle(
-                                    context,
-                                    ref,
-                                    l10n.nextTrip,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _buildUpcomingTripCard(),
-                                ],
+                              return activeSubAsync.when(
+                                data: (subscription) {
+                                  if (nearestBooking == null && subscription == null) {
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _buildSectionTitle(context, ref, l10n.nextTrip),
+                                        const SizedBox(height: 16),
+                                        const EmptyBookingsWidget(),
+                                      ],
+                                    );
+                                  }
+
+                                  String sectionTitle = nearestBooking != null ? l10n.nextTrip : l10n.activeSubscription;
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSectionTitle(context, ref, sectionTitle),
+                                      const SizedBox(height: 16),
+                                      Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          // Bottom layer: Title and Route Info (paints behind)
+                                          if (nearestBooking != null)
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // Spacer to reserve height for physical alignment
+                                                const SizedBox(height: 240),
+                                                const SizedBox(height: 16),
+                                                _buildSectionTitle(
+                                                  context,
+                                                  ref,
+                                                  l10n.tripRoute,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                _buildRouteInfoCard(nearestBooking),
+                                              ],
+                                            ),
+                                          // Top layer: The Card (paints on top of everything)
+                                          UnifiedTripCard(
+                                            booking: nearestBooking,
+                                            subscription: nearestBooking == null ? subscription : null,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                                loading: () => const Center(child: CircularProgressIndicator()),
+                                error: (e, s) => const SizedBox.shrink(),
                               );
                             },
-                            loading: () => Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildSectionTitle(context, ref, l10n.nextTrip),
-                                const SizedBox(height: 16),
-                                _buildUpcomingTripCard(),
-                              ],
-                            ),
-                            error: (e, s) => Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildSectionTitle(context, ref, l10n.nextTrip),
-                                const SizedBox(height: 16),
-                                _buildUpcomingTripCard(),
-                              ],
-                            ),
+                            loading: () => const Center(child: CircularProgressIndicator()),
+                            error: (e, s) => const SizedBox.shrink(),
                           );
                         },
                       ),
@@ -297,76 +299,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildUpcomingTripCard() {
-    final userBookingsAsync = ref.watch(userBookingsProvider);
-
-    return userBookingsAsync.when(
-      data: (bookings) {
-        final now = DateTime.now();
-        final upcomingBookings = bookings.where((b) {
-          return !b.isCancelled &&
-              !b.isCompleted &&
-              (b.bookingDate.isAfter(now.subtract(const Duration(days: 1))) ||
-                  b.bookingDate.day == now.day);
-        }).toList();
-
-        if (upcomingBookings.isEmpty) {
-          return const EmptyBookingsWidget();
-        }
-
-        // Sort by date ascending, pick nearest
-        upcomingBookings.sort((a, b) => a.bookingDate.compareTo(b.bookingDate));
-        final nearest = upcomingBookings.first;
-
-        return Column(
-          children: [
-            BookingCarousel(bookings: upcomingBookings),
-            const SizedBox(height: 16),
-            // Route info card below the booking card
-            _buildSectionTitle(
-              context,
-              ref,
-              AppLocalizations.of(context)!.tripRoute,
-            ),
-            const SizedBox(height: 12),
-            _buildRouteInfoCard(nearest),
-          ],
-        );
-      },
-      loading: () => Container(
-        height: 240,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              CupertinoIcons.exclamationmark_triangle,
-              color: AppTheme.errorColor,
-              size: 32,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.errorLoadingTrips,
-              style: AppTheme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
 
 
@@ -375,23 +307,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     final stations = ref.watch(allStationsProvider).valueOrNull ?? [];
     final universities = ref.watch(allUniversitiesProvider).valueOrNull ?? [];
     final lang = ref.watch(localeProvider).languageCode;
-
-    // Format time to 12-hour with Arabic indicator (Forcing English digits)
-    String? formattedTime;
-    if (booking.departureTime != null) {
-      try {
-        final timeParts = booking.departureTime!.split(':');
-        if (timeParts.length >= 2) {
-          final hour = int.parse(timeParts[0]);
-          final minute = int.parse(timeParts[1]);
-          final period = hour < 12 ? 'ص' : 'م';
-          final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-          formattedTime = '$displayHour:${minute.toString().padLeft(2, '0')} $period';
-        }
-      } catch (e) {
-        formattedTime = booking.departureTime;
-      }
-    }
 
     final pickupStation = stations.where((s) => s.id == booking.pickupStationId).firstOrNull;
     final dropoffStation = stations.where((s) => s.id == booking.dropoffStationId).firstOrNull;
@@ -442,7 +357,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               icon: CupertinoIcons.circle_fill,
               iconColor: AppTheme.primaryColor,
               label: l10n.from,
-              value: formattedTime != null ? '$formattedTime · $routeFrom' : routeFrom,
+              value: routeFrom,
               isLast: false,
             ),
             _buildLocationRow(

@@ -75,6 +75,25 @@ class SubscriptionScheduleEntity extends Equatable {
     );
   }
 
+  /// Create entity from BookingEntity
+  factory SubscriptionScheduleEntity.fromBooking(dynamic booking) {
+    return SubscriptionScheduleEntity(
+      id: booking.id as String,
+      subscriptionId: (booking.subscriptionId as String?) ?? '',
+      tripDate: booking.bookingDate as DateTime,
+      tripType: booking.tripType as String,
+      departureTime: booking.departureTime as String?,
+      returnTime: booking.returnTime as String?,
+      selectionType: booking.selectionType.toJson() as String,
+      passengerCount: booking.passengerCount as int,
+      splitPreference: booking.splitPreference as bool,
+      createdAt: booking.createdAt as DateTime,
+      updatedAt: booking.updatedAt as DateTime,
+      pickupStationId: booking.pickupStationId as String?,
+      dropoffStationId: booking.dropoffStationId as String?,
+    );
+  }
+
   /// Convert entity to JSON
   Map<String, dynamic> toJson() {
     return {
