@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_theme.dart';
 
@@ -50,10 +51,10 @@ class _CustomInputState extends State<CustomInput> {
         obscureText: widget.isPassword ? _obscure : false,
         keyboardType: widget.keyboardType,
         validator: widget.validator,
-        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+        style: GoogleFonts.cairo(color: AppTheme.textPrimary, fontSize: 16),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: const TextStyle(color: CupertinoColors.systemGrey),
+          hintStyle: GoogleFonts.cairo(color: CupertinoColors.systemGrey),
           fillColor: Colors.white,
           filled: true,
           contentPadding: const EdgeInsets.symmetric(

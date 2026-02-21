@@ -146,6 +146,8 @@ class AppTheme {
     ),
   );
 
+  static final TextTheme cairoTextTheme = GoogleFonts.cairoTextTheme(textTheme);
+
   static InputDecoration inputDecoration({
     String? hintText,
     Widget? prefixIcon,
@@ -155,7 +157,7 @@ class AppTheme {
       filled: true,
       fillColor: const Color(0xFFF5F5F5).withValues(alpha: 0.1),
       hintText: hintText,
-      hintStyle: const TextStyle(color: Colors.white54, fontSize: 16),
+      hintStyle: GoogleFonts.cairo(color: Colors.white54, fontSize: 16),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
@@ -182,7 +184,7 @@ class AppTheme {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
     ),
-    textStyle: const TextStyle(
+    textStyle: GoogleFonts.cairo(
       fontSize: 16,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.5,
@@ -196,7 +198,7 @@ class AppTheme {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
     ),
-    textStyle: const TextStyle(
+    textStyle: GoogleFonts.cairo(
       fontSize: 16,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.5,
@@ -207,12 +209,13 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       platform: TargetPlatform.iOS,
+      fontFamily: GoogleFonts.cairo().fontFamily,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
       dividerColor: dividerColor,
       cardColor: cardColor,
 
-      textTheme: textTheme,
+      textTheme: cairoTextTheme,
 
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
@@ -224,25 +227,34 @@ class AppTheme {
         onSurface: textPrimary,
       ),
 
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.cairo(
           color: textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
-        iconTheme: IconThemeData(color: textPrimary),
+        iconTheme: const IconThemeData(color: textPrimary),
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
 
-      cupertinoOverrideTheme: const CupertinoThemeData(
+      cupertinoOverrideTheme: CupertinoThemeData(
         primaryColor: primaryColor,
         scaffoldBackgroundColor: backgroundColor,
         barBackgroundColor: surfaceColor,
-        textTheme: CupertinoTextThemeData(primaryColor: textPrimary),
+        textTheme: CupertinoTextThemeData(
+          primaryColor: textPrimary,
+          textStyle: GoogleFonts.cairo(color: textPrimary),
+          actionTextStyle: GoogleFonts.cairo(color: primaryColor),
+          navTitleTextStyle: GoogleFonts.cairo(
+            color: textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -261,7 +273,7 @@ class AppTheme {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(buttonRadius),
     ),
-    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    textStyle: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w600),
   );
 
   static InputDecorationTheme get inputDecorationThemeData => InputDecorationTheme(
@@ -283,6 +295,6 @@ class AppTheme {
       horizontal: 20,
       vertical: 16,
     ),
-    hintStyle: const TextStyle(color: textTertiary, fontSize: 17),
+    hintStyle: GoogleFonts.cairo(color: textTertiary, fontSize: 17),
   );
 }

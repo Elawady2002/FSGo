@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void showTopNotification(
   BuildContext context,
@@ -102,7 +103,7 @@ class _TopNotificationState extends State<TopNotification>
                   Expanded(
                     child: Text(
                       widget.message,
-                      style: const TextStyle(
+                      style: GoogleFonts.cairo(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,

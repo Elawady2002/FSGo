@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomToast extends StatelessWidget {
   final String message;
@@ -73,13 +74,12 @@ class CustomToast extends StatelessWidget {
                 Expanded(
                   child: Text(
                     message,
-                    style: TextStyle(
+                    style: GoogleFonts.cairo(
                       color: isError
                           ? Colors.red.shade900
                           : Colors.green.shade900,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'Cairo', // Assuming Cairo font is used
                     ),
                   ),
                 ),

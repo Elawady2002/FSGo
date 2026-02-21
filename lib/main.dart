@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:my_app/l10n/app_localizations.dart';
 
 import 'core/theme/app_theme.dart';
@@ -60,7 +61,7 @@ class _SplashScreen extends StatelessWidget {
               // Logo or App Name
               Text(
                 'Fi El Sekka',
-                style: TextStyle(
+                style: GoogleFonts.cairo(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.primaryColor,
@@ -98,15 +99,18 @@ class _ErrorScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.error_outline, color: Colors.red, size: 48),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Initialization Error',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.cairo(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   error.toString(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.grey),
+                  style: GoogleFonts.cairo(color: Colors.grey),
                 ),
               ],
             ),

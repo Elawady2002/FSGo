@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
 // InDrive-style Button - Large, Bold, Lime Green
@@ -59,7 +60,7 @@ class IOSButton extends StatelessWidget {
               ],
               Text(
                 text,
-                style: TextStyle(
+                style: GoogleFonts.cairo(
                   color: effectiveTextColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -140,7 +141,7 @@ class InDriveSearchBar extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               hintText,
-              style: const TextStyle(
+              style: GoogleFonts.cairo(
                 color: AppTheme.textSecondary,
                 fontSize: 17,
                 decoration: TextDecoration.none,
