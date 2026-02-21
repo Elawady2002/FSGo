@@ -153,65 +153,57 @@ class QRDetailsSheet extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(32),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           const SizedBox(height: 32),
-                          // Badge
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: primaryColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                isSubscription ? 'تذكرة الاشتراك' : tripLabel,
-                                style: GoogleFonts.cairo(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
+                          // Badge (Centered)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              isSubscription ? 'تذكرة الاشتراك' : tripLabel,
+                              style: GoogleFonts.cairo(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Text(
-                              shortId,
-                              style: GoogleFonts.cairo(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                letterSpacing: 2,
-                              ),
+                          // ID (Centered)
+                          Text(
+                            shortId,
+                            style: GoogleFonts.cairo(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              letterSpacing: 2,
                             ),
                           ),
                           const SizedBox(height: 24),
-                          // QR Code
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: QrImageView(
-                                data: id ?? '',
-                                version: QrVersions.auto,
-                                size: 160,
-                                eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                                dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
-                              ),
+                          // QR Code (Centered)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: QrImageView(
+                              data: id ?? '',
+                              version: QrVersions.auto,
+                              size: 160,
+                              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
+                              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
                             ),
                           ),
                           const SizedBox(height: 32),
                           _buildDashedDivider(),
                           const SizedBox(height: 24),
-                          // Detail Grid
+                          // Detail Grid (Strict Right Alignment)
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            padding: const EdgeInsets.only(right: 24, left: 24),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
