@@ -98,6 +98,7 @@ class QRDetailsSheet extends ConsumerWidget {
         : null;
 
     final primaryColor = const Color(0xFFCCFF00); // Lime green for the badge
+    final ticketColor = const Color(0xFF1C1C1E);
 
     return Material(
       type: MaterialType.transparency,
@@ -106,18 +107,10 @@ class QRDetailsSheet extends ConsumerWidget {
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 20,
-              offset: Offset(0, -5),
-            ),
-          ],
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
-            // Drag Handle
             Container(
               width: 40,
               height: 5,
@@ -126,12 +119,10 @@ class QRDetailsSheet extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-
-            // Header/Close button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Align(
-                alignment: Alignment.centerLeft, // Assuming RTL app, close on left for Arabic or Right for LTR. The user's screenshot had it on the top right.
+                alignment: Alignment.centerLeft,
                 child: GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
@@ -149,60 +140,48 @@ class QRDetailsSheet extends ConsumerWidget {
                 ),
               ),
             ),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
-                    
-                    // Ticket Box (The stylized parts on white background)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1C1C1E),
+                        color: ticketColor,
                         borderRadius: BorderRadius.circular(32),
-                        border: Border.all(color: Colors.white10),
                       ),
                       child: Column(
                         children: [
+                          const SizedBox(height: 32),
                           // Badge
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               color: primaryColor,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               isSubscription ? 'تذكرة الاشتراك' : tripLabel,
-                              style: const TextStyle(
+                              style: GoogleFonts.cairo(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 13,
                               ),
                             ),
                           ),
-
-                          const SizedBox(height: 24),
-
-                          // ID
+                          const SizedBox(height: 20),
                           Text(
                             shortId,
-                            style: const TextStyle(
+                            style: GoogleFonts.cairo(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 24,
+                              fontSize: 22,
                               letterSpacing: 2,
                             ),
                           ),
-
                           const SizedBox(height: 24),
-
                           // QR Code
                           Container(
                             padding: const EdgeInsets.all(16),
@@ -213,65 +192,64 @@ class QRDetailsSheet extends ConsumerWidget {
                             child: QrImageView(
                               data: id ?? '',
                               version: QrVersions.auto,
-                              size: 180,
-                              eyeStyle: const QrEyeStyle(
-                                eyeShape: QrEyeShape.square,
-                                color: Colors.black,
-                              ),
-                              dataModuleStyle: const QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.square,
-                                color: Colors.black,
-                              ),
+                              size: 160,
+                              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
+                              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
                             ),
                           ),
-
-                          const SizedBox(height: 40),
-
-                          // Detail Grid
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: _buildDetailItem(
-                                  CupertinoIcons.clock,
-                                  "الرحلة الساعة كام؟",
-                                  formattedTime ?? "-",
-                                  color: Colors.white,
-                                  labelColor: Colors.white70,
-                                ),
-                              ),
-                              if (!isSubscription && (booking?.passengerCount ?? 1) > 1)
-                                Expanded(
-                                  child: _buildDetailItem(
-                                    CupertinoIcons.person_2,
-                                    "عدد المقاعد",
-                                    "${booking!.passengerCount}",
-                                    color: Colors.white,
-                                    labelColor: Colors.white70,
-                                  ),
-                                ),
-                              Expanded(
-                                child: _buildDetailItem(
-                                  CupertinoIcons.calendar,
-                                  "امتى؟",
-                                  formattedDate,
-                                  color: Colors.white,
-                                  labelColor: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                          
                           const SizedBox(height: 32),
-
-                          _buildDetailItem(
-                            CupertinoIcons.bus,
-                            "نوع الرحلة",
-                            routeInfo,
-                            isFullWidth: true,
-                            color: Colors.white,
-                            labelColor: Colors.white70,
+                          _buildDashedDivider(),
+                          const SizedBox(height: 24),
+                          // Detail Grid
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildDetailItem(
+                                        CupertinoIcons.clock,
+                                        "وقت الرحلة",
+                                        formattedTime ?? "-",
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 24),
+                                    Expanded(
+                                      child: _buildDetailItem(
+                                        CupertinoIcons.calendar,
+                                        "التاريخ",
+                                        formattedDate,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (!isSubscription && (booking?.passengerCount ?? 1) > 1) ...[
+                                  const SizedBox(height: 24),
+                                  _buildDetailItem(
+                                    CupertinoIcons.person_2,
+                                    "عدد المقاعد المحجوزة",
+                                    "${booking!.passengerCount} مقاعد",
+                                    color: Colors.white,
+                                    isFullWidth: true,
+                                  ),
+                                ],
+                                const SizedBox(height: 24),
+                                _buildDashedDivider(),
+                                const SizedBox(height: 24),
+                                _buildDetailItem(
+                                  CupertinoIcons.bus,
+                                  "خط السير",
+                                  routeInfo,
+                                  isFullWidth: true,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
@@ -286,26 +264,44 @@ class QRDetailsSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String label, String value, {bool isFullWidth = false, Color? color, Color? labelColor}) {
+  Widget _buildDashedDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: List.generate(
+          30,
+          (index) => Expanded(
+            child: Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(IconData icon, String label, String value, {bool isFullWidth = false, Color? color}) {
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
-            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 label,
                 style: GoogleFonts.cairo(
-                  color: labelColor ?? Colors.grey.shade500,
-                  fontSize: 13,
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(icon, color: color?.withValues(alpha: 0.5) ?? Colors.grey.shade400, size: 20),
+              const SizedBox(width: 6),
+              Icon(icon, color: Colors.white.withValues(alpha: 0.3), size: 16),
             ],
           ),
           const SizedBox(height: 4),
@@ -315,7 +311,7 @@ class QRDetailsSheet extends ConsumerWidget {
             style: GoogleFonts.cairo(
               color: color ?? Colors.black,
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 16,
             ),
           ),
         ],
