@@ -238,6 +238,15 @@ class QRDetailsSheet extends ConsumerWidget {
                                 color: Colors.white,
                                 labelColor: Colors.white70,
                               ),
+                              if (!isSubscription && (booking?.passengerCount ?? 1) > 1)
+                                _buildDetailItem(
+                                  CupertinoIcons.person_2,
+                                  "عدد المقاعد",
+                                  "${booking!.passengerCount}",
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  color: Colors.white,
+                                  labelColor: Colors.white70,
+                                ),
                               _buildDetailItem(
                                 CupertinoIcons.clock,
                                 "الرحلة الساعة كام؟",

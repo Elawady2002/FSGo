@@ -294,15 +294,37 @@ class _UnifiedTripCardState extends ConsumerState<UnifiedTripCard> with SingleTi
                           GestureDetector(
                             onTap: _openQRSheet,
                             child: Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Icon(
-                                CupertinoIcons.qrcode,
-                                color: Colors.white,
-                                size: 20,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (!isSubscription && (widget.widgetBooking?.passengerCount ?? 1) > 1) ...[
+                                    Text(
+                                      '${widget.widgetBooking!.passengerCount}',
+                                      style: GoogleFonts.cairo(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      width: 1,
+                                      height: 14,
+                                      color: Colors.white24,
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  const Icon(
+                                    CupertinoIcons.qrcode,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
