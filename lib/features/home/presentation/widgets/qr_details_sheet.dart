@@ -153,48 +153,57 @@ class QRDetailsSheet extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(32),
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           const SizedBox(height: 32),
                           // Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: primaryColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              isSubscription ? 'تذكرة الاشتراك' : tripLabel,
-                              style: GoogleFonts.cairo(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: primaryColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                isSubscription ? 'تذكرة الاشتراك' : tripLabel,
+                                style: GoogleFonts.cairo(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Text(
-                            shortId,
-                            style: GoogleFonts.cairo(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
-                              letterSpacing: 2,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              shortId,
+                              style: GoogleFonts.cairo(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                                letterSpacing: 2,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),
                           // QR Code
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: QrImageView(
-                              data: id ?? '',
-                              version: QrVersions.auto,
-                              size: 160,
-                              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: QrImageView(
+                                data: id ?? '',
+                                version: QrVersions.auto,
+                                size: 160,
+                                eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
+                                dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -204,25 +213,23 @@ class QRDetailsSheet extends ConsumerWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Expanded(
-                                      child: _buildDetailItem(
-                                        CupertinoIcons.calendar,
-                                        "التاريخ",
-                                        formattedDate,
-                                        color: Colors.white,
-                                      ),
+                                    _buildDetailItem(
+                                      CupertinoIcons.clock,
+                                      "وقت الرحلة",
+                                      formattedTime ?? "-",
+                                      color: Colors.white,
                                     ),
-                                    const SizedBox(width: 24),
-                                    Expanded(
-                                      child: _buildDetailItem(
-                                        CupertinoIcons.clock,
-                                        "وقت الرحلة",
-                                        formattedTime ?? "-",
-                                        color: Colors.white,
-                                      ),
+                                    const SizedBox(width: 48),
+                                    _buildDetailItem(
+                                      CupertinoIcons.calendar,
+                                      "التاريخ",
+                                      formattedDate,
+                                      color: Colors.white,
                                     ),
                                   ],
                                 ),
