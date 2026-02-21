@@ -230,35 +230,38 @@ class QRDetailsSheet extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildDetailItem(
-                                CupertinoIcons.calendar,
-                                "امتى؟",
-                                formattedDate,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                color: Colors.white,
-                                labelColor: Colors.white70,
-                              ),
-                              if (!isSubscription && (booking?.passengerCount ?? 1) > 1)
-                                _buildDetailItem(
-                                  CupertinoIcons.person_2,
-                                  "عدد المقاعد",
-                                  "${booking!.passengerCount}",
-                                  crossAxisAlignment: CrossAxisAlignment.center,
+                              Expanded(
+                                child: _buildDetailItem(
+                                  CupertinoIcons.clock,
+                                  "الرحلة الساعة كام؟",
+                                  formattedTime ?? "-",
                                   color: Colors.white,
                                   labelColor: Colors.white70,
                                 ),
-                              _buildDetailItem(
-                                CupertinoIcons.clock,
-                                "الرحلة الساعة كام؟",
-                                formattedTime ?? "-",
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                color: Colors.white,
-                                labelColor: Colors.white70,
+                              ),
+                              if (!isSubscription && (booking?.passengerCount ?? 1) > 1)
+                                Expanded(
+                                  child: _buildDetailItem(
+                                    CupertinoIcons.person_2,
+                                    "عدد المقاعد",
+                                    "${booking!.passengerCount}",
+                                    color: Colors.white,
+                                    labelColor: Colors.white70,
+                                  ),
+                                ),
+                              Expanded(
+                                child: _buildDetailItem(
+                                  CupertinoIcons.calendar,
+                                  "امتى؟",
+                                  formattedDate,
+                                  color: Colors.white,
+                                  labelColor: Colors.white70,
+                                ),
                               ),
                             ],
                           ),
                           
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 32),
 
                           _buildDetailItem(
                             CupertinoIcons.bus,
@@ -282,30 +285,36 @@ class QRDetailsSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String label, String value, {CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center, bool isFullWidth = false, Color? color, Color? labelColor}) {
+  Widget _buildDetailItem(IconData icon, String label, String value, {bool isFullWidth = false, Color? color, Color? labelColor}) {
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
       child: Column(
-        crossAxisAlignment: crossAxisAlignment,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Icon(icon, color: color?.withValues(alpha: 0.5) ?? Colors.grey.shade400, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: labelColor ?? Colors.grey.shade500,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.cairo(
+                  color: labelColor ?? Colors.grey.shade500,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(icon, color: color?.withValues(alpha: 0.5) ?? Colors.grey.shade400, size: 20),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            textAlign: isFullWidth ? TextAlign.center : TextAlign.start,
-            style: TextStyle(
+            textAlign: TextAlign.right,
+            style: GoogleFonts.cairo(
               color: color ?? Colors.black,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 18,
             ),
           ),
         ],
