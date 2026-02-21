@@ -209,18 +209,18 @@ class QRDetailsSheet extends ConsumerWidget {
                                   children: [
                                     Expanded(
                                       child: _buildDetailItem(
-                                        CupertinoIcons.clock,
-                                        "وقت الرحلة",
-                                        formattedTime ?? "-",
+                                        CupertinoIcons.calendar,
+                                        "التاريخ",
+                                        formattedDate,
                                         color: Colors.white,
                                       ),
                                     ),
                                     const SizedBox(width: 24),
                                     Expanded(
                                       child: _buildDetailItem(
-                                        CupertinoIcons.calendar,
-                                        "التاريخ",
-                                        formattedDate,
+                                        CupertinoIcons.clock,
+                                        "وقت الرحلة",
+                                        formattedTime ?? "-",
                                         color: Colors.white,
                                       ),
                                     ),
@@ -289,9 +289,11 @@ class QRDetailsSheet extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              Icon(icon, color: Colors.white.withValues(alpha: 0.3), size: 16),
+              const SizedBox(width: 6),
               Text(
                 label,
                 style: GoogleFonts.cairo(
@@ -300,8 +302,6 @@ class QRDetailsSheet extends ConsumerWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 6),
-              Icon(icon, color: Colors.white.withValues(alpha: 0.3), size: 16),
             ],
           ),
           const SizedBox(height: 4),
