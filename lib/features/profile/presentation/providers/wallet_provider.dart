@@ -144,29 +144,26 @@ class WalletNotifier extends StateNotifier<WalletState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final String reason = isWithdraw
-          ? 'سحب رصيد - $method ($senderPhone)'
-          : 'شحن رصيد - $method ($senderPhone)';
-
-      final result = isWithdraw
-          ? await _repository.deductAmount(_userId, amount, reason)
-          : await _repository.addAmount(_userId, amount, reason);
+      final result = await _repository.createWalletRequest(
+        userId: _userId,
+        amount: amount,
+        method: method,
+        type: isWithdraw ? 'withdraw' : 'topup',
+        proofUrl: proofUrl,
+        senderPhone: senderPhone,
+      );
 
       return result.fold(
         (failure) {
-          AppLogger.error('Failed to process wallet request: ${failure.message}');
+          AppLogger.error(
+            'Failed to create wallet request: ${failure.message}',
+          );
           state = state.copyWith(isLoading: false, error: failure.message);
           return false;
         },
-        (newBalance) {
-          AppLogger.info(
-            'Wallet request processed successfully. New balance: $newBalance',
-          );
-          state = state.copyWith(
-            balance: newBalance,
-            isLoading: false,
-            error: null,
-          );
+        (_) {
+          AppLogger.info('Wallet request created successfully and is pending approval.');
+          state = state.copyWith(isLoading: false, error: null);
           return true;
         },
       );

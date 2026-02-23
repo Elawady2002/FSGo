@@ -249,101 +249,160 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     WidgetRef ref, {
     bool isLadies = false,
   }) {
-    final universityId = state.selectedUniversity?.id;
-    final routesAsync = ref.watch(routesProvider(universityId));
+    if (state.isToUniversity) {
+      final universityId = state.selectedUniversity?.id;
+      final routesAsync = ref.watch(routesProvider(universityId));
 
-    return routesAsync.when(
-      data: (routes) {
-        if (routes.isEmpty) {
-          return [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              child: Center(
-                child: Text(
-                  AppLocalizations.of(context)!.noTripsAvailable,
-                  style: AppTheme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.4),
+      return routesAsync.when(
+        data: (routes) {
+          if (routes.isEmpty) {
+            return [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                child: Center(
+                  child: Text(
+                    AppLocalizations.of(context)!.noTripsAvailable,
+                    style: AppTheme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                   ),
                 ),
               ),
+            ];
+          }
+
+          final route = routes.first;
+          final schedulesAsync = ref.watch(schedulesProvider(route.id));
+
+          return [
+            schedulesAsync.when(
+              data: (schedules) {
+                final allSchedules = schedules;
+                final selectedSchedule =
+                    state.selectedDepartureSchedule ??
+                    state.selectedReturnSchedule;
+
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInlineLabel(
+                        AppLocalizations.of(context)!.tripTime,
+                        isLadies: isLadies,
+                      ),
+                      const SizedBox(height: 12),
+                      TimeSelectionCard(
+                        title: AppLocalizations.of(context)!.selectTripTime,
+                        isLadies: isLadies,
+                        selectedTime: selectedSchedule != null
+                            ? _formatTime(selectedSchedule.departureTime)
+                            : null,
+                        icon: CupertinoIcons.clock,
+                        onTap: () {
+                          final items = allSchedules
+                              .map((s) => _formatTime(s.departureTime))
+                              .toList();
+                          _showTimePicker(
+                            title: AppLocalizations.of(context)!.tripTime,
+                            items: items,
+                            onSelect: (time) {
+                              if (time != null) {
+                                final schedule = allSchedules.firstWhere(
+                                  (s) => _formatTime(s.departureTime) == time,
+                                );
+                                bookingNotifier.selectDepartureSchedule(schedule);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CupertinoActivityIndicator()),
+              ),
+              error: (err, _) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: Text('Error: $err')),
+              ),
             ),
           ];
-        }
+        },
+        loading: () => [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CupertinoActivityIndicator()),
+          ),
+        ],
+        error: (err, _) => [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: Text('Error: $err')),
+          ),
+        ],
+      );
+    } else {
+      // For Point-to-Point: Use schedules from ArrivalStationEntity
+      final schedules = state.selectedArrivalStation?.schedules ?? [];
+      final selectedTime = state.selectedDepartureTime ?? state.selectedReturnTime;
 
-        final route = routes.first;
-        final schedulesAsync = ref.watch(schedulesProvider(route.id));
-
-        return [
-          schedulesAsync.when(
-            data: (schedules) {
-              final allSchedules = schedules;
-              final selectedSchedule =
-                  state.selectedDepartureSchedule ??
-                  state.selectedReturnSchedule;
-
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInlineLabel(
-                      AppLocalizations.of(context)!.tripTime,
-                      isLadies: isLadies,
-                    ),
-                    const SizedBox(height: 12),
-                    TimeSelectionCard(
-                      title: AppLocalizations.of(context)!.selectTripTime,
-                      isLadies: isLadies,
-                      selectedTime: selectedSchedule != null
-                          ? _formatTime(selectedSchedule.departureTime)
-                          : null,
-                      icon: CupertinoIcons.clock,
-                      onTap: () {
-                        final items = allSchedules
-                            .map((s) => _formatTime(s.departureTime))
-                            .toList();
+      return [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInlineLabel(
+                AppLocalizations.of(context)!.tripTime,
+                isLadies: isLadies,
+              ),
+              const SizedBox(height: 12),
+              TimeSelectionCard(
+                title: AppLocalizations.of(context)!.selectTripTime,
+                isLadies: isLadies,
+                selectedTime: selectedTime != null ? _formatTime(selectedTime) : null,
+                icon: CupertinoIcons.clock,
+                onTap: schedules.isEmpty
+                    ? null
+                    : () {
+                        // For Point-to-Point, schedules are already strings like "HH:mm"
+                        final formattedSchedules =
+                            schedules.map((s) => _formatTime(s)).toList();
                         _showTimePicker(
                           title: AppLocalizations.of(context)!.tripTime,
-                          items: items,
+                          items: formattedSchedules,
                           onSelect: (time) {
                             if (time != null) {
-                              final schedule = allSchedules.firstWhere(
-                                (s) => _formatTime(s.departureTime) == time,
+                              // Find original raw time
+                              final originalTime = schedules.firstWhere(
+                                (s) => _formatTime(s) == time,
                               );
-                              bookingNotifier.selectDepartureSchedule(schedule);
+                              bookingNotifier.selectDepartureTime(originalTime);
                             }
                           },
                         );
                       },
+              ),
+              if (schedules.isEmpty && state.selectedArrivalStation != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    AppLocalizations.of(context)!.noTripsAvailable,
+                    style: AppTheme.textTheme.bodySmall?.copyWith(
+                      color: Colors.red.withValues(alpha: 0.7),
+                      fontSize: 10,
                     ),
-                  ],
+                  ),
                 ),
-              );
-            },
-            loading: () => const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: CupertinoActivityIndicator()),
-            ),
-            error: (err, _) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: Text('Error: $err')),
-            ),
+            ],
           ),
-        ];
-      },
-      loading: () => [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Center(child: CupertinoActivityIndicator()),
         ),
-      ],
-      error: (err, _) => [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(child: Text('Error: $err')),
-        ),
-      ],
-    );
+      ];
+    }
   }
 
   String _formatTime(String time) {
@@ -780,7 +839,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                     ],
                   ),
                   Text(
-                    'EGP ${(state.tripType.price * state.passengerCount).toStringAsFixed(0)}',
+                    'EGP ${notifier.totalPrice.toStringAsFixed(0)}',
                     style: AppTheme.textTheme.titleLarge?.copyWith(
                       color: isLadies ? Colors.white : AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,

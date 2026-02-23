@@ -4,7 +4,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/entities/trip_type.dart';
 import '../../domain/entities/city_entity.dart';
 import '../../domain/entities/university_entity.dart';
-import '../../domain/entities/station_entity.dart';
+import '../../domain/entities/boarding_station_entity.dart';
+import '../../domain/entities/arrival_station_entity.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../../data/repositories/booking_repository_impl.dart';
@@ -136,8 +137,8 @@ class BookingState extends _$BookingState {
   void setLocationData({
     required CityEntity city,
     UniversityEntity? university,
-    required StationEntity pickupStation,
-    StationEntity? arrivalStation,
+    required BoardingStationEntity pickupStation,
+    ArrivalStationEntity? arrivalStation,
     bool? isToUniversity,
   }) {
     // Debug logging to trace data flow
@@ -172,14 +173,28 @@ class BookingState extends _$BookingState {
   }
 
   bool get isBookingComplete {
-    // For the simplified UI, any selection is enough
-    return state.selectedDepartureSchedule != null ||
-        state.selectedReturnSchedule != null ||
-        state.selectedDepartureTime != null ||
-        state.selectedReturnTime != null;
+    if (state.isToUniversity) {
+      return state.selectedDepartureSchedule != null ||
+          state.selectedReturnSchedule != null ||
+          state.selectedDepartureTime != null ||
+          state.selectedReturnTime != null;
+    } else {
+      // For Point-to-Point: Must have selected a pickup and arrival station, and a time
+      return state.selectedStation != null &&
+          state.selectedArrivalStation != null &&
+          (state.selectedDepartureTime != null || state.selectedReturnTime != null);
+    }
   }
 
-  double get totalPrice => state.tripType.price;
+  double get totalPrice {
+    if (state.isToUniversity) {
+      return state.tripType.price;
+    } else {
+      // For Point-to-Point: Use the price from the arrival station
+      final basePrice = state.selectedArrivalStation?.price ?? 0.0;
+      return basePrice * state.passengerCount;
+    }
+  }
 
   Future<String?> createBooking(
     BookingRepository repository, {
@@ -308,8 +323,8 @@ class BookingStateModel {
   final ScheduleEntity? selectedReturnSchedule;
   final CityEntity? selectedCity;
   final UniversityEntity? selectedUniversity;
-  final StationEntity? selectedStation;
-  final StationEntity? selectedArrivalStation;
+  final BoardingStationEntity? selectedStation;
+  final ArrivalStationEntity? selectedArrivalStation;
   final BookingSelectionType selectionType;
   final int passengerCount;
   final bool splitPreference;
@@ -345,8 +360,8 @@ class BookingStateModel {
     ScheduleEntity? selectedReturnSchedule,
     CityEntity? selectedCity,
     UniversityEntity? selectedUniversity,
-    StationEntity? selectedStation,
-    StationEntity? selectedArrivalStation,
+    BoardingStationEntity? selectedStation,
+    ArrivalStationEntity? selectedArrivalStation,
     BookingSelectionType? selectionType,
     int? passengerCount,
     bool? splitPreference,

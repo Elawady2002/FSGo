@@ -9,12 +9,12 @@ import 'package:my_app/l10n/app_localizations.dart';
 import 'package:my_app/core/providers/locale_provider.dart';
 import 'package:my_app/features/booking/presentation/pages/booking_page.dart';
 import 'package:my_app/core/widgets/ios_components.dart';
-import '../../../../core/widgets/animated_progress_slider.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../providers/home_provider.dart';
 import '../../../booking/domain/entities/city_entity.dart';
 import '../../../booking/domain/entities/university_entity.dart';
-import '../../../booking/domain/entities/station_entity.dart';
+import '../../../booking/domain/entities/boarding_station_entity.dart';
+import '../../../booking/domain/entities/arrival_station_entity.dart';
 import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -335,14 +335,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _buildRouteInfoCard(BookingEntity booking) {
     final l10n = AppLocalizations.of(context)!;
-    final stations = ref.watch(allStationsProvider).valueOrNull ?? [];
+    final boardingStations = ref.watch(allBoardingStationsProvider).valueOrNull ?? [];
+    final arrivalStations = ref.watch(allArrivalStationsProvider).valueOrNull ?? [];
     final universities = ref.watch(allUniversitiesProvider).valueOrNull ?? [];
     final lang = ref.watch(localeProvider).languageCode;
 
-    final pickupStation = stations
+    final pickupStation = boardingStations
         .where((s) => s.id == booking.pickupStationId)
         .firstOrNull;
-    final dropoffStation = stations
+    final dropoffStation = arrivalStations
         .where((s) => s.id == booking.dropoffStationId)
         .firstOrNull;
 
@@ -494,8 +495,8 @@ class _LocationSelectionDrawerState
     extends ConsumerState<LocationSelectionDrawer> {
   CityEntity? selectedCity;
   UniversityEntity? selectedUniversity;
-  StationEntity? selectedPickupStation;
-  StationEntity? selectedArrivalStation;
+  BoardingStationEntity? selectedPickupStation;
+  ArrivalStationEntity? selectedArrivalStation;
   bool isToUniversity = false;
 
   Widget _buildSelectionItem(
@@ -591,6 +592,7 @@ class _LocationSelectionDrawerState
     bool showAddOption = false,
     String? addOptionLabel,
     ValueChanged<String>? onAddSubmit,
+    String? emptyMessage,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final isAr = ref.watch(localeProvider).languageCode == 'ar';
@@ -657,7 +659,21 @@ class _LocationSelectionDrawerState
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: ListView.separated(
+                    child: items.isEmpty && emptyMessage != null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Text(
+                                emptyMessage,
+                                style: AppTheme.textTheme.titleMedium?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 8,
@@ -809,9 +825,13 @@ class _LocationSelectionDrawerState
     final universitiesAsync = (selectedCity != null && isToUniversity)
         ? ref.watch(universitiesProvider(selectedCity!.id))
         : const AsyncValue.data(<UniversityEntity>[]);
-    final stationsAsync = selectedCity != null
-        ? ref.watch(stationsProvider(selectedCity!.id))
-        : const AsyncValue.data(<StationEntity>[]);
+    final boardingStationsAsync = selectedCity != null
+        ? ref.watch(boardingStationsProvider(selectedCity!.id))
+        : const AsyncValue.data(<BoardingStationEntity>[]);
+
+    final arrivalStationsAsync = selectedPickupStation != null
+        ? ref.watch(arrivalStationsProvider(selectedPickupStation!.id))
+        : const AsyncValue.data(<ArrivalStationEntity>[]);
 
     final bool isComplete = isToUniversity
         ? (selectedCity != null &&
@@ -820,16 +840,6 @@ class _LocationSelectionDrawerState
         : (selectedCity != null &&
               selectedPickupStation != null &&
               selectedArrivalStation != null);
-
-    final int currentStep = isComplete
-        ? 2
-        : (isToUniversity
-              ? (selectedUniversity != null
-                    ? 1
-                    : (selectedCity != null ? 0 : -1))
-              : (selectedPickupStation != null
-                    ? 1
-                    : (selectedCity != null ? 0 : -1)));
 
     return Material(
       color: Colors.transparent,
@@ -954,17 +964,6 @@ class _LocationSelectionDrawerState
               ),
             ),
 
-            // Progress Slider
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              child: AnimatedProgressSlider(
-                currentStep: currentStep,
-                totalSteps: 3,
-                labels: isToUniversity
-                    ? [l10n.city, l10n.university, l10n.station]
-                    : [l10n.city, l10n.pickupStation, l10n.arrivalStation],
-              ),
-            ),
 
             // Main Selection Content
             Expanded(
@@ -1101,7 +1100,7 @@ class _LocationSelectionDrawerState
                             ),
                           ] else ...[
                             // Departure Station Selection
-                            stationsAsync.when(
+                            boardingStationsAsync.when(
                               data: (stations) => _buildSelectionItem(
                                 context,
                                 ref,
@@ -1111,7 +1110,7 @@ class _LocationSelectionDrawerState
                                 ),
                                 placeholder: l10n.selectPickupPoint,
                                 icon: CupertinoIcons.location_fill,
-                                onTap: () => _showPicker<StationEntity>(
+                                onTap: () => _showPicker<BoardingStationEntity>(
                                   context,
                                   ref,
                                   title: l10n.selectPickupPoint,
@@ -1126,6 +1125,7 @@ class _LocationSelectionDrawerState
                                       selectedArrivalStation = null;
                                     });
                                   },
+                                  emptyMessage: l10n.emptyPickupStation,
                                 ),
                               ),
                               loading: () => _buildSelectionItem(
@@ -1157,7 +1157,7 @@ class _LocationSelectionDrawerState
                           ),
                           if (isToUniversity) ...[
                             // Station Selection (Pickup)
-                            stationsAsync.when(
+                            boardingStationsAsync.when(
                               data: (stations) => _buildSelectionItem(
                                 context,
                                 ref,
@@ -1167,7 +1167,7 @@ class _LocationSelectionDrawerState
                                 ),
                                 placeholder: l10n.selectStation,
                                 icon: CupertinoIcons.location_fill,
-                                onTap: () => _showPicker<StationEntity>(
+                                onTap: () => _showPicker<BoardingStationEntity>(
                                   context,
                                   ref,
                                   title: l10n.selectStation,
@@ -1181,6 +1181,7 @@ class _LocationSelectionDrawerState
                                       selectedPickupStation = station;
                                     });
                                   },
+                                  emptyMessage: l10n.emptyPickupStation,
                                 ),
                               ),
                               loading: () => _buildSelectionItem(
@@ -1199,7 +1200,7 @@ class _LocationSelectionDrawerState
                             ),
                           ] else ...[
                             // Arrival Station Selection
-                            stationsAsync.when(
+                            arrivalStationsAsync.when(
                               data: (stations) => _buildSelectionItem(
                                 context,
                                 ref,
@@ -1209,16 +1210,11 @@ class _LocationSelectionDrawerState
                                 ),
                                 placeholder: l10n.selectArrivalPoint,
                                 icon: CupertinoIcons.pin_fill,
-                                onTap: () => _showPicker<StationEntity>(
+                                onTap: () => _showPicker<ArrivalStationEntity>(
                                   context,
                                   ref,
                                   title: l10n.selectArrivalPoint,
-                                  items: stations
-                                      .where(
-                                        (s) =>
-                                            s.id != selectedPickupStation?.id,
-                                      )
-                                      .toList(),
+                                  items: stations,
                                   labelBuilder: (station) =>
                                       station.getLocalizedName(
                                         ref.read(localeProvider).languageCode,
@@ -1228,6 +1224,7 @@ class _LocationSelectionDrawerState
                                       selectedArrivalStation = station;
                                     });
                                   },
+                                  emptyMessage: l10n.emptyArrivalStation,
                                 ),
                               ),
                               loading: () => _buildSelectionItem(

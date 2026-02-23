@@ -4,7 +4,8 @@ import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
 import '../../../booking/domain/entities/city_entity.dart';
 import '../../../booking/domain/entities/university_entity.dart';
-import '../../../booking/domain/entities/station_entity.dart';
+import '../../../booking/domain/entities/boarding_station_entity.dart';
+import '../../../booking/domain/entities/arrival_station_entity.dart';
 import '../../../booking/domain/entities/route_entity.dart';
 import '../../../booking/domain/entities/schedule_entity.dart';
 
@@ -36,13 +37,27 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<StationEntity>>> getStations(
-    String cityId, // Changed from universityId to cityId
+  Future<Either<Failure, List<BoardingStationEntity>>> getBoardingStations(
+    String cityId,
   ) async {
     try {
-      final stations = await remoteDataSource.getStations(
+      final stations = await remoteDataSource.getBoardingStations(
         cityId,
-      ); // Changed from universityId to cityId
+      );
+      return Right(stations);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ArrivalStationEntity>>> getArrivalStations(
+    String boardingStationId,
+  ) async {
+    try {
+      final stations = await remoteDataSource.getArrivalStations(
+        boardingStationId,
+      );
       return Right(stations);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
@@ -74,9 +89,19 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<StationEntity>>> getAllStations() async {
+  Future<Either<Failure, List<BoardingStationEntity>>> getAllBoardingStations() async {
     try {
-      final stations = await remoteDataSource.getAllStations();
+      final stations = await remoteDataSource.getAllBoardingStations();
+      return Right(stations);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ArrivalStationEntity>>> getAllArrivalStations() async {
+    try {
+      final stations = await remoteDataSource.getAllArrivalStations();
       return Right(stations);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));

@@ -171,7 +171,8 @@ class _UnifiedTripCardState extends ConsumerState<UnifiedTripCard> with SingleTi
     }
 
     // Route logic
-    final stations = ref.watch(allStationsProvider).valueOrNull ?? [];
+    final boardingStations = ref.watch(allBoardingStationsProvider).valueOrNull ?? [];
+    final arrivalStations = ref.watch(allArrivalStationsProvider).valueOrNull ?? [];
     final universities = ref.watch(allUniversitiesProvider).valueOrNull ?? [];
     final lang = ref.watch(localeProvider).languageCode;
     
@@ -179,8 +180,8 @@ class _UnifiedTripCardState extends ConsumerState<UnifiedTripCard> with SingleTi
     final dropoffId = isSubscription ? widget.widgetSubscription!.dropoffStationId : widget.widgetBooking!.dropoffStationId;
     final tripType = isSubscription ? widget.widgetSubscription!.tripType : widget.widgetBooking!.tripType;
 
-    final pickupStation = stations.where((s) => s.id == pickupId).firstOrNull;
-    final dropoffStation = stations.where((s) => s.id == dropoffId).firstOrNull;
+    final pickupStation = boardingStations.where((s) => s.id == pickupId).firstOrNull;
+    final dropoffStation = arrivalStations.where((s) => s.id == dropoffId).firstOrNull;
 
     final universityName = universities.isNotEmpty
         ? universities.first.getLocalizedName(lang)

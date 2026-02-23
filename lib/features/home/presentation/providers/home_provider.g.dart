@@ -201,24 +201,27 @@ class _UniversitiesProviderElement
   String get cityId => (origin as UniversitiesProvider).cityId;
 }
 
-String _$stationsHash() => r'd6d4901cd4fd1dfbbdacff297a041dc1aed39afc';
+String _$boardingStationsHash() => r'5e45c980c0e09d4892ec8499bc471bf155a90d71';
 
-/// See also [stations].
-@ProviderFor(stations)
-const stationsProvider = StationsFamily();
+/// See also [boardingStations].
+@ProviderFor(boardingStations)
+const boardingStationsProvider = BoardingStationsFamily();
 
-/// See also [stations].
-class StationsFamily extends Family<AsyncValue<List<StationEntity>>> {
-  /// See also [stations].
-  const StationsFamily();
+/// See also [boardingStations].
+class BoardingStationsFamily
+    extends Family<AsyncValue<List<BoardingStationEntity>>> {
+  /// See also [boardingStations].
+  const BoardingStationsFamily();
 
-  /// See also [stations].
-  StationsProvider call(String cityId) {
-    return StationsProvider(cityId);
+  /// See also [boardingStations].
+  BoardingStationsProvider call(String cityId) {
+    return BoardingStationsProvider(cityId);
   }
 
   @override
-  StationsProvider getProviderOverride(covariant StationsProvider provider) {
+  BoardingStationsProvider getProviderOverride(
+    covariant BoardingStationsProvider provider,
+  ) {
     return call(provider.cityId);
   }
 
@@ -234,26 +237,28 @@ class StationsFamily extends Family<AsyncValue<List<StationEntity>>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'stationsProvider';
+  String? get name => r'boardingStationsProvider';
 }
 
-/// See also [stations].
-class StationsProvider extends AutoDisposeFutureProvider<List<StationEntity>> {
-  /// See also [stations].
-  StationsProvider(String cityId)
+/// See also [boardingStations].
+class BoardingStationsProvider
+    extends AutoDisposeFutureProvider<List<BoardingStationEntity>> {
+  /// See also [boardingStations].
+  BoardingStationsProvider(String cityId)
     : this._internal(
-        (ref) => stations(ref as StationsRef, cityId),
-        from: stationsProvider,
-        name: r'stationsProvider',
+        (ref) => boardingStations(ref as BoardingStationsRef, cityId),
+        from: boardingStationsProvider,
+        name: r'boardingStationsProvider',
         debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
             ? null
-            : _$stationsHash,
-        dependencies: StationsFamily._dependencies,
-        allTransitiveDependencies: StationsFamily._allTransitiveDependencies,
+            : _$boardingStationsHash,
+        dependencies: BoardingStationsFamily._dependencies,
+        allTransitiveDependencies:
+            BoardingStationsFamily._allTransitiveDependencies,
         cityId: cityId,
       );
 
-  StationsProvider._internal(
+  BoardingStationsProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -267,12 +272,13 @@ class StationsProvider extends AutoDisposeFutureProvider<List<StationEntity>> {
 
   @override
   Override overrideWith(
-    FutureOr<List<StationEntity>> Function(StationsRef provider) create,
+    FutureOr<List<BoardingStationEntity>> Function(BoardingStationsRef provider)
+    create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: StationsProvider._internal(
-        (ref) => create(ref as StationsRef),
+      override: BoardingStationsProvider._internal(
+        (ref) => create(ref as BoardingStationsRef),
         from: from,
         name: null,
         dependencies: null,
@@ -284,13 +290,14 @@ class StationsProvider extends AutoDisposeFutureProvider<List<StationEntity>> {
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<StationEntity>> createElement() {
-    return _StationsProviderElement(this);
+  AutoDisposeFutureProviderElement<List<BoardingStationEntity>>
+  createElement() {
+    return _BoardingStationsProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is StationsProvider && other.cityId == cityId;
+    return other is BoardingStationsProvider && other.cityId == cityId;
   }
 
   @override
@@ -304,18 +311,145 @@ class StationsProvider extends AutoDisposeFutureProvider<List<StationEntity>> {
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin StationsRef on AutoDisposeFutureProviderRef<List<StationEntity>> {
+mixin BoardingStationsRef
+    on AutoDisposeFutureProviderRef<List<BoardingStationEntity>> {
   /// The parameter `cityId` of this provider.
   String get cityId;
 }
 
-class _StationsProviderElement
-    extends AutoDisposeFutureProviderElement<List<StationEntity>>
-    with StationsRef {
-  _StationsProviderElement(super.provider);
+class _BoardingStationsProviderElement
+    extends AutoDisposeFutureProviderElement<List<BoardingStationEntity>>
+    with BoardingStationsRef {
+  _BoardingStationsProviderElement(super.provider);
 
   @override
-  String get cityId => (origin as StationsProvider).cityId;
+  String get cityId => (origin as BoardingStationsProvider).cityId;
+}
+
+String _$arrivalStationsHash() => r'4ed03506357543a496f39ce8987a1a8823517aac';
+
+/// See also [arrivalStations].
+@ProviderFor(arrivalStations)
+const arrivalStationsProvider = ArrivalStationsFamily();
+
+/// See also [arrivalStations].
+class ArrivalStationsFamily
+    extends Family<AsyncValue<List<ArrivalStationEntity>>> {
+  /// See also [arrivalStations].
+  const ArrivalStationsFamily();
+
+  /// See also [arrivalStations].
+  ArrivalStationsProvider call(String boardingStationId) {
+    return ArrivalStationsProvider(boardingStationId);
+  }
+
+  @override
+  ArrivalStationsProvider getProviderOverride(
+    covariant ArrivalStationsProvider provider,
+  ) {
+    return call(provider.boardingStationId);
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'arrivalStationsProvider';
+}
+
+/// See also [arrivalStations].
+class ArrivalStationsProvider
+    extends AutoDisposeFutureProvider<List<ArrivalStationEntity>> {
+  /// See also [arrivalStations].
+  ArrivalStationsProvider(String boardingStationId)
+    : this._internal(
+        (ref) => arrivalStations(ref as ArrivalStationsRef, boardingStationId),
+        from: arrivalStationsProvider,
+        name: r'arrivalStationsProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$arrivalStationsHash,
+        dependencies: ArrivalStationsFamily._dependencies,
+        allTransitiveDependencies:
+            ArrivalStationsFamily._allTransitiveDependencies,
+        boardingStationId: boardingStationId,
+      );
+
+  ArrivalStationsProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.boardingStationId,
+  }) : super.internal();
+
+  final String boardingStationId;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<ArrivalStationEntity>> Function(ArrivalStationsRef provider)
+    create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: ArrivalStationsProvider._internal(
+        (ref) => create(ref as ArrivalStationsRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        boardingStationId: boardingStationId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<ArrivalStationEntity>> createElement() {
+    return _ArrivalStationsProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ArrivalStationsProvider &&
+        other.boardingStationId == boardingStationId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, boardingStationId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin ArrivalStationsRef
+    on AutoDisposeFutureProviderRef<List<ArrivalStationEntity>> {
+  /// The parameter `boardingStationId` of this provider.
+  String get boardingStationId;
+}
+
+class _ArrivalStationsProviderElement
+    extends AutoDisposeFutureProviderElement<List<ArrivalStationEntity>>
+    with ArrivalStationsRef {
+  _ArrivalStationsProviderElement(super.provider);
+
+  @override
+  String get boardingStationId =>
+      (origin as ArrivalStationsProvider).boardingStationId;
 }
 
 String _$routesHash() => r'4225e3185e23df4cbfae621444990fbc5e3dfbeb';
@@ -553,24 +687,46 @@ class _SchedulesProviderElement
   String get routeId => (origin as SchedulesProvider).routeId;
 }
 
-String _$allStationsHash() => r'c50d10649b9da60af2f832f13409ade5e60a7092';
+String _$allBoardingStationsHash() =>
+    r'3daffa7352593a164b5a0d72afd6bf446be8d9d8';
 
-/// See also [allStations].
-@ProviderFor(allStations)
-final allStationsProvider =
-    AutoDisposeFutureProvider<List<StationEntity>>.internal(
-      allStations,
-      name: r'allStationsProvider',
+/// See also [allBoardingStations].
+@ProviderFor(allBoardingStations)
+final allBoardingStationsProvider =
+    AutoDisposeFutureProvider<List<BoardingStationEntity>>.internal(
+      allBoardingStations,
+      name: r'allBoardingStationsProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$allStationsHash,
+          : _$allBoardingStationsHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef AllStationsRef = AutoDisposeFutureProviderRef<List<StationEntity>>;
+typedef AllBoardingStationsRef =
+    AutoDisposeFutureProviderRef<List<BoardingStationEntity>>;
+String _$allArrivalStationsHash() =>
+    r'a90b308a79974c0a317689a75ee438594d91a484';
+
+/// See also [allArrivalStations].
+@ProviderFor(allArrivalStations)
+final allArrivalStationsProvider =
+    AutoDisposeFutureProvider<List<ArrivalStationEntity>>.internal(
+      allArrivalStations,
+      name: r'allArrivalStationsProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$allArrivalStationsHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AllArrivalStationsRef =
+    AutoDisposeFutureProviderRef<List<ArrivalStationEntity>>;
 String _$allUniversitiesHash() => r'5ba3818d45c2283cb398226e66ace6741dd11df2';
 
 /// See also [allUniversities].

@@ -593,26 +593,38 @@ abstract class AppLocalizations {
   /// No description provided for @pickupPoint.
   ///
   /// In ar, this message translates to:
-  /// **'نقطة الركوب'**
+  /// **'محطة الركوب'**
   String get pickupPoint;
 
   /// No description provided for @selectPickupPoint.
   ///
   /// In ar, this message translates to:
-  /// **'اختر نقطة الركوب'**
+  /// **'اختر محطة الركوب'**
   String get selectPickupPoint;
 
   /// No description provided for @arrivalPoint.
   ///
   /// In ar, this message translates to:
-  /// **'نقطة الوصول'**
+  /// **'محطة الوصول'**
   String get arrivalPoint;
 
   /// No description provided for @selectArrivalPoint.
   ///
   /// In ar, this message translates to:
-  /// **'اختر نقطة الوصول'**
+  /// **'اختر محطة الوصول'**
   String get selectArrivalPoint;
+
+  /// No description provided for @emptyPickupStation.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد محطة ركوب'**
+  String get emptyPickupStation;
+
+  /// No description provided for @emptyArrivalStation.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد محطة وصول'**
+  String get emptyArrivalStation;
 
   /// No description provided for @toUniversity.
   ///

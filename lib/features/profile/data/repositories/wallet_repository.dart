@@ -19,6 +19,14 @@ abstract class WalletRepository {
   Future<Either<Failure, List<Map<String, dynamic>>>> getTransactions(
     String userId,
   );
+  Future<Either<Failure, void>> createWalletRequest({
+    required String userId,
+    required double amount,
+    required String method,
+    required String type,
+    required String proofUrl,
+    required String senderPhone,
+  });
 }
 
 class WalletRepositoryImpl implements WalletRepository {
@@ -149,8 +157,50 @@ class WalletRepositoryImpl implements WalletRepository {
       AppLogger.info('✅ Amount added. New balance: $newBalance');
       return Right(newBalance);
     } catch (e) {
-      AppLogger.error('❌ Error adding amount: $e');
       return Left(ServerFailure(message: 'فشل في إضافة المبلغ'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createWalletRequest({
+    required String userId,
+    required double amount,
+    required String method,
+    required String type,
+    required String proofUrl,
+    required String senderPhone,
+  }) async {
+    try {
+      AppLogger.info('📝 Creating wallet $type request for user $userId');
+
+      // 1. Insert the recharge request for admin review
+      await _supabase.from('wallet_recharge_requests').insert({
+        'user_id': userId,
+        'amount': amount,
+        'method': method,
+        'type': type,
+        'proof_url': proofUrl,
+        'sender_phone': senderPhone,
+        'status': 'pending',
+      });
+
+      // 2. Insert a pending transaction so it shows in user's history
+      final reason = type == 'withdraw'
+          ? 'سحب رصيد - $method ($senderPhone)'
+          : 'شحن رصيد - $method ($senderPhone)';
+
+      await _supabase.from('wallet_transactions').insert({
+        'user_id': userId,
+        'amount': amount,
+        'type': type == 'withdraw' ? 'debit' : 'credit',
+        'reason': reason,
+        'status': 'pending',
+      });
+
+      return const Right(null);
+    } catch (e) {
+      AppLogger.error('❌ Error creating wallet request: $e');
+      return Left(ServerFailure(message: 'فشل في إرسال الطلب'));
     }
   }
 }

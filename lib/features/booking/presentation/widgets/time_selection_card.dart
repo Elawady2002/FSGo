@@ -6,7 +6,7 @@ class TimeSelectionCard extends StatelessWidget {
   final String title;
   final String? selectedTime;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool isLadies;
 
   const TimeSelectionCard({
@@ -14,7 +14,7 @@ class TimeSelectionCard extends StatelessWidget {
     required this.title,
     required this.selectedTime,
     required this.icon,
-    required this.onTap,
+    this.onTap,
     this.isLadies = false,
   });
 
@@ -93,11 +93,12 @@ class TimeSelectionCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              CupertinoIcons.chevron_left,
-              color: chevronColor,
-              size: 18,
-            ),
+            if (onTap != null)
+              Icon(
+                CupertinoIcons.chevron_left,
+                color: chevronColor,
+                size: 18,
+              ),
           ],
         ),
       ),

@@ -6,7 +6,8 @@ import '../../data/repositories/home_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../../booking/domain/entities/city_entity.dart';
 import '../../../booking/domain/entities/university_entity.dart';
-import '../../../booking/domain/entities/station_entity.dart';
+import '../../../booking/domain/entities/boarding_station_entity.dart';
+import '../../../booking/domain/entities/arrival_station_entity.dart';
 import '../../../booking/domain/entities/route_entity.dart';
 import '../../../booking/domain/entities/schedule_entity.dart';
 
@@ -44,14 +45,25 @@ Future<List<UniversityEntity>> universities(Ref ref, String cityId) async {
 }
 
 @riverpod
-Future<List<StationEntity>> stations(
+Future<List<BoardingStationEntity>> boardingStations(
   Ref ref,
-  String cityId, // Changed from universityId to cityId
+  String cityId,
 ) async {
   final repository = ref.watch(homeRepositoryProvider);
-  final result = await repository.getStations(
-    cityId,
-  ); // Changed from universityId to cityId
+  final result = await repository.getBoardingStations(cityId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (stations) => stations,
+  );
+}
+
+@riverpod
+Future<List<ArrivalStationEntity>> arrivalStations(
+  Ref ref,
+  String boardingStationId,
+) async {
+  final repository = ref.watch(homeRepositoryProvider);
+  final result = await repository.getArrivalStations(boardingStationId);
   return result.fold(
     (failure) => throw Exception(failure.message),
     (stations) => stations,
@@ -207,9 +219,19 @@ Future<List<ScheduleEntity>> schedules(Ref ref, String routeId) async {
   return schedules;
 }
 @riverpod
-Future<List<StationEntity>> allStations(Ref ref) async {
+Future<List<BoardingStationEntity>> allBoardingStations(Ref ref) async {
   final repository = ref.watch(homeRepositoryProvider);
-  final result = await repository.getAllStations();
+  final result = await repository.getAllBoardingStations();
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (stations) => stations,
+  );
+}
+
+@riverpod
+Future<List<ArrivalStationEntity>> allArrivalStations(Ref ref) async {
+  final repository = ref.watch(homeRepositoryProvider);
+  final result = await repository.getAllArrivalStations();
   return result.fold(
     (failure) => throw Exception(failure.message),
     (stations) => stations,

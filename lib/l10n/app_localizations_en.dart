@@ -264,16 +264,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectUniversity => 'Select university';
 
   @override
-  String get pickupPoint => 'Pickup Point';
+  String get pickupPoint => 'Pickup Station';
 
   @override
-  String get selectPickupPoint => 'Select pickup point';
+  String get selectPickupPoint => 'Select pickup station';
 
   @override
-  String get arrivalPoint => 'Arrival Point';
+  String get arrivalPoint => 'Arrival Station';
 
   @override
-  String get selectArrivalPoint => 'Select arrival point';
+  String get selectArrivalPoint => 'Select arrival station';
+
+  @override
+  String get emptyPickupStation => 'No pickup station available';
+
+  @override
+  String get emptyArrivalStation => 'No arrival station available';
 
   @override
   String get toUniversity => 'To University';

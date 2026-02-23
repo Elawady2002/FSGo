@@ -54,7 +54,8 @@ class QRDetailsSheet extends ConsumerWidget {
     final id = isSubscription ? subscription!.id : booking!.id;
     final shortId = '#${id?.substring(0, 8).toUpperCase() ?? "N/A"}';
     
-    final stations = ref.watch(allStationsProvider).valueOrNull ?? [];
+    final boardingStations = ref.watch(allBoardingStationsProvider).valueOrNull ?? [];
+    final arrivalStations = ref.watch(allArrivalStationsProvider).valueOrNull ?? [];
     final universities = ref.watch(allUniversitiesProvider).valueOrNull ?? [];
 
     // Determine trip label
@@ -63,8 +64,8 @@ class QRDetailsSheet extends ConsumerWidget {
     final pickupId = isSubscription ? subscription!.pickupStationId : booking!.pickupStationId;
     final dropoffId = isSubscription ? subscription!.dropoffStationId : booking!.dropoffStationId;
 
-    final pickupStation = stations.where((s) => s.id == pickupId).firstOrNull;
-    final dropoffStation = stations.where((s) => s.id == dropoffId).firstOrNull;
+    final pickupStation = boardingStations.where((s) => s.id == pickupId).firstOrNull;
+    final dropoffStation = arrivalStations.where((s) => s.id == dropoffId).firstOrNull;
     final universityName = universities.isNotEmpty ? universities.first.getLocalizedName(lang) : 'الجامعة';
 
     if (dropoffId != null) {

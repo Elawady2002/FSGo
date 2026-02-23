@@ -1,18 +1,19 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/city_model.dart';
 import '../models/university_model.dart';
-import '../models/station_model.dart';
+import '../models/boarding_station_model.dart';
+import '../models/arrival_station_model.dart';
 import '../models/route_model.dart';
 import '../models/schedule_model.dart';
 
 abstract class HomeRemoteDataSource {
   Future<List<CityModel>> getCities();
   Future<List<UniversityModel>> getUniversities(String cityId);
-  Future<List<StationModel>> getStations(
-    String cityId,
-  ); // Changed from universityId to cityId
+  Future<List<BoardingStationModel>> getBoardingStations(String cityId);
+  Future<List<ArrivalStationModel>> getArrivalStations(String boardingStationId);
   Future<List<RouteModel>> getRoutes(String universityId);
-  Future<List<StationModel>> getAllStations();
+  Future<List<BoardingStationModel>> getAllBoardingStations();
+  Future<List<ArrivalStationModel>> getAllArrivalStations();
   Future<List<UniversityModel>> getAllUniversities();
   Future<List<ScheduleModel>> getSchedules(String routeId);
 }
@@ -46,16 +47,25 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<List<StationModel>> getStations(String cityId) async {
-    // Changed from universityId to cityId
+  Future<List<BoardingStationModel>> getBoardingStations(String cityId) async {
     final response = await _client
-        .from('stations')
+        .from('boarding_stations')
         .select()
-        .eq('city_id', cityId) // Changed from university_id to city_id
-        .eq('is_active', true)
+        .eq('city_id', cityId)
         .order('name_ar');
 
-    return (response as List).map((e) => StationModel.fromJson(e)).toList();
+    return (response as List).map((e) => BoardingStationModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<List<ArrivalStationModel>> getArrivalStations(String boardingStationId) async {
+    final response = await _client
+        .from('arrival_stations')
+        .select()
+        .eq('boarding_station_id', boardingStationId)
+        .order('name_ar');
+
+    return (response as List).map((e) => ArrivalStationModel.fromJson(e)).toList();
   }
 
   @override
@@ -83,14 +93,23 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<List<StationModel>> getAllStations() async {
+  Future<List<BoardingStationModel>> getAllBoardingStations() async {
     final response = await _client
-        .from('stations')
+        .from('boarding_stations')
         .select()
-        .eq('is_active', true)
         .order('name_ar');
 
-    return (response as List).map((e) => StationModel.fromJson(e)).toList();
+    return (response as List).map((e) => BoardingStationModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<List<ArrivalStationModel>> getAllArrivalStations() async {
+    final response = await _client
+        .from('arrival_stations')
+        .select()
+        .order('name_ar');
+
+    return (response as List).map((e) => ArrivalStationModel.fromJson(e)).toList();
   }
 
   @override
