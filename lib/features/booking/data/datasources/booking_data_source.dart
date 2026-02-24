@@ -7,7 +7,7 @@ import '../models/booking_model.dart';
 abstract class BookingDataSource {
   Future<BookingModel> createBooking({
     required String userId,
-    required String scheduleId,
+    String? scheduleId,
     required DateTime bookingDate,
     required String tripType,
     String? pickupStationId,
@@ -87,7 +87,7 @@ class BookingDataSourceImpl implements BookingDataSource {
   @override
   Future<BookingModel> createBooking({
     required String userId,
-    required String scheduleId,
+    String? scheduleId,
     required DateTime bookingDate,
     required String tripType,
     String? pickupStationId,
@@ -104,6 +104,12 @@ class BookingDataSourceImpl implements BookingDataSource {
   }) async {
     try {
       final now = DateTime.now();
+
+      AppLogger.info('📝 Database insert for user $userId (Trip: $tripType)');
+      AppLogger.info('   Pickup ID: $pickupStationId');
+      AppLogger.info('   Arrival ID: $dropoffStationId');
+      AppLogger.info('   Schedule ID: $scheduleId');
+
       final response = await _client
           .from('bookings')
           .insert({
@@ -117,19 +123,22 @@ class BookingDataSourceImpl implements BookingDataSource {
             'return_time': returnTime,
             'payment_proof_image': paymentProofImage,
             'transfer_number': transferNumber,
-            'status': 'pending',
-            'payment_status': 'unpaid',
+            'status': 'confirmed', // Confirmed since money was deducted
+            'payment_status': 'paid', // Paid via wallet
             'selection_type': selectionType.toJson(),
             'passenger_count': passengerCount,
             'split_preference': splitPreference,
             'total_price': totalPrice,
             'is_ladies': isLadies,
+            'university_id': null, // Explicitly no university for standard booking
+            'is_university_request': false,
             'created_at': now.toIso8601String(),
             'updated_at': now.toIso8601String(),
           })
           .select()
           .single();
 
+      AppLogger.info('✅ Booking created successfully!');
       return BookingModel.fromJson(response);
     } on PostgrestException catch (e) {
       // Log detailed error for debugging
@@ -137,7 +146,11 @@ class BookingDataSourceImpl implements BookingDataSource {
       AppLogger.error('   Code: ${e.code}');
       AppLogger.error('   Message: ${e.message}');
       AppLogger.error('   Details: ${e.details}');
-      throw Exception('Database error: ${e.message}');
+      AppLogger.error('   Hint: ${e.hint}');
+      AppLogger.error('   Table: bookings');
+      AppLogger.error('   Payload: {pickup: $pickupStationId, dropoff: $dropoffStationId, type: $tripType}');
+      
+      throw Exception('Database error (FK constraint): ${e.message}');
     } catch (e) {
       AppLogger.error('❌ Unexpected error creating booking: $e');
       throw Exception('Unexpected error during booking creation: $e');

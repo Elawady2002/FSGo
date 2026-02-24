@@ -116,7 +116,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                           return;
                         }
 
-                        final amount = bookingState.tripType.price;
+                        final amount = bookingNotifier.totalPrice;
                         final walletState = ref.read(walletProvider);
 
                         // If it's a university request, we don't deduct money immediately
@@ -216,15 +216,22 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                             (route) => route.isFirst,
                           );
                         } else {
+                          // RECOVERY: If booking creation failed but we already deducted money, refund it!
+                          await ref
+                              .read(walletProvider.notifier)
+                              .addAmount(
+                                amount,
+                                'استرداد: فشل إنشاء الحجز - $errorMessage',
+                              );
+
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.errorCreatingBooking,
+                                'فشل الحجز: $errorMessage',
                               ),
                               backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 5),
                             ),
                           );
                         }
@@ -416,7 +423,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       return DateFormat(
         'h:mm a',
         'ar_EG',
-      ).format(dt).w.replaceAll('صباحاً', 'ص').replaceAll('مساءً', 'م');
+      ).format(dt).replaceAll('صباحاً', 'ص').replaceAll('مساءً', 'م');
     } catch (e) {
       return time;
     }

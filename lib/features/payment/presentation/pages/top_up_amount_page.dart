@@ -6,8 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import 'top_up_proof_page.dart';
 
 class TopUpAmountPage extends ConsumerStatefulWidget {
-  final bool isWithdraw;
-  const TopUpAmountPage({super.key, this.isWithdraw = false});
+  const TopUpAmountPage({super.key});
 
   @override
   ConsumerState<TopUpAmountPage> createState() => _TopUpAmountPageState();
@@ -107,7 +106,7 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            widget.isWithdraw ? 'سحب الرصيد' : 'شحن الرصيد',
+            'شحن الرصيد',
             style: AppTheme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -125,9 +124,7 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
                 child: Column(
                   children: [
                     Text(
-                      widget.isWithdraw
-                          ? 'المبلغ المراد سحبه'
-                          : 'المبلغ المراد شحنه',
+                      'المبلغ المراد شحنه',
                       style: AppTheme.textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
                         fontSize: 15,
@@ -378,7 +375,6 @@ class _TopUpAmountPageState extends ConsumerState<TopUpAmountPage>
                           builder: (_) => TopUpProofPage(
                             amount: _amountController.text,
                             method: _selectedMethod,
-                            isWithdraw: widget.isWithdraw,
                           ),
                         ),
                       );

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -132,15 +133,15 @@ class WalletNotifier extends StateNotifier<WalletState> {
   }
 
   Future<void> refresh() async {
+    AppLogger.info('🔄 Manually refreshing wallet for user: $_userId');
     await _loadBalance();
   }
 
   Future<bool> requestTopUp({
     required double amount,
     required String method,
-    required String proofUrl,
-    required String senderPhone,
-    bool isWithdraw = false,
+    required File imageFile,
+    required String phoneNumber,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -148,9 +149,8 @@ class WalletNotifier extends StateNotifier<WalletState> {
         userId: _userId,
         amount: amount,
         method: method,
-        type: isWithdraw ? 'withdraw' : 'topup',
-        proofUrl: proofUrl,
-        senderPhone: senderPhone,
+        imageFile: imageFile,
+        phoneNumber: phoneNumber,
       );
 
       return result.fold(
@@ -171,7 +171,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       AppLogger.error('Error processing wallet request: $e');
       state = state.copyWith(
         isLoading: false,
-        error: isWithdraw ? 'حدث خطأ في طلب السحب' : 'حدث خطأ في طلب الشحن',
+        error: 'حدث خطأ في طلب الشحن',
       );
       return false;
     }

@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../core/providers/storage_provider.dart';
 
 abstract class WalletRepository {
   Future<Either<Failure, double>> getBalance(String userId);
@@ -23,16 +26,17 @@ abstract class WalletRepository {
     required String userId,
     required double amount,
     required String method,
-    required String type,
-    required String proofUrl,
-    required String senderPhone,
+    File? imageFile,
+    required String phoneNumber,
   });
 }
 
 class WalletRepositoryImpl implements WalletRepository {
   final SupabaseClient _supabase;
+  final StorageService? _storageService;
 
-  WalletRepositoryImpl(this._supabase);
+  WalletRepositoryImpl(this._supabase, {StorageService? storageService})
+      : _storageService = storageService;
 
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getTransactions(
@@ -166,41 +170,33 @@ class WalletRepositoryImpl implements WalletRepository {
     required String userId,
     required double amount,
     required String method,
-    required String type,
-    required String proofUrl,
-    required String senderPhone,
+    File? imageFile,
+    required String phoneNumber,
   }) async {
     try {
-      AppLogger.info('📝 Creating wallet $type request for user $userId');
+      AppLogger.info('📝 Creating wallet recharge request for user $userId');
 
-      // 1. Insert the recharge request for admin review
-      await _supabase.from('wallet_recharge_requests').insert({
+      String proofImageUrl = '';
+      if (imageFile != null && _storageService != null) {
+        proofImageUrl = await _storageService!.uploadPaymentProof(imageFile, userId);
+      }
+
+      // 1. Insert ONLY into the new unified table 'wallet_requests'
+      await _supabase.from('wallet_requests').insert({
         'user_id': userId,
         'amount': amount,
         'method': method,
-        'type': type,
-        'proof_url': proofUrl,
-        'sender_phone': senderPhone,
+        'type': 'topup', // Hardcoded as requested
+        'proof_image_url': proofImageUrl,
+        'phone_number': phoneNumber,
         'status': 'pending',
       });
 
-      // 2. Insert a pending transaction so it shows in user's history
-      final reason = type == 'withdraw'
-          ? 'سحب رصيد - $method ($senderPhone)'
-          : 'شحن رصيد - $method ($senderPhone)';
-
-      await _supabase.from('wallet_transactions').insert({
-        'user_id': userId,
-        'amount': amount,
-        'type': type == 'withdraw' ? 'debit' : 'credit',
-        'reason': reason,
-        'status': 'pending',
-      });
-
+      AppLogger.info('✅ Wallet recharge request created successfully');
       return const Right(null);
     } catch (e) {
       AppLogger.error('❌ Error creating wallet request: $e');
-      return Left(ServerFailure(message: 'فشل في إرسال الطلب'));
+      return Left(ServerFailure(message: 'فشل في إرسال الطلب: $e'));
     }
   }
 }
@@ -208,5 +204,11 @@ class WalletRepositoryImpl implements WalletRepository {
 // Provider
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
   final supabase = Supabase.instance.client;
-  return WalletRepositoryImpl(supabase);
+  try {
+    // Attempt to watch the storage provider if it exists
+    final storageService = ref.watch(storageServiceProvider);
+    return WalletRepositoryImpl(supabase, storageService: storageService);
+  } catch (e) {
+    return WalletRepositoryImpl(supabase);
+  }
 });

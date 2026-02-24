@@ -38,9 +38,15 @@ class WalletPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await ref.read(walletProvider.notifier).refresh();
+          // Force a complete rebuild of the providers to bypass any caching
+          ref.invalidate(walletProvider);
           ref.invalidate(walletTransactionsProvider);
-          await ref.read(walletTransactionsProvider.future);
+          
+          // Wait for both to finish loading
+          await Future.wait([
+            ref.read(walletProvider.notifier).refresh(),
+            ref.read(walletTransactionsProvider.future),
+          ]);
         },
         color: AppTheme.primaryColor,
         backgroundColor: Colors.white,
@@ -118,93 +124,46 @@ class WalletPage extends ConsumerWidget {
                       ),
                     ),
 
-                    // Bottom Black Section (Actions)
+                    // Bottom Black Section (Action: Top-Up Only)
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         vertical: 20,
-                        horizontal: 16,
+                        horizontal: 24,
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(
-                                    builder: (_) => const TopUpAmountPage(
-                                      isWithdraw: false,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      CupertinoIcons.arrow_down_left,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'شحن',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (_) => const TopUpAmountPage(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                CupertinoIcons.plus_circle_fill,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'شحن رصيد',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          Container(
-                            height: 40,
-                            width: 1,
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(
-                                    builder: (_) =>
-                                        const TopUpAmountPage(isWithdraw: true),
-                                  ),
-                                );
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      CupertinoIcons.arrow_up_right,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'سحب',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],

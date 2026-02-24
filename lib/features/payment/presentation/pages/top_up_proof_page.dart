@@ -13,13 +13,11 @@ import '../../../profile/presentation/providers/wallet_provider.dart';
 class TopUpProofPage extends ConsumerStatefulWidget {
   final String amount;
   final String method;
-  final bool isWithdraw;
 
   const TopUpProofPage({
     super.key,
     required this.amount,
     required this.method,
-    this.isWithdraw = false,
   });
 
   @override
@@ -131,14 +129,8 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
   }
 
   Future<void> _submitRequest() async {
-    final bool needsImage = !widget.isWithdraw;
-    if ((needsImage && _proofImage == null) ||
-        _senderPhoneController.text.isEmpty) {
-      _showErrorSnackBar(
-        needsImage
-            ? 'يرجى رفع صورة الإثبات وإدخال رقم المحول منه'
-            : 'يرجى إدخال رقم الحساب المستلم',
-      );
+    if (_proofImage == null || _senderPhoneController.text.isEmpty) {
+      _showErrorSnackBar('يرجى رفع صورة الإثبات وإدخال رقم المحول منه');
       return;
     }
 
@@ -148,26 +140,22 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
       final user = ref.read(authProvider).value;
       if (user == null) throw Exception('User not logged in');
 
-      String? imageUrl;
-      if (_proofImage != null) {
-        final storageService = ref.read(storageServiceProvider);
-        imageUrl = await storageService.uploadPaymentProof(
-          _proofImage!,
-          user.id,
-        );
-      }
-
       final walletNotifier = ref.read(walletProvider.notifier);
-      await walletNotifier.requestTopUp(
+      final success = await walletNotifier.requestTopUp(
         amount: double.parse(widget.amount),
         method: widget.method,
-        proofUrl: imageUrl ?? '',
-        senderPhone: _senderPhoneController.text,
-        isWithdraw: widget.isWithdraw,
+        imageFile: _proofImage!,
+        phoneNumber: _senderPhoneController.text,
       );
 
       if (!mounted) return;
-      _showSuccessDialog();
+      
+      if (success) {
+        _showSuccessDialog();
+      } else {
+        final error = ref.read(walletProvider).error;
+        _showErrorSnackBar(error ?? 'فشل في إرسال الطلب');
+      }
     } catch (e) {
       _showErrorSnackBar('حدث خطأ: $e');
     } finally {
@@ -202,60 +190,82 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
       context: context,
       barrierDismissible: false,
       barrierLabel: '',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 400),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 500),
       transitionBuilder: (context, anim1, anim2, child) {
-        return ScaleTransition(
-          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+        return Transform.scale(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack).value,
           child: FadeTransition(opacity: anim1, child: child),
         );
       },
       pageBuilder: (context, _, _) => Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 40),
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.fromLTRB(24, 40, 24, 32),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // ─── Success Icon ───
               Container(
-                width: 72,
-                height: 72,
+                width: 84,
+                height: 84,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  CupertinoIcons.checkmark_circle_fill,
-                  color: AppTheme.primaryColor,
-                  size: 48,
+                child: Center(
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.checkmark,
+                      color: Colors.black,
+                      size: 32,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
+              // ─── Title ───
               Text(
-                'تم استلام الطلب',
+                'تم استلام طلبك بنجاح',
                 style: AppTheme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
+              // ─── Description ───
               Text(
-                widget.isWithdraw
-                    ? 'سيتم مراجعة طلب السحب وتحويل المبلغ إلى حسابك في أقرب وقت.'
-                    : 'سيتم مراجعة الطلب واضافة الرصيد إلى محفظتك في أقرب وقت.',
+                'سيتم مراجعة بيانات التحويل وإضافة الرصيد إلى محفظتك خلال دقائق.',
                 textAlign: TextAlign.center,
                 style: AppTheme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
-                  height: 1.5,
+                  color: Colors.grey.shade600,
+                  height: 1.6,
+                  fontSize: 15,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 36),
+              // ─── Action Button ───
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
@@ -265,8 +275,9 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
                     backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.black,
                     elevation: 0,
+                    shadowColor: AppTheme.primaryColor.withValues(alpha: 0.4),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                   child: const Text(
@@ -288,8 +299,7 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
         ? _vodafoneNumber
         : _instaPayAddress;
     final bool isReady =
-        (widget.isWithdraw || _proofImage != null) &&
-        _senderPhoneController.text.isNotEmpty;
+        _proofImage != null && _senderPhoneController.text.isNotEmpty;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -302,10 +312,12 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
             icon: const Icon(CupertinoIcons.chevron_right, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text(
-            widget.isWithdraw ? 'تأكيد السحب' : 'تأكيد الدفع',
-            style: AppTheme.textTheme.titleLarge?.copyWith(
+          title: const Text(
+            'تأكيد الدفع',
+            style: TextStyle(
               fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 20,
             ),
           ),
           centerTitle: true,
@@ -328,17 +340,15 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
                       ),
                     ),
 
-                    if (!widget.isWithdraw) ...[
-                      const SizedBox(height: 24),
-                      // ─── Step 2: Upload Proof ───
-                      SlideTransition(
-                        position: _slideAnim2,
-                        child: FadeTransition(
-                          opacity: _fadeAnim2,
-                          child: _buildProofUploadSection(),
-                        ),
+                    const SizedBox(height: 24),
+                    // ─── Step 2: Upload Proof ───
+                    SlideTransition(
+                      position: _slideAnim2,
+                      child: FadeTransition(
+                        opacity: _fadeAnim2,
+                        child: _buildProofUploadSection(),
                       ),
-                    ],
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -396,7 +406,7 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  widget.isWithdraw ? 'سحب' : 'تحويل',
+                  'تحويل',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -417,128 +427,124 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
             ),
           ),
 
-          if (!widget.isWithdraw) ...[
-            const SizedBox(height: 20),
-            // Divider with label
-            Row(
-              children: [
-                Expanded(child: Divider(color: Colors.grey.shade200)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'إلى',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade400,
-                    ),
+          const SizedBox(height: 20),
+          // Divider with label
+          Row(
+            children: [
+              Expanded(child: Divider(color: Colors.grey.shade200)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'إلى',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade400,
                   ),
                 ),
-                Expanded(child: Divider(color: Colors.grey.shade200)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Destination info
-            Row(
-              children: [
-                // Method icon
-                Container(
-                  width: 44,
-                  height: 44,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F7),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Image.asset(
-                    isVodafone
-                        ? 'lib/assets/image/launcher_icons/vodafone_cash.png'
-                        : 'lib/assets/image/launcher_icons/instapay.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      CupertinoIcons.money_dollar_circle,
-                      color: Colors.grey.shade400,
-                    ),
+              ),
+              Expanded(child: Divider(color: Colors.grey.shade200)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Destination info
+          Row(
+            children: [
+              // Method icon
+              Container(
+                width: 44,
+                height: 44,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Image.asset(
+                  isVodafone
+                      ? 'lib/assets/image/launcher_icons/vodafone_cash.png'
+                      : 'lib/assets/image/launcher_icons/instapay.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    CupertinoIcons.money_dollar_circle,
+                    color: Colors.grey.shade400,
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Method name & number
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isVodafone ? 'فودافون كاش' : 'انستا باي',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black54,
-                        ),
+              ),
+              const SizedBox(width: 12),
+              // Method name & number
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isVodafone ? 'فودافون كاش' : 'انستا باي',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black54,
                       ),
-                      const SizedBox(height: 2),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      transferTarget,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Copy button
+              GestureDetector(
+                onTap: () => _copyToClipboard(transferTarget),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _copied
+                        ? AppTheme.primaryColor.withValues(alpha: 0.15)
+                        : const Color(0xFFF5F5F7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _copied
+                            ? CupertinoIcons.checkmark_circle_fill
+                            : CupertinoIcons.doc_on_doc_fill,
+                        size: 15,
+                        color: _copied
+                            ? AppTheme.primaryDark
+                            : Colors.grey.shade500,
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        transferTarget,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                          letterSpacing: 0.5,
+                        _copied ? 'تم' : 'نسخ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _copied
+                              ? AppTheme.primaryDark
+                              : Colors.grey.shade600,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Copy button
-                GestureDetector(
-                  onTap: () => _copyToClipboard(transferTarget),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _copied
-                          ? AppTheme.primaryColor.withValues(alpha: 0.15)
-                          : const Color(0xFFF5F5F7),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _copied
-                              ? CupertinoIcons.checkmark_circle_fill
-                              : CupertinoIcons.doc_on_doc_fill,
-                          size: 15,
-                          color: _copied
-                              ? AppTheme.primaryDark
-                              : Colors.grey.shade500,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          _copied ? 'تم' : 'نسخ',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: _copied
-                                ? AppTheme.primaryDark
-                                : Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ],
       ),
     );
-  }
-
-  // ──────────────────────────────────────────────────
+  }// ──────────────────────────────────────────────────
   // Proof Upload Section
   // ──────────────────────────────────────────────────
   Widget _buildProofUploadSection() {
@@ -686,16 +692,13 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
   // Phone Input Section
   // ──────────────────────────────────────────────────
   Widget _buildPhoneInputSection() {
-    final bool isWithdraw = widget.isWithdraw;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionLabel(
-          icon: isWithdraw
-              ? CupertinoIcons.creditcard_fill
-              : CupertinoIcons.phone_fill,
-          label: isWithdraw ? 'رقم الحساب المستلم' : 'رقم المحول منه',
-          step: isWithdraw ? '1' : '2',
+          icon: CupertinoIcons.phone_fill,
+          label: 'رقم المحول منه',
+          step: '2',
         ),
         const SizedBox(height: 12),
         Container(
@@ -721,9 +724,7 @@ class _TopUpProofPageState extends ConsumerState<TopUpProofPage>
               letterSpacing: 0.5,
             ),
             decoration: InputDecoration(
-              hintText: isWithdraw
-                  ? 'أدخل رقم المحفظة أو الحساب'
-                  : 'أدخل رقم التليفون',
+              hintText: 'أدخل رقم التليفون',
               hintStyle: TextStyle(
                 color: Colors.grey.shade400,
                 fontWeight: FontWeight.w400,

@@ -206,11 +206,10 @@ class BookingState extends _$BookingState {
     }
 
     try {
-      // Use selected schedule ID if available, otherwise use default
+      // Use selected schedule ID if available
       final scheduleId =
           state.selectedDepartureSchedule?.id ??
-          state.selectedReturnSchedule?.id ??
-          '00000000-0000-0000-0000-000000000000';
+          state.selectedReturnSchedule?.id;
 
       final result = await repository.createBooking(
         scheduleId: scheduleId,

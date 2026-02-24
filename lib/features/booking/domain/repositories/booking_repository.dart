@@ -29,7 +29,7 @@ abstract class BookingRepository {
 
   /// Create a new booking
   Future<Either<Failure, BookingEntity>> createBooking({
-    required String scheduleId,
+    String? scheduleId,
     required DateTime bookingDate,
     required String tripType,
     String? pickupStationId,

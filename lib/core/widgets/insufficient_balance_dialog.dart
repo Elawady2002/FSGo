@@ -83,7 +83,7 @@ class InsufficientBalanceDialog extends StatelessWidget {
                   Navigator.push(
                     context,
                     CupertinoPageRoute(
-                      builder: (_) => const TopUpAmountPage(isWithdraw: false),
+                      builder: (_) => const TopUpAmountPage(),
                     ),
                   );
                 },
