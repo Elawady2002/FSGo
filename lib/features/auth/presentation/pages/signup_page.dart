@@ -89,100 +89,85 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 style: AppTheme.textTheme.displayLarge?.copyWith(
                   color: Colors.black,
                 ),
-              ).animate().fadeIn().slideX(),
+              ),
               const SizedBox(height: 8),
               Text(
                 "انضم لينا وابدأ رحلتك.",
                 style: AppTheme.textTheme.bodyLarge?.copyWith(
                   color: AppTheme.textSecondary,
                 ),
-              ).animate().fadeIn(delay: 200.ms).slideX(),
+              ),
               const SizedBox(height: 32),
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     CustomInput(
-                          controller: _nameController,
-                          hintText: "الاسم بالكامل",
-                          prefixIcon: CupertinoIcons.person,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء إدخال الاسم';
-                            }
-                            return null;
-                          },
-                        )
-                        .animate()
-                        .fadeIn(delay: 300.ms)
-                        .slideY(begin: 0.2, end: 0),
+                      controller: _nameController,
+                      hintText: "الاسم بالكامل",
+                      prefixIcon: CupertinoIcons.person,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال الاسم';
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 16),
                     CustomInput(
-                          controller: _emailController,
-                          hintText: "البريد الإلكتروني",
-                          prefixIcon: CupertinoIcons.mail,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء إدخال البريد الإلكتروني';
-                            }
-                            if (!value.contains('@')) {
-                              return 'البريد الإلكتروني غير صحيح';
-                            }
-                            return null;
-                          },
-                        )
-                        .animate()
-                        .fadeIn(delay: 400.ms)
-                        .slideY(begin: 0.2, end: 0),
+                      controller: _emailController,
+                      hintText: "البريد الإلكتروني",
+                      prefixIcon: CupertinoIcons.mail,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال البريد الإلكتروني';
+                        }
+                        if (!value.contains('@')) {
+                          return 'البريد الإلكتروني غير صحيح';
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 16),
                     CustomInput(
-                          controller: _phoneController,
-                          hintText: "رقم الموبايل",
-                          prefixIcon: CupertinoIcons.phone,
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء إدخال رقم الموبايل';
-                            }
-                            if (value.length < 11) {
-                              return 'رقم الموبايل غير صحيح';
-                            }
-                            return null;
-                          },
-                        )
-                        .animate()
-                        .fadeIn(delay: 500.ms)
-                        .slideY(begin: 0.2, end: 0),
+                      controller: _phoneController,
+                      hintText: "رقم الموبايل",
+                      prefixIcon: CupertinoIcons.phone,
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال رقم الموبايل';
+                        }
+                        if (value.length < 11) {
+                          return 'رقم الموبايل غير صحيح';
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 16),
                     CustomInput(
-                          controller: _passwordController,
-                          hintText: "كلمة السر",
-                          prefixIcon: CupertinoIcons.lock,
-                          isPassword: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'الرجاء إدخال كلمة السر';
-                            }
-                            if (value.length < 6) {
-                              return 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
-                            }
-                            return null;
-                          },
-                        )
-                        .animate()
-                        .fadeIn(delay: 600.ms)
-                        .slideY(begin: 0.2, end: 0),
+                      controller: _passwordController,
+                      hintText: "كلمة السر",
+                      prefixIcon: CupertinoIcons.lock,
+                      isPassword: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال كلمة السر';
+                        }
+                        if (value.length < 6) {
+                          return 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
+                        }
+                        return null;
+                      },
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 32),
               _isLoading
                   ? const Center(child: CupertinoActivityIndicator())
-                  : CustomButton(text: "إنشاء حساب", onPressed: _handleSignup)
-                        .animate()
-                        .fadeIn(delay: 700.ms)
-                        .slideY(begin: 0.2, end: 0),
+                  : CustomButton(text: "إنشاء حساب", onPressed: _handleSignup),
               const SizedBox(height: 24),
               Wrap(
                 alignment: WrapAlignment.center,
@@ -199,10 +184,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Text(
+                    child: const Text(
                       "سجل دخول",
                       style: TextStyle(
-                        color: AppTheme.primaryColor,
+                        color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         decoration: TextDecoration.none,
@@ -211,7 +196,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 800.ms),
+              ),
             ],
           ),
         ),

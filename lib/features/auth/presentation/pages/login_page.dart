@@ -84,14 +84,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     color: Colors.black,
                     decoration: TextDecoration.none,
                   ),
-                ).animate().fadeIn().slideX(),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   "سجل دخولك عشان تكمل رحلتك.",
                   style: AppTheme.textTheme.bodyLarge?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
-                ).animate().fadeIn(delay: 200.ms).slideX(),
+                ),
                 const SizedBox(height: 48),
 
                 // Email field with validation
@@ -110,7 +110,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     }
                     return null;
                   },
-                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                ),
                 const SizedBox(height: 16),
 
                 // Password field with validation
@@ -128,7 +128,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     }
                     return null;
                   },
-                ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+                ),
                 const SizedBox(height: 16),
 
                 // Forgot password button
@@ -152,16 +152,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                     ),
                   ),
-                ).animate().fadeIn(delay: 500.ms),
+                ),
                 const SizedBox(height: 16),
 
                 // Login button
                 _isLoading
                     ? const Center(child: CupertinoActivityIndicator())
-                    : CustomButton(text: "تسجيل الدخول", onPressed: _handleLogin)
-                          .animate()
-                          .fadeIn(delay: 600.ms)
-                          .slideY(begin: 0.2, end: 0),
+                    : CustomButton(text: "تسجيل الدخول", onPressed: _handleLogin),
                 const SizedBox(height: 24),
 
                 // Signup link
@@ -199,7 +196,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                     ),
                   ],
-                ).animate().fadeIn(delay: 700.ms),
+                ),
               ],
             ),
           ),

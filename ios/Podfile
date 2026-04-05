@@ -123,13 +123,14 @@ post_install do |installer|
       puts "Deep patching script: #{script_path}"
       script_content = File.read(script_path)
       
-      # Step A: Fix readlink/realpath with python3 (Ultra-aggressive)
-      updated_content = script_content.gsub(/readlink -f\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
-      updated_content = updated_content.gsub(/readlink\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
-      updated_content = updated_content.gsub(/realpath -mq\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
-      updated_content = updated_content.gsub(/realpath\s+([^ \n]+)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      # Step A: Fix readlink/realpath with python3 (Ultra-aggressive & Space-Safe)
+      # We target specifically the CocoaPods patterns and ensure the arguments are quoted
+      updated_content = script_content.gsub(/readlink -f ("?\$[^"]+"?|[^ \n]*)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      updated_content = updated_content.gsub(/readlink ("?\$[^"]+"?|[^ \n]*)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      updated_content = updated_content.gsub(/realpath -mq ("?\$[^"]+"?|[^ \n]*)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
+      updated_content = updated_content.gsub(/realpath ("?\$[^"]+"?|[^ \n]*)/, 'python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" \1')
       
-      # Step B: Fix rsync --delete error in Xcode 16
+      # Step B: Fix rsync --delete error in Xcode 16 + Space-Safe
       updated_content = updated_content.gsub('rsync --delete', 'rsync')
       
       # Step C (Removed): Fixing common codesign errors by allowing Xcode to handle signing

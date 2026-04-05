@@ -40,10 +40,11 @@ class _CustomInputState extends State<CustomInput> {
 
     return Container(
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.textSecondary.withValues(alpha: 0.1),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
@@ -56,48 +57,64 @@ class _CustomInputState extends State<CustomInput> {
         style: GoogleFonts.cairo(color: AppTheme.textPrimary, fontSize: 16),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: GoogleFonts.cairo(color: CupertinoColors.systemGrey),
+          hintStyle: GoogleFonts.cairo(
+            color: CupertinoColors.systemGrey,
+            fontSize: 14,
+          ),
           fillColor: widget.backgroundColor ?? Colors.white,
           filled: true,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+            horizontal: 20,
+            vertical: 18,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: const BorderSide(
               color: AppTheme.primaryColor,
               width: 1.5,
             ),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: const BorderSide(color: Colors.red, width: 1),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: const BorderSide(color: Colors.red, width: 1.5),
           ),
           prefixIcon: widget.prefixIcon != null
-              ? Icon(widget.prefixIcon, color: CupertinoColors.systemGrey)
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Icon(
+                    widget.prefixIcon,
+                    color: CupertinoColors.systemGrey,
+                    size: 20,
+                  ),
+                )
               : null,
+          prefixIconConstraints: const BoxConstraints(minWidth: 40),
           suffixIcon: showBuiltInToggle
               ? GestureDetector(
                   onTap: () => setState(() => _obscure = !_obscure),
-                  child: Icon(
-                    _obscure ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
-                    color: CupertinoColors.systemGrey,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Icon(
+                      _obscure ? CupertinoIcons.eye_slash : CupertinoIcons.eye,
+                      color: CupertinoColors.systemGrey,
+                      size: 20,
+                    ),
                   ),
                 )
               : widget.suffixIcon,
+          suffixIconConstraints: const BoxConstraints(minWidth: 40),
         ),
       ),
     );

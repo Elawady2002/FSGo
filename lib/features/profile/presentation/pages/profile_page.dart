@@ -320,50 +320,104 @@ class ProfilePage extends ConsumerWidget {
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showCupertinoDialog(
+    showDialog(
       context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: const Text('تسجيل الخروج'),
-        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('إلغاء'),
-            onPressed: () => Navigator.pop(dialogContext),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: const Text('خروج'),
-            onPressed: () async {
-              Navigator.pop(dialogContext); // Close dialog
-
-              // Call logout from auth provider
-              final error = await ref.read(authProvider.notifier).logout();
-
-              if (error == null && context.mounted) {
-                // Logout successful, navigate to login
-                Navigator.of(context).pushAndRemoveUntil(
-                  CupertinoPageRoute(builder: (_) => const LoginPage()),
-                  (route) => false,
-                );
-              } else if (context.mounted) {
-                // Show error if logout failed
-                showCupertinoDialog(
-                  context: context,
-                  builder: (context) => CupertinoAlertDialog(
-                    title: const Text('خطأ'),
-                    content: Text(error ?? 'حدث خطأ أثناء تسجيل الخروج'),
-                    actions: [
-                      CupertinoDialogAction(
-                        child: const Text('حسناً'),
-                        onPressed: () => Navigator.pop(context),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                CupertinoIcons.square_arrow_right,
+                color: Color(0xFFFF3B30),
+                size: 28,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'تسجيل الخروج',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'هل تريد الخروج من حسابك؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                    ],
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ),
                   ),
-                );
-              }
-            },
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(dialogContext);
+                        await ref.read(authProvider.notifier).logout();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            CupertinoPageRoute(builder: (_) => const LoginPage()),
+                            (route) => false,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF3B30),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'خروج',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          fontFamily: 'Cairo',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
