@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_app/core/theme/app_theme.dart';
 import 'package:my_app/l10n/app_localizations.dart';
@@ -325,39 +326,45 @@ class ProfilePage extends ConsumerWidget {
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 50),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 55),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                CupertinoIcons.square_arrow_right,
-                color: Color(0xFFFF3B30),
-                size: 28,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF3B30).withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFFFF3B30),
+                  size: 26,
+                ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              const SizedBox(height: 20),
+              Text(
                 'تسجيل الخروج',
-                style: TextStyle(
+                style: GoogleFonts.cairo(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
-                  fontFamily: 'Cairo',
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'هل تريد الخروج من حسابك؟',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: GoogleFonts.cairo(
                   fontSize: 14,
                   color: AppTheme.textSecondary,
-                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               Row(
                 children: [
                   Expanded(
@@ -369,13 +376,12 @@ class ProfilePage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'إلغاء',
-                        style: TextStyle(
-                          color: Colors.black,
+                        style: GoogleFonts.cairo(
+                          color: Colors.black54,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          fontFamily: 'Cairo',
                         ),
                       ),
                     ),
@@ -403,12 +409,11 @@ class ProfilePage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'خروج',
-                        style: TextStyle(
+                        style: GoogleFonts.cairo(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          fontFamily: 'Cairo',
                         ),
                       ),
                     ),
