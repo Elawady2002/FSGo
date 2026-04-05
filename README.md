@@ -1,16 +1,39 @@
-# my_app
+# Fielsekkia Driver
 
-A new Flutter project.
+Flutter application for the **Driver & Coordinator** side of the Fielsekkia transport platform.
+
+## Supported Roles
+
+| Role | Description |
+|------|-------------|
+| Driver (`driver`) | Receives trip requests and reports live location |
+| Office Owner (`office_owner`) | Manages a fleet of drivers from an office dashboard |
+| Station Owner (`station_owner`) | Manages drivers assigned to a specific station |
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+```bash
+cd driver
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Architecture
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Follows Clean Architecture with three layers:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Presentation** — Flutter Widgets + Riverpod providers
+- **Domain** — Pure Dart entities and use cases
+- **Data** — Supabase repositories and models
+
+## Database Migration
+
+Before running for the first time, apply the Supabase migration:
+
+```
+driver/scripts/migrations/002_driver_onboarding.sql
+```
+
+## Constitution
+
+This app complies with the [Fielsekkia Constitution](../.specify/memory/constitution.md).

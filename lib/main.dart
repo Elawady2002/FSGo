@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_app/l10n/app_localizations.dart';
+import 'package:fielsekkia_driver/l10n/app_localizations.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/widgets/auth_wrapper.dart';

@@ -15,6 +15,9 @@ class SignupUseCase {
     required String phone,
     String? studentId,
     String? universityId,
+    String userType = 'driver',
+    String? officeName,
+    String? stationName,
   }) =>
       _repository.signUp(
         email: email,
@@ -23,5 +26,8 @@ class SignupUseCase {
         phone: phone,
         studentId: studentId,
         universityId: universityId,
+        userType: userType,
+        officeName: officeName,
+        stationName: stationName,
       );
 }

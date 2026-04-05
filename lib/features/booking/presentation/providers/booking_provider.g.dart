@@ -6,7 +6,7 @@ part of 'booking_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$bookingRepositoryHash() => r'3cca7ae606ca7009304f239b540afc65fb798db8';
+String _$bookingRepositoryHash() => r'e0f339f0fae207f3f7bc7e3c92250f0e92b23541';
 
 /// See also [bookingRepository].
 @ProviderFor(bookingRepository)
@@ -24,7 +24,7 @@ final bookingRepositoryProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef BookingRepositoryRef = AutoDisposeProviderRef<BookingRepository>;
-String _$userBookingsHash() => r'5365a8677cb2ae527af4f21d5439094e9e19e958';
+String _$userBookingsHash() => r'fd9185e1e28d21cdc72b9fef9ecaec893a42a4d5';
 
 /// See also [userBookings].
 @ProviderFor(userBookings)
@@ -42,7 +42,7 @@ final userBookingsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UserBookingsRef = AutoDisposeFutureProviderRef<List<BookingEntity>>;
-String _$upcomingBookingHash() => r'384f7216a1f768b1ccdd56190bc8fb0716e69053';
+String _$upcomingBookingHash() => r'd2fee3f00a3bd953911f72d8bb65380a723d0c58';
 
 /// See also [upcomingBooking].
 @ProviderFor(upcomingBooking)
@@ -60,7 +60,7 @@ final upcomingBookingProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UpcomingBookingRef = AutoDisposeFutureProviderRef<BookingEntity?>;
-String _$bookingStateHash() => r'7a27a1433503e6d9151b75ef4db68caf70cefb1d';
+String _$bookingStateHash() => r'c08d719d2e20ddeaf219fbcb78bd92089a36721b';
 
 /// See also [BookingState].
 @ProviderFor(BookingState)

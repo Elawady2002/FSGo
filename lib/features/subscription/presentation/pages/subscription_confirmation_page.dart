@@ -5,7 +5,7 @@ import 'dart:math' as math;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/ticket_card.dart';
 import '../../../home/presentation/pages/home_page.dart';
-import 'package:my_app/core/utils/digit_converter.dart';
+import 'package:fielsekkia_driver/core/utils/digit_converter.dart';
 
 class SubscriptionConfirmationPage extends StatefulWidget {
   final String planName;

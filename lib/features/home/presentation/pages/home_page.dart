@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:my_app/core/theme/app_theme.dart';
-import 'package:my_app/core/utils/logger.dart';
-import 'package:my_app/l10n/app_localizations.dart';
-import 'package:my_app/core/providers/locale_provider.dart';
-import 'package:my_app/features/booking/presentation/pages/booking_page.dart';
-import 'package:my_app/core/widgets/ios_components.dart';
+import 'package:fielsekkia_driver/core/theme/app_theme.dart';
+import 'package:fielsekkia_driver/core/utils/logger.dart';
+import 'package:fielsekkia_driver/l10n/app_localizations.dart';
+import 'package:fielsekkia_driver/core/providers/locale_provider.dart';
+import 'package:fielsekkia_driver/features/booking/presentation/pages/booking_page.dart';
+import 'package:fielsekkia_driver/core/widgets/ios_components.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../providers/home_provider.dart';
 import '../../../booking/domain/entities/city_entity.dart';
@@ -19,6 +19,7 @@ import '../../../booking/domain/entities/arrival_station_entity.dart';
 import '../../../booking/presentation/providers/booking_provider.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/domain/entities/user_entity.dart';
 import '../../../profile/presentation/providers/wallet_provider.dart';
 import '../widgets/unified_trip_card.dart';
 import '../widgets/wallet_widget.dart';
@@ -43,6 +44,12 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     AppLogger.debug('HomePage build called');
     final l10n = AppLocalizations.of(context)!;
+    final user = ref.watch(authProvider).valueOrNull;
+
+    // Role-based UI branching (FR-005)
+    if (user != null && user.isCoordinator) {
+      return _CoordinatorDashboard(user: user);
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -1726,6 +1733,86 @@ class _LocationSelectionDrawerState
                   const TextStyle(),
               child: Text(title, textAlign: TextAlign.center),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Coordinator Dashboard (FR-005: office_owner / station_owner)
+// ---------------------------------------------------------------------------
+class _CoordinatorDashboard extends ConsumerWidget {
+  final UserEntity user;
+
+  const _CoordinatorDashboard({required this.user});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roleLabel = user.isOfficeOwner ? 'مكتب' : 'محطة';
+    final entityName = user.isOfficeOwner
+        ? (user.officeName ?? 'مكتبي')
+        : (user.stationName ?? 'محطتي');
+
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: AppTheme.backgroundColor,
+        elevation: 0,
+        title: Text(
+          'لوحة التحكم - $roleLabel',
+          style: AppTheme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                entityName,
+                style: AppTheme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'مرحباً ${user.fullName.split(' ').first}، هنا تتابع السائقين النشطين.',
+                style: AppTheme.textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        CupertinoIcons.person_2_fill,
+                        size: 64,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'لا يوجد سائقون نشطون الآن',
+                        style: AppTheme.textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

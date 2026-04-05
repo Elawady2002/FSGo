@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
-import 'package:my_app/core/utils/digit_converter.dart';
+import 'package:fielsekkia_driver/core/utils/digit_converter.dart';
 
 class DigitalTicket extends StatelessWidget {
   final String title;

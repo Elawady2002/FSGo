@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Fi El Sekka (Debug)",
+      "name": "Fielsekkia Driver (Debug)",
       "request": "launch",
       "type": "dart",
       "args": ["--dart-define-from-file=.env"]
     },
     {
-      "name": "Fi El Sekka (Release)",
+      "name": "Fielsekkia Driver (Release)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",

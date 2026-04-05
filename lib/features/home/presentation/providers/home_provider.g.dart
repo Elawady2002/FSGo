@@ -452,7 +452,7 @@ class _ArrivalStationsProviderElement
       (origin as ArrivalStationsProvider).pickupStationId;
 }
 
-String _$routesHash() => r'4225e3185e23df4cbfae621444990fbc5e3dfbeb';
+String _$routesHash() => r'da788a5aad97dd959d48fa497f01a6b4cd172eed';
 
 /// See also [routes].
 @ProviderFor(routes)
@@ -569,7 +569,7 @@ class _RoutesProviderElement
   String? get universityId => (origin as RoutesProvider).universityId;
 }
 
-String _$schedulesHash() => r'6b7a38efc46ea5819becbc9da827d648f87aa8c1';
+String _$schedulesHash() => r'abfa14e5b56a7278b69c50265f0ec5224373bd73';
 
 /// See also [schedules].
 @ProviderFor(schedules)

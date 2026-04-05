@@ -14,6 +14,9 @@ abstract class AuthRepository {
     required String phone,
     String? studentId,
     String? universityId,
+    String userType = 'driver',
+    String? officeName,
+    String? stationName,
   });
 
   /// Sign in an existing user with email and password

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:my_app/core/theme/app_theme.dart';
-import 'package:my_app/core/widgets/custom_button.dart';
-import 'package:my_app/l10n/app_localizations.dart';
-import 'package:my_app/features/payment/presentation/pages/top_up_amount_page.dart';
+import 'package:fielsekkia_driver/core/theme/app_theme.dart';
+import 'package:fielsekkia_driver/core/widgets/custom_button.dart';
+import 'package:fielsekkia_driver/l10n/app_localizations.dart';
+import 'package:fielsekkia_driver/features/payment/presentation/pages/top_up_amount_page.dart';
 
 class InsufficientBalanceDialog extends StatelessWidget {
   final double currentBalance;

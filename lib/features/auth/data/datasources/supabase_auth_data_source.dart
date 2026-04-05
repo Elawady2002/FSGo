@@ -20,6 +20,9 @@ class SupabaseAuthDataSource implements AuthDataSource {
     required String phone,
     String? studentId,
     String? universityId,
+    String userType = 'driver',
+    String? officeName,
+    String? stationName,
   }) async {
     try {
       // Sign up with Supabase Auth
@@ -31,6 +34,7 @@ class SupabaseAuthDataSource implements AuthDataSource {
           'phone': phone,
           'student_id': studentId,
           'university_id': universityId,
+          'user_type': userType,
         },
       );
 
@@ -49,9 +53,11 @@ class SupabaseAuthDataSource implements AuthDataSource {
         'full_name': fullName,
         'student_id': studentId,
         'university_id': universityId,
-        'user_type': 'student', // Default to student
+        'user_type': userType,
         'is_verified': isVerified,
         'created_at': DateTime.now().toIso8601String(),
+        'office_name': officeName,
+        'station_name': stationName,
       };
 
       try {
@@ -60,11 +66,17 @@ class SupabaseAuthDataSource implements AuthDataSource {
         // Return user from local data to avoid RLS race conditions
         return UserModel.fromJson(userData);
       } on PostgrestException catch (e) {
-        // If insert fails (e.g. duplicate email or phone in public.users)
+        // 23505 = unique violation — a Supabase trigger already inserted the
+        // row before our manual insert. Fetch the existing record and return it.
         if (e.code == '23505') {
-          throw Exception(
-            'بيانات مكررة (البريد الإلكتروني أو الهاتف) موجودة بالفعل في جدول المستخدمين. يرجى حذف البيانات القديمة.',
-          );
+          final existing = await _client
+              .from('users')
+              .select()
+              .eq('id', userId)
+              .maybeSingle();
+          if (existing != null) {
+            return UserModel.fromJson(existing);
+          }
         }
         rethrow;
       }

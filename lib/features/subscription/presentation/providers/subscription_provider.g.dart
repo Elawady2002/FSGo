@@ -27,7 +27,7 @@ final subscriptionDataSourceProvider =
 typedef SubscriptionDataSourceRef =
     AutoDisposeProviderRef<SubscriptionDataSource>;
 String _$subscriptionRepositoryHash() =>
-    r'27bedcb0dda880bd2682b4415a9d73b099c3184a';
+    r'd271e4c14fa11776665a57d9121eeb92ff0fd0aa';
 
 /// See also [subscriptionRepository].
 @ProviderFor(subscriptionRepository)

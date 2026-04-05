@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/domain/entities/user_entity.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_input.dart';
@@ -23,6 +24,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _entityNameController = TextEditingController();
+
+  UserType _selectedRole = UserType.driver;
   bool _isLoading = false;
 
   @override
@@ -31,8 +35,19 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _entityNameController.dispose();
     super.dispose();
   }
+
+  String get _entityNameHint {
+    if (_selectedRole == UserType.officeOwner) return 'اسم المكتب';
+    if (_selectedRole == UserType.stationOwner) return 'اسم المحطة';
+    return '';
+  }
+
+  bool get _showEntityName =>
+      _selectedRole == UserType.officeOwner ||
+      _selectedRole == UserType.stationOwner;
 
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
@@ -46,13 +61,19 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               _emailController.text.trim(),
               _passwordController.text.trim(),
               _phoneController.text.trim(),
+              userType: _selectedRole.name,
+              officeName: _selectedRole == UserType.officeOwner
+                  ? _entityNameController.text.trim()
+                  : null,
+              stationName: _selectedRole == UserType.stationOwner
+                  ? _entityNameController.text.trim()
+                  : null,
             );
 
         if (mounted) {
           setState(() => _isLoading = false);
 
           if (error == null) {
-            // Navigate directly to HomePage
             Navigator.pushAndRemoveUntil(
               context,
               CupertinoPageRoute(builder: (_) => const HomePage()),
@@ -98,7 +119,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   color: AppTheme.textSecondary,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+
+              // Role Selector
+              _RoleSelector(
+                selected: _selectedRole,
+                onChanged: (role) => setState(() {
+                  _selectedRole = role;
+                  _entityNameController.clear();
+                }),
+              ),
+              const SizedBox(height: 24),
+
               Form(
                 key: _formKey,
                 child: Column(
@@ -162,6 +194,20 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                         return null;
                       },
                     ),
+                    if (_showEntityName) ...[
+                      const SizedBox(height: 16),
+                      CustomInput(
+                        controller: _entityNameController,
+                        hintText: _entityNameHint,
+                        prefixIcon: CupertinoIcons.building_2_fill,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'الرجاء إدخال $_entityNameHint';
+                          }
+                          return null;
+                        },
+                      ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.1),
+                    ],
                   ],
                 ),
               ),
@@ -183,13 +229,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       decorationColor: Colors.transparent,
                     ),
                   ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(builder: (_) => LoginPage()),
-                          );
-                        },
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (_) => LoginPage()),
+                      );
+                    },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
@@ -209,6 +255,89 @@ class _SignupPageState extends ConsumerState<SignupPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RoleSelector extends StatelessWidget {
+  final UserType selected;
+  final ValueChanged<UserType> onChanged;
+
+  const _RoleSelector({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    const roles = [
+      (label: 'سائق', role: UserType.driver, icon: CupertinoIcons.car_fill),
+      (
+        label: 'مكتب',
+        role: UserType.officeOwner,
+        icon: CupertinoIcons.building_2_fill
+      ),
+      (
+        label: 'محطة',
+        role: UserType.stationOwner,
+        icon: CupertinoIcons.map_pin_ellipse
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'نوع الحساب',
+          style: AppTheme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: roles.map((entry) {
+            final isSelected = selected == entry.role;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: GestureDetector(
+                  onTap: () => onChanged(entry.role),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.black : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            isSelected ? Colors.black : Colors.grey.shade300,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          entry.icon,
+                          color: isSelected ? Colors.white : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          entry.label,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.grey,
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

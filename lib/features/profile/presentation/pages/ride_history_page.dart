@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_app/l10n/app_localizations.dart';
-import 'package:my_app/core/theme/app_theme.dart';
-import 'package:my_app/features/booking/presentation/providers/booking_provider.dart';
-import 'package:my_app/features/booking/domain/entities/booking_entity.dart';
-import 'package:my_app/features/subscription/presentation/providers/subscription_provider.dart';
-import 'package:my_app/features/subscription/domain/entities/subscription_entity.dart';
+import 'package:fielsekkia_driver/l10n/app_localizations.dart';
+import 'package:fielsekkia_driver/core/theme/app_theme.dart';
+import 'package:fielsekkia_driver/features/booking/presentation/providers/booking_provider.dart';
+import 'package:fielsekkia_driver/features/booking/domain/entities/booking_entity.dart';
+import 'package:fielsekkia_driver/features/subscription/presentation/providers/subscription_provider.dart';
+import 'package:fielsekkia_driver/features/subscription/domain/entities/subscription_entity.dart';
 
 class RideHistoryPage extends ConsumerStatefulWidget {
   const RideHistoryPage({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_app/core/utils/digit_converter.dart';
+import 'package:fielsekkia_driver/core/utils/digit_converter.dart';
 import '../theme/app_theme.dart';
 
 enum UnifiedCalendarMode {

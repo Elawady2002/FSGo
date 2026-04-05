@@ -4,7 +4,9 @@ import 'package:equatable/equatable.dart';
 enum UserType {
   student,
   driver,
-  admin;
+  admin,
+  stationOwner,
+  officeOwner;
 
   String toJson() => name;
 
@@ -32,6 +34,8 @@ class UserEntity extends Equatable {
   final DateTime? subscriptionStartDate;
   final DateTime? subscriptionEndDate;
   final String? subscriptionStatus;
+  final String? officeName;
+  final String? stationName;
 
   const UserEntity({
     required this.id,
@@ -48,6 +52,8 @@ class UserEntity extends Equatable {
     this.subscriptionStartDate,
     this.subscriptionEndDate,
     this.subscriptionStatus,
+    this.officeName,
+    this.stationName,
   });
 
   @override
@@ -66,16 +72,19 @@ class UserEntity extends Equatable {
     subscriptionStartDate,
     subscriptionEndDate,
     subscriptionStatus,
+    officeName,
+    stationName,
   ];
 
-  /// Check if user is a student
+  /// Role Getters
   bool get isStudent => userType == UserType.student;
-
-  /// Check if user is a driver
   bool get isDriver => userType == UserType.driver;
-
-  /// Check if user is an admin
   bool get isAdmin => userType == UserType.admin;
+  bool get isStationOwner => userType == UserType.stationOwner;
+  bool get isOfficeOwner => userType == UserType.officeOwner;
+
+  /// Check if user is a coordinator (office or station owner)
+  bool get isCoordinator => isOfficeOwner || isStationOwner;
 
   /// Check if user has an active subscription
   bool get hasActiveSubscription {
@@ -106,6 +115,8 @@ class UserEntity extends Equatable {
     DateTime? subscriptionStartDate,
     DateTime? subscriptionEndDate,
     String? subscriptionStatus,
+    String? officeName,
+    String? stationName,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -123,6 +134,8 @@ class UserEntity extends Equatable {
           subscriptionStartDate ?? this.subscriptionStartDate,
       subscriptionEndDate: subscriptionEndDate ?? this.subscriptionEndDate,
       subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
+      officeName: officeName ?? this.officeName,
+      stationName: stationName ?? this.stationName,
     );
   }
 }

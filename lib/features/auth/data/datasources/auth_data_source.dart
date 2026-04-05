@@ -12,6 +12,9 @@ abstract class AuthDataSource {
     required String phone,
     String? studentId,
     String? universityId,
+    String userType = 'driver',
+    String? officeName,
+    String? stationName,
   });
 
   Future<UserModel> signIn({

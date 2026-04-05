@@ -1,5 +1,5 @@
-name: my_app
-description: "A new Flutter project."
+name: fielsekkia_driver
+description: "Fielsekkia Driver & Coordinator Platform."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -125,7 +125,7 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "lib/assets/image/launcher_icons/logo.png"
-  adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "lib/assets/image/launcher_icons/logo.png"
+  image_path: "assets/images/logo_driver.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/logo_driver.png"
   remove_alpha_ios: true

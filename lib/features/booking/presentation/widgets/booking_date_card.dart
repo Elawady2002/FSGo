@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
-import 'package:my_app/core/utils/digit_converter.dart';
+import 'package:fielsekkia_driver/core/utils/digit_converter.dart';
 import 'premium_calendar_sheet.dart';
 
 class BookingDateCard extends StatelessWidget {
