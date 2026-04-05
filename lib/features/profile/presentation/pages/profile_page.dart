@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:my_app/core/theme/app_theme.dart';
 import 'package:my_app/l10n/app_localizations.dart';
 import 'package:my_app/core/providers/locale_provider.dart';
+import 'package:my_app/core/widgets/custom_button.dart';
 import 'personal_data_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/login_page.dart';
@@ -443,7 +444,7 @@ class ProfilePage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
-            CupertinoIcons.check_mark_circled_fill,
+            CupertinoIcons.checkmark_circle_fill,
             color: Colors.green,
             size: 18,
           ),
