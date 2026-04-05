@@ -179,7 +179,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          CupertinoPageRoute(builder: (_) => const SignupPage()),
+                          CupertinoPageRoute(builder: (_) => SignupPage()),
                         );
                       },
                       style: TextButton.styleFrom(

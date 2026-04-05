@@ -182,13 +182,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       decorationColor: Colors.transparent,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(builder: (_) => const LoginPage()),
-                      );
-                    },
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(builder: (_) => LoginPage()),
+                          );
+                        },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
