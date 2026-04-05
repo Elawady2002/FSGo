@@ -148,6 +148,20 @@ class SupabaseAuthDataSource implements AuthDataSource {
           await _client.from('users').insert(recoveredUserData);
           LoggerService.info('User $userId recovered to public.users table');
           return UserModel.fromJson(recoveredUserData);
+        } on PostgrestException catch (e) {
+          // Trigger already inserted the row — just fetch it
+          if (e.code == '23505') {
+            final existing = await _client
+                .from('users')
+                .select()
+                .eq('id', userId)
+                .maybeSingle();
+            if (existing != null) return UserModel.fromJson(existing);
+          }
+          LoggerService.error('Failed to recover user', error: e);
+          throw Exception(
+            'حساب المستخدم غير موجود في قاعدة البيانات. فشلت محاولة الاستعادة التلقائية. يرجى التواصل مع الدعم.',
+          );
         } catch (recoveryError) {
           LoggerService.error('Failed to recover user', error: recoveryError);
           throw Exception(
