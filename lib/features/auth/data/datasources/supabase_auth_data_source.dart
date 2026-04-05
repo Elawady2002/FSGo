@@ -117,57 +117,32 @@ class SupabaseAuthDataSource implements AuthDataSource {
           .maybeSingle(); // Use maybeSingle() to handle 0 or 1 results
 
       if (response == null) {
-        // Attempt to recover user data from Auth metadata if missing in public table
+        // Row not visible — may be an RLS race condition right after sign-in.
+        // The sign-in itself succeeded, so build the model from Auth metadata
+        // and return immediately. The DB record will be readable on the next
+        // request once the session is fully propagated.
         LoggerService.warning(
-          'User $userId not found in public.users table. Attempting recovery...',
+          'User $userId not found in public.users via SELECT. '
+          'Falling back to Auth metadata.',
         );
 
-        final user = authResponse.user!;
-        final metadata = user.userMetadata;
+        final authUser = authResponse.user!;
+        final metadata = authUser.userMetadata ?? {};
 
-        if (metadata == null || !metadata.containsKey('full_name')) {
-          throw Exception(
-            'حساب المستخدم غير موجود في قاعدة البيانات، ولا توجد بيانات كافية لاستعادته. يرجى التواصل مع الدعم.',
-          );
-        }
-
-        // Reconstruct user data
-        final recoveredUserData = {
-          'id': userId,
-          'email': email,
-          'phone': metadata['phone'] ?? '',
-          'full_name': metadata['full_name'] ?? '',
-          'student_id': metadata['student_id'],
-          'university_id': metadata['university_id'],
-          'user_type': 'student',
-          'is_verified': true, // Since they just logged in successfully
-          'created_at': DateTime.now().toIso8601String(),
-        };
-
-        try {
-          await _client.from('users').insert(recoveredUserData);
-          LoggerService.info('User $userId recovered to public.users table');
-          return UserModel.fromJson(recoveredUserData);
-        } on PostgrestException catch (e) {
-          // Trigger already inserted the row — just fetch it
-          if (e.code == '23505') {
-            final existing = await _client
-                .from('users')
-                .select()
-                .eq('id', userId)
-                .maybeSingle();
-            if (existing != null) return UserModel.fromJson(existing);
-          }
-          LoggerService.error('Failed to recover user', error: e);
-          throw Exception(
-            'حساب المستخدم غير موجود في قاعدة البيانات. فشلت محاولة الاستعادة التلقائية. يرجى التواصل مع الدعم.',
-          );
-        } catch (recoveryError) {
-          LoggerService.error('Failed to recover user', error: recoveryError);
-          throw Exception(
-            'حساب المستخدم غير موجود في قاعدة البيانات. فشلت محاولة الاستعادة التلقائية. يرجى التواصل مع الدعم.',
-          );
-        }
+        return UserModel(
+          id: authUser.id,
+          email: authUser.email ?? email,
+          phone: metadata['phone'] ?? '',
+          fullName: metadata['full_name'] ?? '',
+          userType: UserType.fromJson(
+            metadata['user_type'] ?? 'driver',
+          ),
+          studentId: metadata['student_id'],
+          universityId: metadata['university_id'],
+          avatarUrl: metadata['avatar_url'],
+          isVerified: true,
+          createdAt: DateTime.tryParse(authUser.createdAt) ?? DateTime.now(),
+        );
       }
 
       return UserModel.fromJson(response);
