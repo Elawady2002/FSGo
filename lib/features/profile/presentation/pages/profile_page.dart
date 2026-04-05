@@ -255,33 +255,104 @@ class ProfilePage extends ConsumerWidget {
   }
 
   void _showContactDialog(BuildContext context) {
-    showCupertinoDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('تواصل معنا'),
-        content: const Column(
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 8),
-            Text('يمكنك التواصل معنا عبر:'),
-            SizedBox(height: 12),
-            Text(
-              'البريد الإلكتروني:\nsupport@fielsekka.com',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'الهاتف:\n01000000000',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                CupertinoIcons.phone_fill,
+                color: AppTheme.primaryDark,
+                size: 28,
+              ),
             ),
+            const SizedBox(height: 16),
+            Text(
+              'تواصل معنا',
+              style: GoogleFonts.cairo(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'يمكنك التواصل معنا عبر:',
+              style: GoogleFonts.cairo(color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            _buildContactItem(
+              CupertinoIcons.mail,
+              'البريد الإلكتروني',
+              'support@fielsekka.com',
+            ),
+            const SizedBox(height: 12),
+            _buildContactItem(
+              CupertinoIcons.phone,
+              'الهاتف',
+              '01000000000',
+            ),
+            const SizedBox(height: 32),
+            CustomButton(
+              text: 'حسناً',
+              onPressed: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('حسناً'),
-            onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildContactItem(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F7),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppTheme.primaryDark),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.cairo(
+                  fontSize: 12,
+                  color: AppTheme.textTertiary,
+                ),
+              ),
+              Text(
+                value,
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -289,31 +360,102 @@ class ProfilePage extends ConsumerWidget {
   }
 
   void _showTermsDialog(BuildContext context) {
-    showCupertinoDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('الشروط والأحكام'),
-        content: const SingleChildScrollView(
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 8),
-              Text(
-                '1. استخدام الخدمة مخصص للطلاب فقط\n\n'
-                '2. يجب الالتزام بمواعيد الرحلات\n\n'
-                '3. الدفع مقدماً قبل الحجز\n\n'
-                '4. يمكن إلغاء الحجز قبل 24 ساعة\n\n'
-                '5. الحفاظ على النظافة داخل الباص',
-                textAlign: TextAlign.right,
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.doc_text,
+                      color: AppTheme.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'الشروط والأحكام',
+                    style: GoogleFonts.cairo(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    _buildTermItem('1. استخدام الخدمة مخصص للطلاب فقط'),
+                    _buildTermItem('2. يجب الالتزام بمواعيد الرحلات'),
+                    _buildTermItem('3. الدفع مقدماً قبل الحجز'),
+                    _buildTermItem('4. يمكن إلغاء الحجز قبل 24 ساعة'),
+                    _buildTermItem('5. الحفاظ على النظافة داخل الباص'),
+                    _buildTermItem('6. الالتزام بتعليمات المشرفين'),
+                    _buildTermItem('7. عدم إحداث ضجيج داخل المركبة'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              CustomButton(
+                text: 'حسناً',
+                onPressed: () => Navigator.pop(context),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('حسناً'),
-            onPressed: () => Navigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildTermItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            CupertinoIcons.check_mark_circled_fill,
+            color: Colors.green,
+            size: 18,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                height: 1.6,
+              ),
+            ),
           ),
         ],
       ),
@@ -321,107 +463,121 @@ class ProfilePage extends ConsumerWidget {
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 55),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF3B30).withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: Color(0xFFFF3B30),
-                  size: 26,
-                ),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (bottomSheetContext) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle for the bottom sheet
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(height: 20),
-              Text(
-                'تسجيل الخروج',
-                style: GoogleFonts.cairo(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'هل تريد الخروج من حسابك؟',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFFF3B30),
+                size: 32,
               ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'تسجيل الخروج',
+              style: GoogleFonts.cairo(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'هل تريد الخروج من حسابك؟',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 16,
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(bottomSheetContext),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                      side: BorderSide(color: Colors.grey.shade200),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        'إلغاء',
-                        style: GoogleFonts.cairo(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                    ),
+                    child: Text(
+                      'إلغاء',
+                      style: GoogleFonts.cairo(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.pop(dialogContext);
-                        await ref.read(authProvider.notifier).logout();
-                        if (context.mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            CupertinoPageRoute(builder: (_) => const LoginPage()),
-                            (route) => false,
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF3B30),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(bottomSheetContext);
+                      await ref.read(authProvider.notifier).logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          CupertinoPageRoute(builder: (_) => const LoginPage()),
+                          (route) => false,
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF3B30),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        'خروج',
-                        style: GoogleFonts.cairo(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                    ),
+                    child: Text(
+                      'خروج',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16), // Bottom safe area space
+          ],
         ),
       ),
     );
@@ -520,23 +676,104 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
   }
 
   Future<void> _removeImage() async {
-    // Show confirmation dialog
-    final confirmed = await showCupertinoDialog<bool>(
+    // Show confirmation bottom sheet
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('حذف الصورة'),
-        content: const Text('هل تريد حذف صورة الملف الشخصي؟'),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('إلغاء'),
-            onPressed: () => Navigator.pop(context, false),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: const Text('حذف'),
-            onPressed: () => Navigator.pop(context, true),
-          ),
-        ],
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                CupertinoIcons.trash,
+                color: Color(0xFFFF3B30),
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'حذف الصورة',
+              style: GoogleFonts.cairo(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'هل أنت متأكد من حذف الصورة الشخصية؟',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 16,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                      side: BorderSide(color: Colors.grey.shade200),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      'إلغاء',
+                      style: GoogleFonts.cairo(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF3B30),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      'حذف',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
 
