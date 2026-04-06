@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/domain/entities/user_entity.dart';
 import '../../domain/entities/drawer_item.dart';
-import '../pages/profile_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/onboarding_page.dart';
 import '../../../../main.dart' show appNavigatorKey;

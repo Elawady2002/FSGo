@@ -1760,11 +1760,11 @@ class _CoordinatorDashboard extends ConsumerWidget {
 
   const _CoordinatorDashboard({required this.user});
 
-  static const _kBg = Color(0xFF1A1A1A);
-  static const _kCard = Color(0xFF242424);
+  static const _kBg = Colors.white;
+  static const _kCard = Color(0xFFF5F5F5);
   static const _kLime = Color(0xFFC9D420);
-  static const _kText = Colors.white;
-  static const _kSubText = Color(0xFF9E9E9E);
+  static const _kText = Color(0xFF1A1A1A);
+  static const _kSubText = Color(0xFF666666);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1776,7 +1776,8 @@ class _CoordinatorDashboard extends ConsumerWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: _kBg,
@@ -1960,10 +1961,10 @@ class _ActionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  static const _kCard = Color(0xFF242424);
+  static const _kCard = Color(0xFFF5F5F5);
   static const _kLime = Color(0xFFC9D420);
-  static const _kText = Colors.white;
-  static const _kSubText = Color(0xFF9E9E9E);
+  static const _kText = Color(0xFF1A1A1A);
+  static const _kSubText = Color(0xFF666666);
 
   const _ActionCard({
     required this.icon,
