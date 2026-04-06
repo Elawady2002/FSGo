@@ -32,8 +32,13 @@ class _DutyDashboardPageState extends ConsumerState<DutyDashboardPage> {
   @override
   void initState() {
     super.initState();
-    // TODO: Subscribe to push notifications when FCM is configured
-    // NotificationService.instance.initialize();
+    NotificationService.instance.subscribeToAssignments(widget.driverId);
+  }
+
+  @override
+  void dispose() {
+    NotificationService.instance.unsubscribe();
+    super.dispose();
   }
 
   @override
