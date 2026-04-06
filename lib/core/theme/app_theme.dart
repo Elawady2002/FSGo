@@ -30,35 +30,10 @@ class AppTheme {
   static const double defaultPadding = 16.0;
   static const double bottomSheetRadius = 24.0;
 
-  // InDrive-style Shadows
-  static List<BoxShadow> get cardShadow => [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.08),
-      blurRadius: 16,
-      offset: const Offset(0, 4),
-    ),
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.04),
-      blurRadius: 8,
-      offset: const Offset(0, 2),
-    ),
-  ];
-
-  static List<BoxShadow> get floatingShadow => [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.12),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-  ];
-
-  static List<BoxShadow> get bottomSheetShadow => [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.15),
-      blurRadius: 30,
-      offset: const Offset(0, -4),
-    ),
-  ];
+  // InDrive-style Shadows (Removed as requested: "No Glow")
+  static List<BoxShadow> get cardShadow => [];
+  static List<BoxShadow> get floatingShadow => [];
+  static List<BoxShadow> get bottomSheetShadow => [];
 
   // Text Theme with Google Fonts (Cairo for Arabic)
   static TextTheme get textTheme => GoogleFonts.cairoTextTheme(

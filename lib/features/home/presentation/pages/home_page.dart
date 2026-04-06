@@ -1821,10 +1821,8 @@ class _CoordinatorDashboard extends ConsumerWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: _kLime.withValues(alpha: 0.15),
+                          color: const Color(0xFF1A1A1A),
                           shape: BoxShape.circle,
-                          border: Border.all(
-                              color: _kLime.withValues(alpha: 0.4)),
                         ),
                         child: Center(
                           child: Text(
@@ -1832,7 +1830,7 @@ class _CoordinatorDashboard extends ConsumerWidget {
                                 ? user.fullName[0]
                                 : '?',
                             style: GoogleFonts.cairo(
-                              color: _kLime,
+                              color: const Color(0xFFC9D420),
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1961,11 +1959,6 @@ class _ActionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  static const _kCard = Color(0xFFF5F5F5);
-  static const _kLime = Color(0xFFC9D420);
-  static const _kText = Color(0xFF1A1A1A);
-  static const _kSubText = Color(0xFF666666);
-
   const _ActionCard({
     required this.icon,
     required this.title,
@@ -1978,23 +1971,13 @@ class _ActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: _kCard,
+          color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _kLime.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: _kLime, size: 22),
-            ),
-            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2002,21 +1985,23 @@ class _ActionCard extends StatelessWidget {
                   Text(
                     title,
                     style: GoogleFonts.cairo(
-                      color: _kText,
+                      color: const Color(0xFFC9D420),
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style:
-                        GoogleFonts.cairo(color: _kSubText, fontSize: 12),
+                    style: GoogleFonts.cairo(
+                      color: Colors.white60,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
             ),
             const Icon(CupertinoIcons.chevron_right,
-                color: _kSubText, size: 16),
+                color: Colors.white38, size: 16),
           ],
         ),
       ),

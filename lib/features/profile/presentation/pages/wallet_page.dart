@@ -61,13 +61,7 @@ class WalletPage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                  border: Border.all(color: Colors.white10),
                 ),
                 child: Column(
                   children: [
@@ -148,14 +142,14 @@ class WalletPage extends ConsumerWidget {
                             children: [
                               Icon(
                                 CupertinoIcons.plus_circle_fill,
-                                color: Colors.white,
+                                color: Color(0xFFC9D420), // Lime Color
                                 size: 28,
                               ),
                               SizedBox(height: 8),
                               Text(
                                 'شحن رصيد',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Color(0xFFC9D420), // Lime Color
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -275,13 +269,7 @@ class WalletPage extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
         ),
         child: Row(
           children: [

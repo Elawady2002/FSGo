@@ -328,89 +328,164 @@ class _DutyCard extends StatelessWidget {
   }
 }
 
-// ── Empty State ────────────────────────────────────────────────
-
-class _EmptyDuty extends ConsumerWidget {
+class _EmptyDuty extends ConsumerStatefulWidget {
   final DateTime date;
   final VoidCallback onChangeDate;
   const _EmptyDuty({required this.date, required this.onChangeDate});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_EmptyDuty> createState() => _EmptyDutyState();
+}
+
+class _EmptyDutyState extends ConsumerState<_EmptyDuty> {
+  bool _isRefreshing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final status = ref.watch(driverStatusProvider);
     final isOffline = status == DriverActivityStatus.offline;
 
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Status Indicator
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              color: isOffline ? Colors.white12 : _kLime.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isOffline ? _kSubText : Color(status.colorHex),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Animated Illustration Background
+            Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _kCard, // Replacing glow with solid card color
+              ),
+              child: Icon(
+                CupertinoIcons.car_detailed,
+                size: 64,
+                color: isOffline ? _kSubText.withValues(alpha: 0.3) : _kLime,
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isOffline ? _kSubText : Color(status.colorHex),
+            const SizedBox(height: 32),
+
+            // Status Indicator (Simplified - No Glow)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isOffline ? _kSubText : _kLime,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isOffline ? 'خارج الخدمة حالياً' : status.label,
+                    style: GoogleFonts.cairo(
+                      color: isOffline ? _kSubText : _kText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Text(
+              'لا توجد رحلات مجدولة',
+              style: GoogleFonts.cairo(
+                color: _kText,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isOffline
+                  ? 'يرجى تفعيل حالة "متاح" لتتمكن من استلام وتأكيد المهام والرحلات من الإدارة.'
+                  : 'لم يتم تعيين أي رحلات لك في هذا اليوم. يمكنك التحقق من توفر مهام جديدة بالضغط على الزر أدناه.',
+              style: GoogleFonts.cairo(
+                color: _kSubText,
+                fontSize: 14,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+
+            // Action Buttons (Redesigned: #1A1A1A Bg, #C9D420 Text, No Glow)
+            if (!isOffline)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isRefreshing ? null : _handleRefresh,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A1A1A),
+                    foregroundColor: _kLime,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: _isRefreshing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(_kLime),
+                          ),
+                        )
+                      : const Icon(CupertinoIcons.refresh, size: 20),
+                  label: Text(
+                    'تحديث المهام',
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  isOffline ? 'خارج الخدمة' : status.label,
-                  style: GoogleFonts.cairo(
-                    color: isOffline ? _kSubText : Color(status.colorHex),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+              ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: widget.onChangeDate,
+              icon: const Icon(CupertinoIcons.calendar, size: 18),
+              label: Text(
+                'عرض يوم آخر',
+                style: GoogleFonts.cairo(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: _kSubText,
+              ),
             ),
-          ),
-          Icon(
-            CupertinoIcons.car_detailed,
-            size: 64,
-            color: isOffline ? _kSubText : _kLime,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'لا توجد رحلات معينه لك لهذا اليوم',
-            style: GoogleFonts.cairo(
-              color: _kText,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isOffline
-                ? 'أنت حالياً خارج الخدمة، ستظهر الرحلات عند تفعيل حسابك'
-                : 'لم يتم تعيينك في أي رحلة لهذا اليوم',
-            style: GoogleFonts.cairo(color: _kSubText, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          TextButton.icon(
-            onPressed: onChangeDate,
-            icon: const Icon(CupertinoIcons.calendar, color: _kLime),
-            label: Text(
-              'تغيير التاريخ',
-              style: GoogleFonts.cairo(color: _kLime),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    setState(() => _isRefreshing = true);
+    // Simulate refresh or call actual provider
+    final user = ref.read(authProvider).value;
+    if (user != null) {
+      await ref.refresh(driverAssignedSchedulesProvider(user.id).future);
+    }
+    await Future.delayed(const Duration(seconds: 1)); // UX delay
+    if (mounted) setState(() => _isRefreshing = false);
   }
 }

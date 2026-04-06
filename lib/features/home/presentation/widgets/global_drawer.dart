@@ -7,6 +7,7 @@ import '../../domain/entities/drawer_item.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/onboarding_page.dart';
+import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
 import '../../../../main.dart' show appNavigatorKey;
 
 const _kBg = Colors.white;
@@ -39,6 +40,16 @@ class GlobalDrawer extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
+                  // Dashboard Item
+                  _buildDrawerItem(
+                    context,
+                    DrawerItem(
+                      title: 'لوحة التحكم',
+                      icon: CupertinoIcons.home,
+                      onTap: () => _navigateToDashboard(context),
+                    ),
+                    isSelected: selectedIndex == 1,
+                  ),
                   // Profile Item
                   _buildDrawerItem(
                     context,
@@ -49,10 +60,9 @@ class GlobalDrawer extends ConsumerWidget {
                     ),
                     isSelected: selectedIndex == 0,
                   ),
-                  // Divider
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Divider(color: Colors.white12),
+                    child: Divider(color: Colors.black12),
                   ),
                   // Logout Item
                   _buildDrawerItem(
@@ -173,10 +183,19 @@ class GlobalDrawer extends ConsumerWidget {
     );
   }
 
+  void _navigateToDashboard(BuildContext context) {
+    if (user != null) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => DutyDashboardPage(driverId: user!.id)),
+        (route) => false,
+      );
+    }
+  }
+
   void _navigateToProfile(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const ProfilePage()));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ProfilePage()),
+    );
   }
 
   Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
