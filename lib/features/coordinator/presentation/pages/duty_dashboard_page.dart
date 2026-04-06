@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../providers/driver_duty_provider.dart';
 import 'manifest_page.dart';
+import '../../../../core/services/notification_service.dart';
 
 const _kBg = Color(0xFF1A1A1A);
 const _kCard = Color(0xFF242424);
@@ -23,6 +24,18 @@ class DutyDashboardPage extends ConsumerStatefulWidget {
 
 class _DutyDashboardPageState extends ConsumerState<DutyDashboardPage> {
   DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.instance.subscribeToAssignments(widget.driverId);
+  }
+
+  @override
+  void dispose() {
+    NotificationService.instance.unsubscribe();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
