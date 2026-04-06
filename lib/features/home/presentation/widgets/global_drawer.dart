@@ -209,16 +209,14 @@ class GlobalDrawer extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    await ref.read(authProvider.notifier).logout();
-
-    // Force navigation to OnboardingPage using the global key.
-    // This is necessary because the drawer context may be unmounted
-    // by the time the auth state change propagates, and in some cases
-    // Supabase can restore a cached session (e.g. a different user type)
-    // before AuthWrapper re-renders — causing the wrong page to appear.
+    // Navigate first — before logout — to avoid any flash of intermediate screens.
+    // The auth state change that follows will keep the user on OnboardingPage.
     appNavigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const OnboardingPage()),
       (route) => false,
     );
+
+    // Logout in background after navigation is already complete.
+    ref.read(authProvider.notifier).logout();
   }
 }
