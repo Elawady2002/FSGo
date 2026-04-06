@@ -1,6 +1,6 @@
 -- ============================================================
 -- Migration 003: Multi-Role Platform
--- Adds coordinator workflow fields and office subscription plans
+-- Run this in Supabase Dashboard → SQL Editor
 -- ============================================================
 
 -- 1. Extend schedules table for coordinator workflow
@@ -13,50 +13,50 @@ ALTER TABLE public.schedules
   ADD COLUMN IF NOT EXISTS base_fare      NUMERIC(10,2),
   ADD COLUMN IF NOT EXISTS admin_margin   NUMERIC(10,2) DEFAULT 0;
 
--- Only admin can set is_approved — block coordinator from flipping it directly
--- (Enforce via RLS: coordinators may INSERT/UPDATE other fields but not is_approved)
-CREATE POLICY IF NOT EXISTS "Coordinators cannot approve own schedules"
-  ON public.schedules
-  FOR UPDATE
-  USING (auth.uid() = coordinator_id)
-  WITH CHECK (is_approved = OLD.is_approved);  -- cannot change is_approved
+-- Make route_id nullable so coordinator schedules don't need a university route
+ALTER TABLE public.schedules
+  ALTER COLUMN route_id DROP NOT NULL;
 
--- Coordinators can read their own schedules
-CREATE POLICY IF NOT EXISTS "Coordinators read own schedules"
+-- 2. RLS policies for schedules (drop first to avoid duplicates)
+DROP POLICY IF EXISTS "Coordinators read own schedules" ON public.schedules;
+DROP POLICY IF EXISTS "Coordinators insert schedules"   ON public.schedules;
+
+CREATE POLICY "Coordinators read own schedules"
   ON public.schedules FOR SELECT
   USING (auth.uid() = coordinator_id OR auth.uid() = driver_id);
 
--- Coordinators can insert schedules
-CREATE POLICY IF NOT EXISTS "Coordinators insert schedules"
+CREATE POLICY "Coordinators insert schedules"
   ON public.schedules FOR INSERT
   WITH CHECK (auth.uid() = coordinator_id);
 
--- 2. Add boarding_status to bookings for passenger check-in
+-- 3. Add boarding_status to bookings for passenger check-in
 ALTER TABLE public.bookings
   ADD COLUMN IF NOT EXISTS boarding_status TEXT NOT NULL DEFAULT 'booked'
     CHECK (boarding_status IN ('booked', 'boarded'));
 
--- 3. Create office_subscription_plans table
+-- 4. Create office_subscription_plans table
 CREATE TABLE IF NOT EXISTS public.office_subscription_plans (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  coordinator_id  UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  plan_name       TEXT        NOT NULL,
-  plan_type       TEXT        NOT NULL CHECK (plan_type IN ('monthly', 'semester')),
+  id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  coordinator_id  UUID          NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  plan_name       TEXT          NOT NULL,
+  plan_type       TEXT          NOT NULL CHECK (plan_type IN ('monthly', 'semester')),
   price           NUMERIC(10,2) NOT NULL,
-  duration_days   INT         NOT NULL,
+  duration_days   INT           NOT NULL,
   max_students    INT,
-  is_active       BOOLEAN     NOT NULL DEFAULT TRUE,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  is_active       BOOLEAN       NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
 ALTER TABLE public.office_subscription_plans ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Coordinators manage own plans"
+DROP POLICY IF EXISTS "Coordinators manage own plans" ON public.office_subscription_plans;
+
+CREATE POLICY "Coordinators manage own plans"
   ON public.office_subscription_plans
   USING (auth.uid() = coordinator_id)
   WITH CHECK (auth.uid() = coordinator_id);
 
--- 4. Index for fast driver-duty lookups
+-- 5. Indexes for fast lookups
 CREATE INDEX IF NOT EXISTS idx_schedules_driver_id
   ON public.schedules(driver_id)
   WHERE driver_id IS NOT NULL;
