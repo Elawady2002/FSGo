@@ -35,6 +35,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../coordinator/presentation/pages/schedule_manager_page.dart';
 import '../../../coordinator/presentation/pages/office_plans_page.dart';
 import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
+import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -51,6 +52,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     final user = ref.watch(authProvider).valueOrNull;
 
     // Role-based UI branching (FR-005)
+    if (user != null && user.isAdmin) {
+      return AdminDashboardPage(admin: user);
+    }
     if (user != null && user.isCoordinator) {
       return _CoordinatorDashboard(user: user);
     }

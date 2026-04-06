@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../config/supabase_config.dart';
 import '../config/env.dart';
 import '../services/logger_service.dart';
+import '../services/notification_service.dart';
 
 /// Provider that handles all app-wide initialization synchronously
 /// but is consumed asynchronously to avoid blocking the main thread.
@@ -30,5 +31,7 @@ final appStartupProvider = FutureProvider<void>((ref) async {
     throw Exception('Failed to initialize backend services: $e');
   }
 
+  // 4. Initialize Push Notifications (graceful — won't crash if Firebase not configured)
+  await NotificationService.instance.initialize();
   LoggerService.info('App Initialization Complete');
 });

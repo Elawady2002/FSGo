@@ -1,123 +1,134 @@
-// ignore_for_file: avoid_print
+import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'logger_service.dart';
 
-/// Push notification service — Firebase Cloud Messaging (FCM)
-///
-/// SETUP REQUIRED before this activates:
-/// 1. Create a Firebase project at console.firebase.google.com
-/// 2. Add Android (com.abdallah.fielsekkia.driver) & iOS apps in Firebase
-/// 3. Download google-services.json → driver/android/app/
-/// 4. Download GoogleService-Info.plist → driver/ios/Runner/
-/// 5. Add firebase_core + firebase_messaging to pubspec.yaml
-/// 6. Run: dart run build_runner build
-/// 7. Uncomment the imports and code below
-///
-/// Supabase Webhook to trigger FCM:
-/// - Table: schedules | Event: UPDATE | When: driver_id changes
-/// - Payload: POST to your Edge Function URL
-/// - Edge Function uses admin FCM SDK to send to driver's device token
-
-class NotificationService {
-  static NotificationService? _instance;
-  NotificationService._();
-  static NotificationService get instance =>
-      _instance ??= NotificationService._();
-
-  // FCM device token for this device — saved to users table after init
-  String? _deviceToken;
-  String? get deviceToken => _deviceToken;
-
-  /// Call once at app startup (after Supabase.initialize)
-  Future<void> initialize() async {
-    // TODO: Uncomment after adding firebase_core + firebase_messaging
-    //
-    // await Firebase.initializeApp(
-    //   options: DefaultFirebaseOptions.currentPlatform,
-    // );
-    //
-    // final messaging = FirebaseMessaging.instance;
-    //
-    // // Request permission (iOS)
-    // await messaging.requestPermission(
-    //   alert: true,
-    //   badge: true,
-    //   sound: true,
-    // );
-    //
-    // _deviceToken = await messaging.getToken();
-    // if (_deviceToken != null) {
-    //   await _saveTokenToDb(_deviceToken!);
-    // }
-    //
-    // // Handle foreground messages
-    // FirebaseMessaging.onMessage.listen(_onMessage);
-    //
-    // // Handle notification taps when app is in background
-    // FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
-
-    print('[NotificationService] Firebase not yet configured — see setup instructions in this file.');
-  }
-
-  /// Save FCM token to Supabase users table for server-side targeting
-  Future<void> _saveTokenToDb(String token) async {
-    // TODO: Uncomment after setup
-    // final userId = Supabase.instance.client.auth.currentUser?.id;
-    // if (userId == null) return;
-    // await Supabase.instance.client
-    //     .from('users')
-    //     .update({'fcm_token': token})
-    //     .eq('id', userId);
-  }
-
-  void _onMessage(dynamic message) {
-    // TODO: Show in-app banner using top_notification.dart widget
-    print('[NotificationService] Foreground message: $message');
-  }
-
-  void _onMessageOpenedApp(dynamic message) {
-    // TODO: Navigate to DutyDashboardPage when driver taps notification
-    print('[NotificationService] Notification tapped: $message');
-  }
+/// Background message handler — must be a top-level function
+@pragma('vm:entry-point')
+Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
+  // Firebase is already initialized in the background isolate
+  LoggerService.info(
+    'Background FCM: ${message.notification?.title} — ${message.data}',
+  );
 }
 
-// ── Supabase Edge Function template (deploy separately) ────────
-//
-// File: supabase/functions/notify-driver/index.ts
-//
-// import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-//
-// serve(async (req) => {
-//   const { record } = await req.json();
-//   if (!record.driver_id || !record.is_approved) {
-//     return new Response("skip", { status: 200 });
-//   }
-//
-//   // Fetch driver's FCM token from users table
-//   const { data: driver } = await supabaseAdmin
-//     .from("users")
-//     .select("fcm_token")
-//     .eq("id", record.driver_id)
-//     .single();
-//
-//   if (!driver?.fcm_token) return new Response("no token", { status: 200 });
-//
-//   // Send via FCM HTTP v1 API
-//   const response = await fetch("https://fcm.googleapis.com/v1/projects/YOUR_PROJECT/messages:send", {
-//     method: "POST",
-//     headers: {
-//       "Authorization": `Bearer ${Deno.env.get("FCM_ACCESS_TOKEN")}`,
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({
-//       message: {
-//         token: driver.fcm_token,
-//         notification: {
-//           title: "مهمة جديدة",
-//           body: `رحلة ${record.origin} → ${record.destination} في ${record.departure_time}`,
-//         },
-//         data: { schedule_id: record.id },
-//       },
-//     }),
-//   });
-//
-//   return new Response(await response.text(), { status: response.status });
-// });
+class NotificationService {
+  NotificationService._();
+  static final NotificationService instance = NotificationService._();
+
+  FirebaseMessaging get _fcm => FirebaseMessaging.instance;
+
+  /// Call once after Supabase.initialize() in main()
+  Future<void> initialize() async {
+    // ── 1. Initialize Firebase ─────────────────────────────────────
+    // SETUP REQUIRED:
+    //   Android: place google-services.json  → driver/android/app/
+    //   iOS:     place GoogleService-Info.plist → driver/ios/Runner/
+    //   Then run: flutter pub get
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      LoggerService.warning(
+        'Firebase not configured yet. Push notifications disabled. '
+        'Add google-services.json (Android) and GoogleService-Info.plist (iOS).',
+      );
+      return;
+    }
+
+    // ── 2. Register background handler ─────────────────────────────
+    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+
+    // ── 3. Request permission (iOS / Android 13+) ──────────────────
+    final settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    LoggerService.info(
+        'FCM permission: ${settings.authorizationStatus.name}');
+
+    if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+
+    // ── 4. Get & save device token ─────────────────────────────────
+    await _refreshAndSaveToken();
+
+    // Token may rotate — keep it updated
+    _fcm.onTokenRefresh.listen(_saveToken);
+
+    // ── 5. Foreground messages ─────────────────────────────────────
+    FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+
+    // ── 6. Notification tap (background → foreground) ──────────────
+    FirebaseMessaging.onMessageOpenedApp.listen(_onNotificationTap);
+
+    // ── 7. iOS: show notifications while app is in foreground ──────
+    await _fcm.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    LoggerService.info('NotificationService initialized ✓');
+  }
+
+  // ── Token management ───────────────────────────────────────────
+
+  Future<void> _refreshAndSaveToken() async {
+    try {
+      String? token;
+      if (Platform.isIOS) {
+        // iOS needs APNs token first
+        await _fcm.getAPNSToken();
+      }
+      token = await _fcm.getToken();
+      if (token != null) await _saveToken(token);
+    } catch (e) {
+      LoggerService.error('Failed to get FCM token', error: e);
+    }
+  }
+
+  Future<void> _saveToken(String token) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      await Supabase.instance.client
+          .from('users')
+          .update({'fcm_token': token}).eq('id', userId);
+      LoggerService.info('FCM token saved for user $userId');
+    } catch (e) {
+      LoggerService.error('Failed to save FCM token', error: e);
+    }
+  }
+
+  // ── Message handlers ───────────────────────────────────────────
+
+  void _onForegroundMessage(RemoteMessage message) {
+    LoggerService.info(
+        'Foreground FCM: ${message.notification?.title}');
+    // The system shows the notification automatically on Android 13+.
+    // For older Android or custom banners, show a SnackBar/overlay here
+    // using a global navigator key.
+  }
+
+  void _onNotificationTap(RemoteMessage message) {
+    LoggerService.info('Notification tapped: ${message.data}');
+    // Navigate to DutyDashboardPage when driver taps the notification.
+    // Use a GlobalKey<NavigatorState> passed from main() if needed.
+    final scheduleId = message.data['schedule_id'];
+    if (scheduleId != null) {
+      LoggerService.info('Navigate to schedule: $scheduleId');
+      // navigatorKey.currentState?.push(...)
+    }
+  }
+
+  /// Call on logout to clean up the token from DB
+  Future<void> clearToken() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    await Supabase.instance.client
+        .from('users')
+        .update({'fcm_token': null}).eq('id', userId);
+    await _fcm.deleteToken();
+  }
+}
