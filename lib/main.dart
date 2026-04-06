@@ -60,7 +60,7 @@ class _SplashScreen extends StatelessWidget {
             children: [
               // Logo or App Name
               Text(
-                'Fi El Sekka',
+                'FSGo',
                 style: GoogleFonts.cairo(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -129,7 +129,7 @@ class MyApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp(
-      title: 'Fi El Sekka',
+      title: 'FSGo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       locale: locale,
