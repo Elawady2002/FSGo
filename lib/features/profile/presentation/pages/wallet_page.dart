@@ -61,7 +61,13 @@ class WalletPage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: Colors.white10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -124,9 +130,8 @@ class WalletPage extends ConsumerWidget {
                         vertical: 20,
                         horizontal: 24,
                       ),
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
+                      child: ElevatedButton.icon(
+                        onPressed: () {
                           Navigator.push(
                             context,
                             CupertinoPageRoute(
@@ -134,19 +139,6 @@ class WalletPage extends ConsumerWidget {
                             ),
                           );
                         },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 12.0),
-                          child: const Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                CupertinoIcons.plus_circle_fill,
-                                color: Color(0xFFC9D420), // Lime Color
-                                size: 28,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
                                 'شحن رصيد',
                                 style: TextStyle(
                                   color: Color(0xFFC9D420), // Lime Color
@@ -269,7 +261,13 @@ class WalletPage extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [

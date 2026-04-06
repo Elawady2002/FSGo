@@ -4,21 +4,19 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // InDrive Colors - Adjusted for better contrast
-  static const Color primaryColor = Color(0xFF1A1A1A); // Premium Dark
-  static const Color primaryDark = Color(0xFF000000);
-  static const Color primaryLight = Color(0xFF333333);
-  static const Color accentColor = Color(0xFFC9D420); // Secondary helper color
+  // FSGo Premium Lime Theme Colors
+  static const Color primaryColor = Color(0xFFC9D420); // FSGo Lime
+  static const Color accentColor = Color(0xFF1A1A1A); // FSGo Dark (Contrast)
+  static const Color primaryDark = Color(0xFFAAB51B);
+  static const Color primaryLight = Color(0xFFE1EA55);
 
-  static const Color backgroundColor = Colors.white;
+  static const Color backgroundColor = Color(0xFFF5F5F7);
   static const Color surfaceColor = Colors.white;
   static const Color cardColor = Colors.white;
 
-  static const Color textPrimary = Color(0xFF000000);
+  static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color textSecondary = Color(0xFF666666);
-  static const Color textTertiary = Color(
-    0xFF757575,
-  ); // Darkened for better contrast
+  static const Color textTertiary = Color(0xFF9E9E9E);
 
   static const Color dividerColor = Color(0xFFE0E0E0);
   static const Color errorColor = Color(0xFFFF3B30);
@@ -30,10 +28,30 @@ class AppTheme {
   static const double defaultPadding = 16.0;
   static const double bottomSheetRadius = 24.0;
 
-  // InDrive-style Shadows (Removed as requested: "No Glow")
-  static List<BoxShadow> get cardShadow => [];
-  static List<BoxShadow> get floatingShadow => [];
-  static List<BoxShadow> get bottomSheetShadow => [];
+  // FSGo High-Fidelity Shadows
+  static List<BoxShadow> get cardShadow => [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 20,
+      offset: const Offset(0, 10),
+    ),
+  ];
+
+  static List<BoxShadow> get floatingShadow => [
+    BoxShadow(
+      color: primaryColor.withValues(alpha: 0.3),
+      blurRadius: 20,
+      offset: const Offset(0, 10),
+    ),
+  ];
+
+  static List<BoxShadow> get bottomSheetShadow => [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.1),
+      blurRadius: 30,
+      offset: const Offset(0, -4),
+    ),
+  ];
 
   // Text Theme with Google Fonts (Cairo for Arabic)
   static TextTheme get textTheme => GoogleFonts.cairoTextTheme(
@@ -241,13 +259,14 @@ class AppTheme {
 
   static ButtonStyle get elevatedButtonThemeData => ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
-    foregroundColor: accentColor,
-    elevation: 0,
+    foregroundColor: Colors.white,
+    elevation: 4,
+    shadowColor: primaryColor.withValues(alpha: 0.4),
     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(buttonRadius),
     ),
-    textStyle: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w600),
+    textStyle: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700),
   );
 
   static InputDecorationTheme get inputDecorationThemeData => InputDecorationTheme(

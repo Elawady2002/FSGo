@@ -431,28 +431,35 @@ class _EmptyDutyState extends ConsumerState<_EmptyDuty> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A1A1A),
                     foregroundColor: _kLime,
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+                  onPressed: _handleRefresh,
                   icon: _isRefreshing
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(_kLime),
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
                           ),
                         )
-                      : const Icon(CupertinoIcons.refresh, size: 20),
+                      : const Icon(CupertinoIcons.refresh_thick, size: 20),
                   label: Text(
-                    'تحديث المهام',
+                    _isRefreshing ? 'جاري التحديث...' : 'تحديث المهام',
                     style: GoogleFonts.cairo(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kLime,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    elevation: 8,
+                    shadowColor: _kLime.withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),

@@ -30,8 +30,7 @@ class IOSButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveColor = color ?? AppTheme.primaryColor;
-    final effectiveTextColor =
-        textColor ?? (isFilled ? AppTheme.accentColor : effectiveColor);
+    final effectiveTextColor = textColor ?? Colors.white;
 
     return CupertinoButton(
       padding: EdgeInsets.zero,
@@ -46,6 +45,7 @@ class IOSButton extends StatelessWidget {
           color: isFilled ? effectiveColor : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.buttonRadius),
           border: isFilled ? null : Border.all(color: effectiveColor, width: 2),
+          boxShadow: isFilled ? AppTheme.floatingShadow : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
