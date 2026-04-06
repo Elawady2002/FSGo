@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/domain/entities/user_entity.dart';
-import '../../../auth/presentation/pages/login_page.dart';
 import '../../domain/entities/drawer_item.dart';
 import '../pages/profile_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -164,7 +163,9 @@ class GlobalDrawer extends ConsumerWidget {
       selectedTileColor: _kLime.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onTap: () {
-        Navigator.of(context).pop();
+        if (!item.isDestructive) {
+          Navigator.of(context).pop();
+        }
         item.onTap?.call();
       },
     );
