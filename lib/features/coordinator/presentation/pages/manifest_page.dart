@@ -6,11 +6,11 @@ import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../../domain/entities/passenger_entity.dart';
 import '../providers/driver_duty_provider.dart';
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
+const _kBg = Colors.white;
+const _kCard = Color(0xFFF5F5F5);
 const _kLime = Color(0xFFC9D420);
-const _kText = Colors.white;
-const _kSubText = Color(0xFF9E9E9E);
+const _kText = Color(0xFF1A1A1A);
+const _kSubText = Color(0xFF666666);
 
 class ManifestPage extends ConsumerStatefulWidget {
   final CoordinatorScheduleEntity schedule;

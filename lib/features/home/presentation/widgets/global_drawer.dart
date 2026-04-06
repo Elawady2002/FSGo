@@ -6,12 +6,14 @@ import '../../../../core/domain/entities/user_entity.dart';
 import '../../domain/entities/drawer_item.dart';
 import '../pages/profile_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/pages/onboarding_page.dart';
+import '../../../../main.dart' show appNavigatorKey;
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
+const _kBg = Colors.white;
+const _kCard = Color(0xFFF5F5F5);
 const _kLime = Color(0xFFC9D420);
-const _kText = Colors.white;
-const _kSubText = Color(0xFF9E9E9E);
+const _kText = Color(0xFF1A1A1A);
+const _kSubText = Color(0xFF666666);
 
 /// Global Navigation Drawer for authenticated users
 /// Provides access to Profile, Logout, and other navigation items
@@ -207,8 +209,16 @@ class GlobalDrawer extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    // Perform logout — AuthWrapper will navigate to OnboardingPage automatically
-    // when auth state changes to null. No loading dialog needed (avoids stuck spinner).
     await ref.read(authProvider.notifier).logout();
+
+    // Force navigation to OnboardingPage using the global key.
+    // This is necessary because the drawer context may be unmounted
+    // by the time the auth state change propagates, and in some cases
+    // Supabase can restore a cached session (e.g. a different user type)
+    // before AuthWrapper re-renders — causing the wrong page to appear.
+    appNavigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const OnboardingPage()),
+      (route) => false,
+    );
   }
 }

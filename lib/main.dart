@@ -121,6 +121,10 @@ class _ErrorScreen extends StatelessWidget {
   }
 }
 
+/// Global navigator key — used to force navigation after logout regardless
+/// of build context lifecycle (e.g. from inside a Drawer widget).
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
@@ -129,6 +133,7 @@ class MyApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'FSGo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
