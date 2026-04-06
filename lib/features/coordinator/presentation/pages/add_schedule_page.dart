@@ -5,11 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/domain/entities/user_entity.dart';
 import '../providers/coordinator_provider.dart';
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
+const _kBg = Colors.white;
+const _kCard = Color(0xFFF5F5F5);
 const _kLime = Color(0xFFC9D420);
-const _kText = Colors.white;
-const _kSubText = Color(0xFF9E9E9E);
+const _kText = Color(0xFF1A1A1A);
+const _kSubText = Color(0xFF666666);
 
 class AddSchedulePage extends ConsumerStatefulWidget {
   final UserEntity coordinator;
@@ -144,7 +144,7 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                             : _kCard,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? _kLime : Colors.white12,
+                          color: isSelected ? _kLime : Colors.black12,
                         ),
                       ),
                       child: Text(

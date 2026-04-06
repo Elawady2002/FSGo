@@ -6,11 +6,11 @@ import '../../../../core/domain/entities/user_entity.dart';
 import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../providers/coordinator_provider.dart';
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
+const _kBg = Colors.white;
+const _kCard = Color(0xFFF5F5F5);
 const _kLime = Color(0xFFC9D420);
-const _kText = Colors.white;
-const _kSubText = Color(0xFF9E9E9E);
+const _kText = Color(0xFF1A1A1A);
+const _kSubText = Color(0xFF666666);
 
 /// Bottom sheet to pick and assign a driver to an approved schedule
 class DriverAssignerSheet extends ConsumerStatefulWidget {
@@ -53,7 +53,7 @@ class _DriverAssignerSheetState extends ConsumerState<DriverAssignerSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: Colors.black12,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -108,7 +108,7 @@ class _DriverAssignerSheetState extends ConsumerState<DriverAssignerSheet> {
                   shrinkWrap: true,
                   itemCount: drivers.length,
                   separatorBuilder: (_, _) => const Divider(
-                    color: Colors.white10,
+                    color: Colors.black12,
                     height: 1,
                   ),
                   itemBuilder: (_, i) {
@@ -122,7 +122,7 @@ class _DriverAssignerSheetState extends ConsumerState<DriverAssignerSheet> {
                       leading: CircleAvatar(
                         backgroundColor: isSelected
                             ? _kLime.withValues(alpha: 0.2)
-                            : Colors.white10,
+                            : Colors.black.withOpacity(0.05),
                         child: Text(
                           driver.fullName.isNotEmpty
                               ? driver.fullName[0]
@@ -163,7 +163,7 @@ class _DriverAssignerSheetState extends ConsumerState<DriverAssignerSheet> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    _selectedDriverId != null ? _kLime : Colors.white12,
+                    _selectedDriverId != null ? _kLime : Colors.black12,
                 foregroundColor: _kBg,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(

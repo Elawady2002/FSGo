@@ -9,11 +9,11 @@ import 'add_schedule_page.dart';
 import 'driver_assigner_page.dart';
 
 // ── Design tokens ──────────────────────────────────────────────
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
+const _kBg = Colors.white;
+const _kCard = Color(0xFFF5F5F5);
 const _kLime = Color(0xFFC9D420);
-const _kText = Colors.white;
-const _kSubText = Color(0xFF9E9E9E);
+const _kText = Color(0xFF1A1A1A);
+const _kSubText = Color(0xFF666666);
 
 class ScheduleManagerPage extends ConsumerStatefulWidget {
   final UserEntity coordinator;

@@ -6,11 +6,11 @@ import '../../../../core/domain/entities/user_entity.dart';
 import '../../domain/entities/office_plan_entity.dart';
 import '../providers/coordinator_provider.dart';
 
-const _kBg = Color(0xFF1A1A1A);
-const _kCard = Color(0xFF242424);
+const _kBg = Colors.white;
+const _kCard = Color(0xFFF5F5F5);
 const _kLime = Color(0xFFC9D420);
-const _kText = Colors.white;
-const _kSubText = Color(0xFF9E9E9E);
+const _kText = Color(0xFF1A1A1A);
+const _kSubText = Color(0xFF666666);
 
 class OfficePlansPage extends ConsumerStatefulWidget {
   final UserEntity coordinator;
@@ -391,7 +391,7 @@ class _AddPlanSheetState extends ConsumerState<_AddPlanSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: Colors.black12,
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
@@ -423,7 +423,7 @@ class _AddPlanSheetState extends ConsumerState<_AddPlanSheet> {
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: selected ? _kLime : Colors.white12),
+                          color: selected ? _kLime : Colors.black12),
                     ),
                     child: Text(
                       type.label,
@@ -571,7 +571,7 @@ class _DarkField extends StatelessWidget {
         hintText: hint,
         hintStyle: GoogleFonts.cairo(color: _kSubText, fontSize: 14),
         filled: true,
-        fillColor: const Color(0xFF1A1A1A),
+        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,

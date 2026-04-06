@@ -8,13 +8,29 @@ enum UserType {
   stationOwner,
   officeOwner;
 
-  String toJson() => name;
+  String toJson() {
+    switch (this) {
+      case UserType.stationOwner:
+        return 'station_owner';
+      case UserType.officeOwner:
+        return 'office_owner';
+      default:
+        return name;
+    }
+  }
 
   static UserType fromJson(String value) {
-    return UserType.values.firstWhere(
-      (type) => type.name == value,
-      orElse: () => UserType.student,
-    );
+    switch (value) {
+      case 'station_owner':
+        return UserType.stationOwner;
+      case 'office_owner':
+        return UserType.officeOwner;
+      default:
+        return UserType.values.firstWhere(
+          (type) => type.name == value,
+          orElse: () => UserType.student,
+        );
+    }
   }
 }
 

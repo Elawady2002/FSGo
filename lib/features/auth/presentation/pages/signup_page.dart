@@ -61,7 +61,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               _emailController.text.trim(),
               _passwordController.text.trim(),
               _phoneController.text.trim(),
-              userType: _selectedRole.name,
+              userType: _selectedRole.toJson(),
               officeName: _selectedRole == UserType.officeOwner
                   ? _entityNameController.text.trim()
                   : null,
