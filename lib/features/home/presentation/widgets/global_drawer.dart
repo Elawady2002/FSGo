@@ -207,35 +207,8 @@ class GlobalDrawer extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    // Show loading indicator
-    if (!context.mounted) return;
-    showCupertinoDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CupertinoActivityIndicator(radius: 15)),
-    );
-
-    // Perform logout
-    final error = await ref.read(authProvider.notifier).logout();
-
-    if (context.mounted) {
-      // Close loading indicator
-      Navigator.of(context).pop();
-
-      if (error != null) {
-        // Show error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'خطأ في تسجيل الخروج: $error',
-              style: GoogleFonts.cairo(),
-            ),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-      // Note: No manual navigation here.
-      // AuthWrapper will handle the transition automatically when the user state becomes null.
-    }
+    // Perform logout — AuthWrapper will navigate to OnboardingPage automatically
+    // when auth state changes to null. No loading dialog needed (avoids stuck spinner).
+    await ref.read(authProvider.notifier).logout();
   }
 }
