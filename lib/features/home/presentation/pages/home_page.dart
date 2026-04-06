@@ -149,7 +149,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                           fit: BoxFit.cover,
                                           width: 48,
                                           height: 48,
-                                          placeholder: (_, __) => const Padding(
+                                          placeholder: (_, _) => const Padding(
                                             padding: EdgeInsets.all(8.0),
                                             child: Icon(
                                               CupertinoIcons.person_fill,
@@ -157,7 +157,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                               size: 24,
                                             ),
                                           ),
-                                          errorWidget: (_, __, ___) =>
+                                          errorWidget: (_, _, _) =>
                                               const Padding(
                                             padding: EdgeInsets.all(8.0),
                                             child: Icon(
@@ -1956,7 +1956,6 @@ class _ActionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  static const _kBg = Color(0xFF1A1A1A);
   static const _kCard = Color(0xFF242424);
   static const _kLime = Color(0xFFC9D420);
   static const _kText = Colors.white;

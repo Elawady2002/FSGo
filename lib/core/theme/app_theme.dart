@@ -5,11 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // InDrive Colors - Adjusted for better contrast
-  static const Color primaryColor = Color(
-    0xFFA8E600,
-  ); // Darker Green for visibility
-  static const Color primaryDark = Color(0xFF90CC00);
-  static const Color primaryLight = Color(0xFFC7FF00);
+  static const Color primaryColor = Color(0xFF1A1A1A); // Premium Dark
+  static const Color primaryDark = Color(0xFF000000);
+  static const Color primaryLight = Color(0xFF333333);
+  static const Color accentColor = Color(0xFFC9D420); // Secondary helper color
 
   static const Color backgroundColor = Colors.white;
   static const Color surfaceColor = Colors.white;
@@ -178,7 +177,7 @@ class AppTheme {
 
   static ButtonStyle get primaryButtonStyle => ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
-    foregroundColor: Colors.black,
+    foregroundColor: accentColor,
     elevation: 0,
     padding: const EdgeInsets.symmetric(vertical: 16),
     shape: RoundedRectangleBorder(
@@ -219,11 +218,11 @@ class AppTheme {
 
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
-        secondary: primaryColor,
+        secondary: accentColor,
         surface: surfaceColor,
         error: errorColor,
-        onPrimary: Colors.black,
-        onSecondary: Colors.black,
+        onPrimary: accentColor,
+        onSecondary: primaryColor,
         onSurface: textPrimary,
       ),
 
@@ -267,7 +266,7 @@ class AppTheme {
 
   static ButtonStyle get elevatedButtonThemeData => ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
-    foregroundColor: Colors.black,
+    foregroundColor: accentColor,
     elevation: 0,
     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
     shape: RoundedRectangleBorder(

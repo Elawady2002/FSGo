@@ -88,7 +88,7 @@ class _DutyDashboardPageState extends ConsumerState<DutyDashboardPage> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: filtered.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const SizedBox(height: 12),
                     itemBuilder: (context, i) {
                       return _DutyCard(

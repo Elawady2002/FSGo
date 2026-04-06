@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/services/logger_service.dart';
 import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../../domain/entities/office_plan_entity.dart';
 import '../../../../core/domain/entities/user_entity.dart';
@@ -19,7 +18,9 @@ class CoordinatorDataSource {
         .eq('coordinator_id', coordinatorId)
         .order('created_at', ascending: false);
 
-    return (response as List).map(_scheduleFromJson).toList();
+    return (response as List)
+        .map((e) => _scheduleFromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Create a new schedule (awaits admin approval)
@@ -100,7 +101,9 @@ class CoordinatorDataSource {
         .eq('coordinator_id', coordinatorId)
         .order('created_at', ascending: false);
 
-    return (response as List).map(_planFromJson).toList();
+    return (response as List)
+        .map((e) => _planFromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<OfficePlanEntity> createOfficePlan({
@@ -117,7 +120,7 @@ class CoordinatorDataSource {
       'plan_type': planType == OfficePlanType.monthly ? 'monthly' : 'semester',
       'price': price,
       'duration_days': durationDays,
-      if (maxStudents != null) 'max_students': maxStudents,
+      'max_students': maxStudents,
       'is_active': true,
     };
 

@@ -89,7 +89,7 @@ class _DriverAssignerSheetState extends ConsumerState<DriverAssignerSheet> {
                   padding: const EdgeInsets.all(32),
                   child: Column(
                     children: [
-                      const Icon(CupertinoIcons.person_slash,
+                      Icon(CupertinoIcons.person_crop_circle,
                           color: _kSubText, size: 48),
                       const SizedBox(height: 12),
                       Text(
@@ -107,7 +107,7 @@ class _DriverAssignerSheetState extends ConsumerState<DriverAssignerSheet> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: drivers.length,
-                  separatorBuilder: (_, __) => const Divider(
+                  separatorBuilder: (_, _) => const Divider(
                     color: Colors.white10,
                     height: 1,
                   ),

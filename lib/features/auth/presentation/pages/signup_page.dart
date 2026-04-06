@@ -109,7 +109,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               Text(
                 "حساب جديد",
                 style: AppTheme.textTheme.displayLarge?.copyWith(
-                  color: Colors.black,
+                  color: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(height: 8),
@@ -244,7 +244,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     child: Text(
                       'سجل دخول',
                       style: AppTheme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.black,
+                        color: AppTheme.primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -288,7 +288,7 @@ class _RoleSelector extends StatelessWidget {
           'نوع الحساب',
           style: AppTheme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: AppTheme.primaryColor,
           ),
         ),
         const SizedBox(height: 10),
@@ -304,25 +304,25 @@ class _RoleSelector extends StatelessWidget {
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.black : Colors.grey.shade100,
+                      color: isSelected ? AppTheme.primaryColor : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color:
-                            isSelected ? Colors.black : Colors.grey.shade300,
+                            isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
                       ),
                     ),
                     child: Column(
                       children: [
                         Icon(
                           entry.icon,
-                          color: isSelected ? Colors.white : Colors.grey,
+                          color: isSelected ? AppTheme.accentColor : Colors.grey,
                           size: 20,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           entry.label,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.grey,
+                            color: isSelected ? AppTheme.accentColor : Colors.grey,
                             fontSize: 12,
                             fontWeight: isSelected
                                 ? FontWeight.bold

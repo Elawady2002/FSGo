@@ -31,7 +31,7 @@ class IOSButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveColor = color ?? AppTheme.primaryColor;
     final effectiveTextColor =
-        textColor ?? (isFilled ? Colors.black : effectiveColor);
+        textColor ?? (isFilled ? AppTheme.accentColor : effectiveColor);
 
     return CupertinoButton(
       padding: EdgeInsets.zero,

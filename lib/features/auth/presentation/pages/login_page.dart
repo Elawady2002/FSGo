@@ -81,7 +81,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Text(
                   "أهلاً بيك!",
                   style: AppTheme.textTheme.displayLarge?.copyWith(
-                    color: Colors.black,
+                    color: AppTheme.primaryColor,
                     decoration: TextDecoration.none,
                   ),
                 ),
@@ -146,7 +146,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: const Text(
                       "نسيت كلمة السر؟",
                       style: TextStyle(
-                        color: Colors.black,
+                        color: AppTheme.primaryColor,
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.none,
                       ),
@@ -190,7 +190,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       child: Text(
                         'سجل دلوقتي',
                         style: AppTheme.textTheme.bodyLarge?.copyWith(
-                          color: Colors.black,
+                          color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
