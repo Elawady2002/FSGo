@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../config/supabase_config.dart';
 import '../config/env.dart';
 import '../services/logger_service.dart';
 import '../services/notification_service.dart';
+import '../../features/trip_management/data/services/trip_cache_service.dart';
 
 /// Provider that handles all app-wide initialization synchronously
 /// but is consumed asynchronously to avoid blocking the main thread.
@@ -31,7 +33,12 @@ final appStartupProvider = FutureProvider<void>((ref) async {
     throw Exception('Failed to initialize backend services: $e');
   }
 
-  // 4. Initialize Push Notifications (graceful — won't crash if Firebase not configured)
+  // 4. Initialize Hive (local offline cache)
+  await Hive.initFlutter();
+  await TripCacheService.init();
+  LoggerService.info('Hive offline cache initialized');
+
+  // 5. Initialize Push Notifications (graceful — won't crash if Firebase not configured)
   await NotificationService.instance.initialize();
   LoggerService.info('App Initialization Complete');
 });

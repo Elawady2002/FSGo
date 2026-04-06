@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../../domain/entities/passenger_entity.dart';
 import '../providers/driver_duty_provider.dart';
+import '../../../scanner/presentation/scanner_screen.dart';
+import '../../../trip_management/presentation/widgets/start_trip_button.dart';
 
 const _kBg = Colors.white;
 const _kCard = Color(0xFFF5F5F5);
@@ -42,7 +44,27 @@ class _ManifestPageState extends ConsumerState<ManifestPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(manifestProvider(_key));
 
+    final manifestKey = ManifestKey(widget.schedule.id, widget.date);
+
     return Scaffold(
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'scan_qr',
+            onPressed: () => Navigator.push(
+              context,
+              CupertinoPageRoute(
+                builder: (_) => ScannerScreen(manifestKey: manifestKey),
+              ),
+            ),
+            backgroundColor: _kLime,
+            foregroundColor: _kText,
+            icon: const Icon(CupertinoIcons.qrcode_viewfinder),
+            label: Text('مسح QR', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
       backgroundColor: _kBg,
       appBar: AppBar(
         backgroundColor: _kBg,

@@ -428,10 +428,6 @@ class _EmptyDutyState extends ConsumerState<_EmptyDuty> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _isRefreshing ? null : _handleRefresh,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A1A1A),
-                    foregroundColor: _kLime,
-                  onPressed: _handleRefresh,
                   icon: _isRefreshing
                       ? const SizedBox(
                           width: 18,
@@ -450,8 +446,8 @@ class _EmptyDutyState extends ConsumerState<_EmptyDuty> {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _kLime,
-                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF1A1A1A),
+                    foregroundColor: _kLime,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
                       vertical: 16,

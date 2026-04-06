@@ -34,6 +34,8 @@ import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../coordinator/presentation/pages/schedule_manager_page.dart';
 import '../../../coordinator/presentation/pages/office_plans_page.dart';
+import '../../../station_management/presentation/pages/fleet_dashboard_screen.dart';
+import '../../../station_management/presentation/widgets/payout_settlement_sheet.dart';
 import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 
@@ -1909,6 +1911,30 @@ class _CoordinatorDashboard extends ConsumerWidget {
                     ),
                   ),
                 if (user.isOfficeOwner) const SizedBox(height: 10),
+                if (user.isStationOwner) ...[
+                  _ActionCard(
+                    icon: CupertinoIcons.car_detailed,
+                    title: 'تخطيط الأسطول',
+                    subtitle: 'عدد المقاعد المحجوزة لكل وجهة',
+                    onTap: () => Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (_) => const FleetDashboardScreen(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _ActionCard(
+                    icon: CupertinoIcons.money_dollar_circle_fill,
+                    title: 'تسوية المدفوعات',
+                    subtitle: 'اعتمد مدفوعات السائقين برفع إيصال',
+                    onTap: () => PayoutSettlementSheet.show(
+                      context,
+                      managerId: user.id,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 _ActionCard(
                   icon: CupertinoIcons.person_crop_circle_badge_checkmark,
                   title: 'الملف الشخصي',

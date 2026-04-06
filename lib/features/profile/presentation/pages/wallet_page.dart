@@ -130,24 +130,29 @@ class WalletPage extends ConsumerWidget {
                         vertical: 20,
                         horizontal: 24,
                       ),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (_) => const TopUpAmountPage(),
-                            ),
-                          );
-                        },
-                                'شحن رصيد',
-                                style: TextStyle(
-                                  color: Color(0xFFC9D420), // Lime Color
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (_) => const TopUpAmountPage(),
                               ),
-                            ],
+                            );
+                          },
+                          icon: const Icon(
+                            CupertinoIcons.add,
+                            color: Color(0xFFC9D420),
+                          ),
+                          label: Text(
+                            'شحن رصيد',
+                            style: TextStyle(
+                              color: Color(0xFFC9D420),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ),

@@ -164,9 +164,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ? const Icon(CupertinoIcons.person, color: _kLime, size: 48)
                     : null,
               ),
-              GestureDetector(
-                onTap: _pickAndUploadImage,
-                child: Container(
               // Camera button
               Positioned(
                 bottom: 0,
