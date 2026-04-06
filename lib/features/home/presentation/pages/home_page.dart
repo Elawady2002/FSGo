@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:fielsekkia_driver/core/theme/app_theme.dart';
 import 'package:fielsekkia_driver/core/utils/logger.dart';
@@ -31,6 +32,9 @@ import '../../../booking/domain/entities/university_arrival_point_entity.dart';
 import '../../../../core/widgets/dashed_rect.dart';
 import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_button.dart';
+import '../../../coordinator/presentation/pages/schedule_manager_page.dart';
+import '../../../coordinator/presentation/pages/office_plans_page.dart';
+import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -49,6 +53,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     // Role-based UI branching (FR-005)
     if (user != null && user.isCoordinator) {
       return _CoordinatorDashboard(user: user);
+    }
+    if (user != null && user.isDriver) {
+      return DutyDashboardPage(driverId: user.id);
     }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -1749,71 +1756,264 @@ class _CoordinatorDashboard extends ConsumerWidget {
 
   const _CoordinatorDashboard({required this.user});
 
+  static const _kBg = Color(0xFF1A1A1A);
+  static const _kCard = Color(0xFF242424);
+  static const _kLime = Color(0xFFC9D420);
+  static const _kText = Colors.white;
+  static const _kSubText = Color(0xFF9E9E9E);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final roleLabel = user.isOfficeOwner ? 'مكتب' : 'محطة';
     final entityName = user.isOfficeOwner
         ? (user.officeName ?? 'مكتبي')
         : (user.stationName ?? 'محطتي');
+    final firstName = user.fullName.split(' ').first;
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
-        elevation: 0,
-        title: Text(
-          'لوحة التحكم - $roleLabel',
-          style: AppTheme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: true,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                entityName,
-                style: AppTheme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+      child: Scaffold(
+        backgroundColor: _kBg,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header ──────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'أهلاً، $firstName',
+                          style: GoogleFonts.cairo(
+                            color: _kSubText,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          entityName,
+                          style: GoogleFonts.cairo(
+                            color: _kText,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                            builder: (_) => const ProfilePage()),
+                      ),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _kLime.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: _kLime.withValues(alpha: 0.4)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            user.fullName.isNotEmpty
+                                ? user.fullName[0]
+                                : '?',
+                            style: GoogleFonts.cairo(
+                              color: _kLime,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'مرحباً ${user.fullName.split(' ').first}، هنا تتابع السائقين النشطين.',
-                style: AppTheme.textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: Center(
-                  child: Column(
+                const SizedBox(height: 28),
+                // ── Role badge ───────────────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _kLime.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: _kLime.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        CupertinoIcons.person_2_fill,
-                        size: 64,
-                        color: Colors.grey.shade300,
+                        user.isOfficeOwner
+                            ? CupertinoIcons.building_2_fill
+                            : CupertinoIcons.map_pin_ellipse,
+                        color: _kLime,
+                        size: 14,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(width: 6),
                       Text(
-                        'لا يوجد سائقون نشطون الآن',
-                        style: AppTheme.textTheme.bodyLarge?.copyWith(
-                          color: AppTheme.textSecondary,
+                        user.isOfficeOwner ? 'مالك مكتب' : 'مالك محطة',
+                        style: GoogleFonts.cairo(
+                            color: _kLime, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+                // ── Quick actions ────────────────────────────
+                Text(
+                  'الأدوات',
+                  style: GoogleFonts.cairo(
+                    color: _kSubText,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ActionCard(
+                  icon: CupertinoIcons.calendar_badge_plus,
+                  title: 'إدارة المواعيد',
+                  subtitle: 'أنشئ مواعيد وتابع حالة الموافقة',
+                  onTap: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) =>
+                          ScheduleManagerPage(coordinator: user),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                if (user.isOfficeOwner)
+                  _ActionCard(
+                    icon: CupertinoIcons.creditcard_fill,
+                    title: 'خطط الاشتراك',
+                    subtitle: 'أدر خطط الاشتراك الشهرية والفصلية',
+                    onTap: () => Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (_) =>
+                            OfficePlansPage(coordinator: user),
+                      ),
+                    ),
+                  ),
+                if (user.isOfficeOwner) const SizedBox(height: 10),
+                _ActionCard(
+                  icon: CupertinoIcons.person_crop_circle_badge_checkmark,
+                  title: 'الملف الشخصي',
+                  subtitle: 'بيانات الحساب والإعدادات',
+                  onTap: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                        builder: (_) => const ProfilePage()),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                // ── Info card ────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: _kCard,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(CupertinoIcons.info_circle,
+                          color: _kLime, size: 16),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'بعد إنشاء موعد وموافقة الإدارة، يمكنك تعيين سائق وسيصله إشعار تلقائي.',
+                          style: GoogleFonts.cairo(
+                            color: _kSubText,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  static const _kBg = Color(0xFF1A1A1A);
+  static const _kCard = Color(0xFF242424);
+  static const _kLime = Color(0xFFC9D420);
+  static const _kText = Colors.white;
+  static const _kSubText = Color(0xFF9E9E9E);
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _kCard,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _kLime.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: _kLime, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.cairo(
+                      color: _kText,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style:
+                        GoogleFonts.cairo(color: _kSubText, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(CupertinoIcons.chevron_right,
+                color: _kSubText, size: 16),
+          ],
         ),
       ),
     );
