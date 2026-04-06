@@ -206,10 +206,21 @@ class GlobalDrawer extends ConsumerWidget {
 
     if (confirmed != true) return;
 
+    // Show loading indicator
+    if (!context.mounted) return;
+    showCupertinoDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CupertinoActivityIndicator(radius: 15)),
+    );
+
     // Perform logout
     final error = await ref.read(authProvider.notifier).logout();
 
     if (context.mounted) {
+      // Close loading indicator
+      Navigator.of(context).pop();
+
       if (error != null) {
         // Show error
         ScaffoldMessenger.of(context).showSnackBar(
@@ -221,13 +232,9 @@ class GlobalDrawer extends ConsumerWidget {
             backgroundColor: Colors.redAccent,
           ),
         );
-      } else {
-        // Navigate to login
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-          (route) => false,
-        );
       }
+      // Note: No manual navigation here.
+      // AuthWrapper will handle the transition automatically when the user state becomes null.
     }
   }
 }
