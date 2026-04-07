@@ -10,7 +10,7 @@ import '../../../home/presentation/widgets/global_drawer.dart';
 
 const _kBg = Color(0xFFF5F5F7);
 const _kCard = Colors.white;
-const _kLime = Color(0xFFC9D420);
+const _kLime = Color(0xFF1A1A1A);
 const _kText = Color(0xFF1A1A1A);
 const _kSubText = Color(0xFF666666);
 const _kDanger = Color(0xFFFF3B30);

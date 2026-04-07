@@ -143,12 +143,12 @@ class WalletPage extends ConsumerWidget {
                           },
                           icon: const Icon(
                             CupertinoIcons.add,
-                            color: Color(0xFFC9D420),
+                            color: Color(0xFF1A1A1A),
                           ),
                           label: Text(
                             'شحن رصيد',
                             style: TextStyle(
-                              color: Color(0xFFC9D420),
+                              color: Color(0xFF1A1A1A),
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,

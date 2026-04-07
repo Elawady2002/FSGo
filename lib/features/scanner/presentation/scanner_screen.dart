@@ -7,7 +7,7 @@ import '../../coordinator/presentation/providers/driver_duty_provider.dart';
 import 'providers/scanner_provider.dart';
 
 const _kBg = Color(0xFF1A1A1A);
-const _kLime = Color(0xFFC9D420);
+const _kLime = Color(0xFF1A1A1A);
 const _kText = Colors.white;
 const _kSubText = Color(0xFF9E9E9E);
 
