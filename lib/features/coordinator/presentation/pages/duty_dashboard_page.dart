@@ -142,10 +142,18 @@ class _DutyDashboardPageState extends ConsumerState<DutyDashboardPage> {
       firstDate: DateTime.now().subtract(const Duration(days: 7)),
       lastDate: DateTime.now().add(const Duration(days: 30)),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: _kLime,
+        data: ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: _kText,
+            onPrimary: _kLime,
             onSurface: _kText,
+            surface: Colors.white,
+          ),
+          dialogTheme: const DialogThemeData(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+            ),
           ),
         ),
         child: child!,
@@ -434,7 +442,7 @@ class _EmptyDutyState extends ConsumerState<_EmptyDuty> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                            valueColor: AlwaysStoppedAnimation(_kLime),
                           ),
                         )
                       : const Icon(CupertinoIcons.refresh_thick, size: 20),
@@ -447,13 +455,13 @@ class _EmptyDutyState extends ConsumerState<_EmptyDuty> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A1A1A),
-                    foregroundColor: _kLime,
+                    foregroundColor: const Color(0xFFC9D420),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
                       vertical: 16,
                     ),
-                    elevation: 8,
-                    shadowColor: _kLime.withValues(alpha: 0.4),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
