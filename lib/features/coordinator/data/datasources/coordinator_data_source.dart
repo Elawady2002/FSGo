@@ -80,6 +80,20 @@ class CoordinatorDataSource {
     }).toList();
   }
 
+  /// Send a driver invite request — inserts a pending record in driver_invites
+  Future<void> inviteDriver({
+    required String coordinatorId,
+    required String driverName,
+    required String driverPhone,
+  }) async {
+    await _client.from('driver_invites').insert({
+      'coordinator_id': coordinatorId,
+      'driver_name': driverName,
+      'driver_phone': driverPhone,
+      'status': 'pending',
+    });
+  }
+
   /// Assign a driver to an approved schedule
   Future<void> assignDriver({
     required String scheduleId,

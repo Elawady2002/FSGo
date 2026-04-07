@@ -82,6 +82,24 @@ class CoordinatorScheduleNotifier
     }
   }
 
+  /// Invite a new driver to join the office
+  Future<String?> inviteDriver({
+    required String coordinatorId,
+    required String driverName,
+    required String driverPhone,
+  }) async {
+    try {
+      await _dataSource.inviteDriver(
+        coordinatorId: coordinatorId,
+        driverName: driverName,
+        driverPhone: driverPhone,
+      );
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   Future<String?> assignDriver(String scheduleId, String driverId,
       String driverName) async {
     try {

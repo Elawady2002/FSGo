@@ -33,7 +33,9 @@ import '../../../../core/widgets/dashed_rect.dart';
 import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../coordinator/presentation/pages/schedule_manager_page.dart';
+import '../../../coordinator/presentation/pages/add_schedule_page.dart';
 import '../../../coordinator/presentation/pages/office_plans_page.dart';
+import '../../../coordinator/presentation/pages/add_driver_page.dart';
 import '../../../station_management/presentation/pages/fleet_dashboard_screen.dart';
 import '../../../station_management/presentation/widgets/payout_settlement_sheet.dart';
 import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
@@ -1750,19 +1752,65 @@ class _LocationSelectionDrawerState
 // ---------------------------------------------------------------------------
 // Coordinator Dashboard (FR-005: office_owner / station_owner)
 // ---------------------------------------------------------------------------
-class _CoordinatorDashboard extends ConsumerWidget {
+class _CoordinatorDashboard extends ConsumerStatefulWidget {
   final UserEntity user;
 
   const _CoordinatorDashboard({required this.user});
 
+  @override
+  ConsumerState<_CoordinatorDashboard> createState() =>
+      _CoordinatorDashboardState();
+}
+
+class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
+    with SingleTickerProviderStateMixin {
   static const _kBg = Colors.white;
   static const _kCard = Color(0xFFF5F5F5);
   static const _kLime = Color(0xFFC9D420);
   static const _kText = Color(0xFF1A1A1A);
   static const _kSubText = Color(0xFF666666);
 
+  bool _isFabOpen = false;
+  late AnimationController _fabAnimController;
+  late Animation<double> _fabRotation;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _fabAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _fabRotation = Tween<double>(begin: 0, end: 0.375).animate(
+      CurvedAnimation(parent: _fabAnimController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fabAnimController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFab() {
+    setState(() => _isFabOpen = !_isFabOpen);
+    if (_isFabOpen) {
+      _fabAnimController.forward();
+    } else {
+      _fabAnimController.reverse();
+    }
+  }
+
+  void _closeFab() {
+    if (_isFabOpen) {
+      setState(() => _isFabOpen = false);
+      _fabAnimController.reverse();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.user;
     final entityName = user.isOfficeOwner
         ? (user.officeName ?? 'مكتبي')
         : (user.stationName ?? 'محطتي');
@@ -1774,9 +1822,12 @@ class _CoordinatorDashboard extends ConsumerWidget {
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        backgroundColor: _kBg,
-        body: SafeArea(
+      child: GestureDetector(
+        onTap: _closeFab,
+        child: Scaffold(
+          backgroundColor: _kBg,
+          floatingActionButton: _buildSpeedDial(context, user),
+          body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -1967,6 +2018,142 @@ class _CoordinatorDashboard extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    ),
+  );
+  }
+
+  // ── Speed Dial FAB ────────────────────────────────────────────
+  Widget _buildSpeedDial(BuildContext context, UserEntity user) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // ── Option 2: موعد جديد ──────────────────────────────
+        AnimatedSlide(
+          duration: const Duration(milliseconds: 200),
+          offset: _isFabOpen ? Offset.zero : const Offset(0, 0.5),
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: _isFabOpen ? 1.0 : 0.0,
+            child: _FabItem(
+              icon: CupertinoIcons.calendar_badge_plus,
+              label: 'موعد جديد',
+              onTap: () {
+                _closeFab();
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => AddSchedulePage(coordinator: user),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // ── Option 1: إضافة سائق ────────────────────────────
+        AnimatedSlide(
+          duration: const Duration(milliseconds: 160),
+          offset: _isFabOpen ? Offset.zero : const Offset(0, 0.5),
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 160),
+            opacity: _isFabOpen ? 1.0 : 0.0,
+            child: _FabItem(
+              icon: CupertinoIcons.person_badge_plus_fill,
+              label: 'إضافة سائق',
+              onTap: () {
+                _closeFab();
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => AddDriverPage(coordinator: user),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // ── Main FAB ─────────────────────────────────────────
+        FloatingActionButton(
+          backgroundColor: const Color(0xFF1A1A1A),
+          foregroundColor: const Color(0xFFC9D420),
+          elevation: 4,
+          onPressed: _toggleFab,
+          child: RotationTransition(
+            turns: _fabRotation,
+            child: const Icon(CupertinoIcons.add, size: 26),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── FAB Item ────────────────────────────────────────────────────
+class _FabItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _FabItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Label
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.cairo(
+                color: const Color(0xFFC9D420),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Mini FAB
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: const Color(0xFFC9D420), size: 20),
+          ),
+        ],
       ),
     );
   }
