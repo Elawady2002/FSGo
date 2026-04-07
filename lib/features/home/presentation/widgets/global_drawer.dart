@@ -12,7 +12,7 @@ import '../../../../main.dart' show appNavigatorKey;
 
 const _kBg = Colors.white;
 const _kCard = Color(0xFFF5F5F5);
-const _kLime = Color(0xFFC9D420);
+const _kLime = Color(0xFF1A1A1A);
 const _kText = Color(0xFF1A1A1A);
 const _kSubText = Color(0xFF666666);
 

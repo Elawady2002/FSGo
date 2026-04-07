@@ -271,8 +271,11 @@ class _PendingCard extends ConsumerWidget {
                 flex: 2,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _kLime,
-                    foregroundColor: _kBg,
+                    backgroundColor: _kBg,
+                    foregroundColor: _kLime,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    side: BorderSide(color: _kLime.withValues(alpha: 0.3), width: 1),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(vertical: 12),

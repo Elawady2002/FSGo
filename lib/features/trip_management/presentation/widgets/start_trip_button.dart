@@ -69,8 +69,8 @@ class StartTripButton extends ConsumerWidget {
               ? null
               : () => _confirmStart(context, ref, args),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _kLime,
-            foregroundColor: _kText,
+            backgroundColor: _kText,
+            foregroundColor: _kLime,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14)),
             elevation: 0,
@@ -80,7 +80,7 @@ class StartTripButton extends ConsumerWidget {
                   width: 18,
                   height: 18,
                   child:
-                      CircularProgressIndicator(strokeWidth: 2, color: _kText),
+                      CircularProgressIndicator(strokeWidth: 2, color: _kLime),
                 )
               : const Icon(CupertinoIcons.play_fill, size: 18),
           label: Text(

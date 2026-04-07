@@ -30,7 +30,7 @@ class IOSButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveColor = color ?? AppTheme.primaryColor;
-    final effectiveTextColor = textColor ?? Colors.white;
+    final effectiveTextColor = textColor ?? AppTheme.accentColor;
 
     return CupertinoButton(
       padding: EdgeInsets.zero,
@@ -45,7 +45,7 @@ class IOSButton extends StatelessWidget {
           color: isFilled ? effectiveColor : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.buttonRadius),
           border: isFilled ? null : Border.all(color: effectiveColor, width: 2),
-          boxShadow: isFilled ? AppTheme.floatingShadow : null,
+          boxShadow: null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -76,7 +76,7 @@ class IOSButton extends StatelessWidget {
   }
 }
 
-// InDrive-style Card - Clean white with subtle shadow
+// InDrive-style Card - Clean white with no shadow
 class IOSCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -91,7 +91,8 @@ class IOSCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.dividerColor.withValues(alpha: 0.5)),
+        boxShadow: null,
       ),
       child: Padding(
         padding: padding ?? const EdgeInsets.all(16),
@@ -111,7 +112,7 @@ class IOSCard extends StatelessWidget {
   }
 }
 
-// InDrive Search Bar - Floating search with icon
+// InDrive Search Bar - Floating search with no shadow
 class InDriveSearchBar extends StatelessWidget {
   final String hintText;
   final VoidCallback? onTap;
@@ -133,7 +134,8 @@ class InDriveSearchBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: AppTheme.floatingShadow,
+          border: Border.all(color: AppTheme.dividerColor.withValues(alpha: 0.5)),
+          boxShadow: null,
         ),
         child: Row(
           children: [
@@ -174,12 +176,12 @@ class InDriveBottomSheet extends StatelessWidget {
 
     return Container(
       height: height ?? screenHeight * 0.85,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(
+        borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppTheme.bottomSheetRadius),
         ),
-        boxShadow: AppTheme.bottomSheetShadow,
+        boxShadow: null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

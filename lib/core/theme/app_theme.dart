@@ -4,11 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // FSGo Premium Lime Theme Colors
-  static const Color primaryColor = Color(0xFFC9D420); // FSGo Lime
-  static const Color accentColor = Color(0xFF1A1A1A); // FSGo Dark (Contrast)
-  static const Color primaryDark = Color(0xFFAAB51B);
-  static const Color primaryLight = Color(0xFFE1EA55);
+  // FSGo Premium Latte Theme Colors
+  static const Color primaryColor = Color(0xFF1A1A1A); // FSGo Dark
+  static const Color accentColor = Color(0xFFC9D420); // FSGo Lime (Contrast)
+  static const Color primaryDark = Color(0xFF000000);
+  static const Color primaryLight = Color(0xFF333333);
 
   static const Color backgroundColor = Color(0xFFF5F5F7);
   static const Color surfaceColor = Colors.white;
@@ -28,30 +28,12 @@ class AppTheme {
   static const double defaultPadding = 16.0;
   static const double bottomSheetRadius = 24.0;
 
-  // FSGo High-Fidelity Shadows
-  static List<BoxShadow> get cardShadow => [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
-      blurRadius: 20,
-      offset: const Offset(0, 10),
-    ),
-  ];
+  // FSGo Minimalist Design - No Shadows
+  static List<BoxShadow> get cardShadow => [];
 
-  static List<BoxShadow> get floatingShadow => [
-    BoxShadow(
-      color: primaryColor.withValues(alpha: 0.3),
-      blurRadius: 20,
-      offset: const Offset(0, 10),
-    ),
-  ];
+  static List<BoxShadow> get floatingShadow => [];
 
-  static List<BoxShadow> get bottomSheetShadow => [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.1),
-      blurRadius: 30,
-      offset: const Offset(0, -4),
-    ),
-  ];
+  static List<BoxShadow> get bottomSheetShadow => [];
 
   // Text Theme with Google Fonts (Cairo for Arabic)
   static TextTheme get textTheme => GoogleFonts.cairoTextTheme(
@@ -149,7 +131,7 @@ class AppTheme {
       filled: true,
       fillColor: const Color(0xFFF5F5F5).withValues(alpha: 0.1),
       hintText: hintText,
-      hintStyle: GoogleFonts.cairo(color: Colors.white54, fontSize: 16),
+      hintStyle: GoogleFonts.cairo(color: textSecondary, fontSize: 16),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
@@ -184,8 +166,8 @@ class AppTheme {
   );
 
   static ButtonStyle get secondaryButtonStyle => OutlinedButton.styleFrom(
-    foregroundColor: Colors.white,
-    side: const BorderSide(color: Colors.white24, width: 1.5),
+    foregroundColor: textPrimary,
+    side: const BorderSide(color: dividerColor, width: 1.5),
     padding: const EdgeInsets.symmetric(vertical: 16),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
@@ -259,9 +241,9 @@ class AppTheme {
 
   static ButtonStyle get elevatedButtonThemeData => ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
-    foregroundColor: Colors.white,
-    elevation: 4,
-    shadowColor: primaryColor.withValues(alpha: 0.4),
+    foregroundColor: accentColor,
+    elevation: 0,
+    shadowColor: Colors.transparent,
     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(buttonRadius),

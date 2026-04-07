@@ -130,15 +130,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.05,
-                                      ),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                                  border: Border.all(
+                                    color: AppTheme.dividerColor,
+                                    width: 0.5,
+                                  ),
+                                  boxShadow: null,
                                 ),
                                 child: user?.avatarUrl == null
                                     ? const Padding(
@@ -319,15 +315,12 @@ class _HomePageState extends ConsumerState<HomePage> {
               // Bottom Action Button
               Container(
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
+                  border: Border(
+                    top: BorderSide(color: AppTheme.dividerColor, width: 0.5),
+                  ),
+                  boxShadow: null,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
