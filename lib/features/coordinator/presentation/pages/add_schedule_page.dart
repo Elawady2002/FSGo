@@ -272,10 +272,29 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
       context: context,
       initialTime: _departureTime,
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
+        data: ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
             primary: _kLime,
+            onPrimary: Colors.white,
             onSurface: _kText,
+            secondary: _kLime,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: _kLime,
+              textStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+            ),
+          ),
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: Colors.white,
+            hourMinuteColor: _kCard,
+            hourMinuteTextColor: _kText,
+            dayPeriodColor: _kCard,
+            dayPeriodTextColor: _kText,
+            dialHandColor: _kLime,
+            dialBackgroundColor: _kCard,
+            dialTextColor: _kText,
+            entryModeIconColor: _kLime,
           ),
         ),
         child: child!,

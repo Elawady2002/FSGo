@@ -32,12 +32,10 @@ import '../../../booking/domain/entities/university_arrival_point_entity.dart';
 import '../../../../core/widgets/dashed_rect.dart';
 import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_button.dart';
-import '../../../coordinator/presentation/pages/schedule_manager_page.dart';
 import '../../../coordinator/presentation/pages/add_schedule_page.dart';
-import '../../../coordinator/presentation/pages/office_plans_page.dart';
 import '../../../coordinator/presentation/pages/add_driver_page.dart';
-import '../../../station_management/presentation/pages/fleet_dashboard_screen.dart';
-import '../../../station_management/presentation/widgets/payout_settlement_sheet.dart';
+import '../../../coordinator/presentation/providers/coordinator_provider.dart';
+import '../../../coordinator/domain/entities/coordinator_schedule_entity.dart';
 import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 
@@ -1770,42 +1768,14 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
   static const _kText = Color(0xFF1A1A1A);
   static const _kSubText = Color(0xFF666666);
 
-  bool _isFabOpen = false;
-  late AnimationController _fabAnimController;
-  late Animation<double> _fabRotation;
-
-  @override
-  void initState() {
-    super.initState();
-    _fabAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 220),
+  void _showActionMenu(BuildContext context, UserEntity user) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ActionBottomSheet(user: user),
     );
-    _fabRotation = Tween<double>(begin: 0, end: 0.375).animate(
-      CurvedAnimation(parent: _fabAnimController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _fabAnimController.dispose();
-    super.dispose();
-  }
-
-  void _toggleFab() {
-    setState(() => _isFabOpen = !_isFabOpen);
-    if (_isFabOpen) {
-      _fabAnimController.forward();
-    } else {
-      _fabAnimController.reverse();
-    }
-  }
-
-  void _closeFab() {
-    if (_isFabOpen) {
-      setState(() => _isFabOpen = false);
-      _fabAnimController.reverse();
-    }
   }
 
   @override
@@ -1822,11 +1792,29 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
-      child: GestureDetector(
-        onTap: _closeFab,
-        child: Scaffold(
-          backgroundColor: _kBg,
-          floatingActionButton: _buildSpeedDial(context, user),
+      child: Scaffold(
+        backgroundColor: _kBg,
+        bottomNavigationBar: Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(color: Color(0xFFEEEEEE), width: 1),
+            ),
+          ),
+          child: IOSButton(
+            text: 'إضافة جديد',
+            onPressed: () => _showActionMenu(context, user),
+            icon: CupertinoIcons.add_circled_solid,
+            color: const Color(0xFF1A1A1A),
+            textColor: const Color(0xFFC9D420),
+          ),
+        ),
           body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -1917,79 +1905,67 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                   ),
                 ),
                 const SizedBox(height: 28),
-                // ── Quick actions ────────────────────────────
-                Text(
-                  'الأدوات',
-                  style: GoogleFonts.cairo(
-                    color: _kSubText,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                  ),
+                // ── Posted Schedules ─────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'المواعيد المنشورة',
+                      style: GoogleFonts.cairo(
+                        color: _kText,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
-                _ActionCard(
-                  icon: CupertinoIcons.calendar_badge_plus,
-                  title: 'إدارة المواعيد',
-                  subtitle: 'أنشئ مواعيد وتابع حالة الموافقة',
-                  onTap: () => Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (_) =>
-                          ScheduleManagerPage(coordinator: user),
-                    ),
-                  ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final scheduleState = ref.watch(coordinatorScheduleProvider(user.id));
+                    
+                    if (scheduleState.isLoading && scheduleState.schedules.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: CircularProgressIndicator(color: _kText),
+                        ),
+                      );
+                    }
+
+                    if (scheduleState.schedules.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: _kCard,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.black12, style: BorderStyle.none),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(CupertinoIcons.calendar_today, color: _kSubText.withValues(alpha: 0.3), size: 48),
+                            const SizedBox(height: 16),
+                            Text(
+                              'لا توجد مواعيد منشورة حالياً',
+                              style: GoogleFonts.cairo(color: _kSubText, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: scheduleState.schedules.take(3).map((schedule) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _ScheduleCard(schedule: schedule),
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
-                const SizedBox(height: 10),
-                if (user.isOfficeOwner)
-                  _ActionCard(
-                    icon: CupertinoIcons.creditcard_fill,
-                    title: 'خطط الاشتراك',
-                    subtitle: 'أدر خطط الاشتراك الشهرية والفصلية',
-                    onTap: () => Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (_) =>
-                            OfficePlansPage(coordinator: user),
-                      ),
-                    ),
-                  ),
-                if (user.isOfficeOwner) const SizedBox(height: 10),
-                if (user.isStationOwner) ...[
-                  _ActionCard(
-                    icon: CupertinoIcons.car_detailed,
-                    title: 'تخطيط الأسطول',
-                    subtitle: 'عدد المقاعد المحجوزة لكل وجهة',
-                    onTap: () => Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (_) => const FleetDashboardScreen(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _ActionCard(
-                    icon: CupertinoIcons.money_dollar_circle_fill,
-                    title: 'تسوية المدفوعات',
-                    subtitle: 'اعتمد مدفوعات السائقين برفع إيصال',
-                    onTap: () => PayoutSettlementSheet.show(
-                      context,
-                      managerId: user.id,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-                _ActionCard(
-                  icon: CupertinoIcons.person_crop_circle_badge_checkmark,
-                  title: 'الملف الشخصي',
-                  subtitle: 'بيانات الحساب والإعدادات',
-                  onTap: () => Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                        builder: (_) => const ProfilePage()),
-                  ),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 12),
                 // ── Info card ────────────────────────────────
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -2019,153 +1995,87 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
           ),
         ),
       ),
-    ),
-  );
-  }
-
-  // ── Speed Dial FAB ────────────────────────────────────────────
-  Widget _buildSpeedDial(BuildContext context, UserEntity user) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // ── Option 2: موعد جديد ──────────────────────────────
-        AnimatedSlide(
-          duration: const Duration(milliseconds: 200),
-          offset: _isFabOpen ? Offset.zero : const Offset(0, 0.5),
-          curve: Curves.easeOut,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: _isFabOpen ? 1.0 : 0.0,
-            child: _FabItem(
-              icon: CupertinoIcons.calendar_badge_plus,
-              label: 'موعد جديد',
-              onTap: () {
-                _closeFab();
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (_) => AddSchedulePage(coordinator: user),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        // ── Option 1: إضافة سائق ────────────────────────────
-        AnimatedSlide(
-          duration: const Duration(milliseconds: 160),
-          offset: _isFabOpen ? Offset.zero : const Offset(0, 0.5),
-          curve: Curves.easeOut,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 160),
-            opacity: _isFabOpen ? 1.0 : 0.0,
-            child: _FabItem(
-              icon: CupertinoIcons.person_badge_plus_fill,
-              label: 'إضافة سائق',
-              onTap: () {
-                _closeFab();
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (_) => AddDriverPage(coordinator: user),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        // ── Main FAB ─────────────────────────────────────────
-        FloatingActionButton(
-          backgroundColor: const Color(0xFF1A1A1A),
-          foregroundColor: const Color(0xFFC9D420),
-          elevation: 4,
-          onPressed: _toggleFab,
-          child: RotationTransition(
-            turns: _fabRotation,
-            child: const Icon(CupertinoIcons.add, size: 26),
-          ),
-        ),
-      ],
     );
   }
 }
 
-// ── FAB Item ────────────────────────────────────────────────────
-class _FabItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _FabItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+class _ActionBottomSheet extends StatelessWidget {
+  final UserEntity user;
+  const _ActionBottomSheet({required this.user});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Label
+          // Drag Handle
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.cairo(
-                color: const Color(0xFFC9D420),
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 10),
-          // Mini FAB
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+          Text(
+            'ماذا تريد أن تفعل؟',
+            style: GoogleFonts.cairo(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
-            child: Icon(icon, color: const Color(0xFFC9D420), size: 20),
           ),
+          const SizedBox(height: 24),
+          _ActionItem(
+            icon: CupertinoIcons.calendar_badge_plus,
+            title: 'إضافة موعد جديد',
+            subtitle: 'إنشاء رحلة مجدولة للركاب',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (_) => AddSchedulePage(coordinator: user),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          _ActionItem(
+            icon: CupertinoIcons.person_badge_plus_fill,
+            title: 'إضافة سائق',
+            subtitle: 'ربط سائق جديد بمكتبك/محطتك',
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                CupertinoPageRoute(
+                  builder: (_) => AddDriverPage(coordinator: user),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 }
 
-class _ActionCard extends StatelessWidget {
+class _ActionItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
-  const _ActionCard({
+  const _ActionItem({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -2174,41 +2084,189 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ListTile(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      leading: Container(
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(14),
+          color: const Color(0xFFF5F5F5), // Light grey circle
+          shape: BoxShape.circle,
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.cairo(
-                      color: const Color(0xFFC9D420),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+        child: Icon(icon, color: const Color(0xFF1A1A1A), size: 24),
+      ),
+      title: Text(
+        title,
+        style: GoogleFonts.cairo(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: const Color(0xFF1A1A1A),
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: GoogleFonts.cairo(
+          color: const Color(0xFF888888), // Subtle grey for subtitle
+          fontSize: 13,
+        ),
+      ),
+      trailing: const Icon(CupertinoIcons.chevron_left, size: 16, color: Colors.grey),
+    );
+  }
+}
+
+class _ScheduleCard extends StatelessWidget {
+  final CoordinatorScheduleEntity schedule;
+
+  const _ScheduleCard({required this.schedule});
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Color(0xFFC9D420); // Driver app lime
+    
+    return Container(
+      height: 240,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Status Badge (Mirroring confirmed/soon)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: schedule.isApproved ? primaryColor : Colors.amber,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            schedule.approvalStatus.label,
+                            style: GoogleFonts.cairo(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        // Action Icon (QR Placeholder)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.qrcode,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.cairo(
-                      color: Colors.white60,
-                      fontSize: 12,
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'امتى؟',
+                              style: GoogleFonts.cairo(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              schedule.daysLabel.split('،').length > 2 
+                                  ? 'أيام محددة' 
+                                  : schedule.daysLabel,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'نوع الرحلة',
+                              style: GoogleFonts.cairo(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'من محطة لمحطة',
+                              style: GoogleFonts.cairo(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Icon(CupertinoIcons.chevron_right,
-                color: Colors.white38, size: 16),
-          ],
+              const SizedBox(height: 12),
+              const Divider(color: Colors.white24, height: 1),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 24,
+                child: Row(
+                  children: [
+                    const Icon(
+                      CupertinoIcons.location_fill,
+                      color: primaryColor,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '${schedule.departureTime} · ${schedule.origin} ← ${schedule.destination}',
+                        style: GoogleFonts.cairo(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

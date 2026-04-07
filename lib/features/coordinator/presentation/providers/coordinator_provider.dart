@@ -43,7 +43,26 @@ class CoordinatorScheduleNotifier
   final String _coordinatorId;
 
   CoordinatorScheduleNotifier(this._dataSource, this._coordinatorId)
-      : super(const CoordinatorScheduleState());
+      : super(CoordinatorScheduleState(
+          schedules: [
+            CoordinatorScheduleEntity(
+              id: 'mock-1',
+              coordinatorId: _coordinatorId,
+              origin: 'المنصورة',
+              destination: 'القاهرة',
+              departureTime: '08:00',
+              availableDays: const ['sunday', 'tuesday', 'thursday'],
+              capacity: 14,
+              baseFare: 45.0,
+              adminMargin: 5.0,
+              isApproved: true,
+              isActive: true,
+              createdAt: DateTime.now(),
+              driverName: 'أحمد محمود (تجريبي)',
+              driverId: 'mock-driver',
+            ),
+          ],
+        ));
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -64,7 +83,9 @@ class CoordinatorScheduleNotifier
     required double baseFare,
   }) async {
     try {
-      final created = await _dataSource.createSchedule(
+      // 🧪 MOCK MODE: Skip database call for now as requested
+      final created = CoordinatorScheduleEntity(
+        id: 'mock-${DateTime.now().millisecondsSinceEpoch}',
         coordinatorId: _coordinatorId,
         origin: origin,
         destination: destination,
@@ -72,7 +93,12 @@ class CoordinatorScheduleNotifier
         availableDays: availableDays,
         capacity: capacity,
         baseFare: baseFare,
+        adminMargin: 5.0, // Mock admin margin
+        isApproved: false, // Initially pending
+        isActive: true,
+        createdAt: DateTime.now(),
       );
+
       state = state.copyWith(
         schedules: [created, ...state.schedules],
       );
