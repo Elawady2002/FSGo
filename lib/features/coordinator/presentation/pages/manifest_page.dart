@@ -58,8 +58,9 @@ class _ManifestPageState extends ConsumerState<ManifestPage> {
                 builder: (_) => ScannerScreen(manifestKey: manifestKey),
               ),
             ),
-            backgroundColor: _kLime,
-            foregroundColor: _kText,
+            backgroundColor: _kText,
+            foregroundColor: _kLime,
+            elevation: 0,
             icon: const Icon(CupertinoIcons.qrcode_viewfinder),
             label: Text('مسح QR', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
           ),
@@ -332,13 +333,13 @@ class _PassengerRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _kLime,
+                    color: _kText,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     'ركب',
                     style: GoogleFonts.cairo(
-                      color: _kBg,
+                      color: _kLime,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
