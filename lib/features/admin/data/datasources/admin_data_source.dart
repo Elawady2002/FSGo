@@ -61,7 +61,6 @@ class AdminDataSource {
       destination: json['destination'] as String? ?? '',
       departureTime: json['departure_time'] as String? ?? '',
       availableDays: List<String>.from((json['available_days'] as List?) ?? []),
-      capacity: (json['capacity'] as num?)?.toInt() ?? 0,
       baseFare: (json['base_fare'] as num?)?.toDouble() ?? 0,
       adminMargin: (json['admin_margin'] as num?)?.toDouble() ?? 0,
       isApproved: json['is_approved'] as bool? ?? false,

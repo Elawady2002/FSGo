@@ -30,10 +30,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
   ScheduleType? _selectedType;
 
   final _formKey = GlobalKey<FormState>();
-  final _originCtrl = TextEditingController();
   final _destCtrl = TextEditingController();
   final _fareCtrl = TextEditingController();
-  final _capacityCtrl = TextEditingController(text: '14');
   final _durationCtrl = TextEditingController();
 
   TimeOfDay _departureTime = const TimeOfDay(hour: 7, minute: 0);
@@ -53,10 +51,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
 
   @override
   void dispose() {
-    _originCtrl.dispose();
     _destCtrl.dispose();
     _fareCtrl.dispose();
-    _capacityCtrl.dispose();
     _durationCtrl.dispose();
     super.dispose();
   }
@@ -111,10 +107,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                 key: const ValueKey('step-1'),
                 scheduleType: _selectedType!,
                 formKey: _formKey,
-                originCtrl: _originCtrl,
                 destCtrl: _destCtrl,
                 fareCtrl: _fareCtrl,
-                capacityCtrl: _capacityCtrl,
                 durationCtrl: _durationCtrl,
                 departureTime: _departureTime,
                 selectedDays: _selectedDays,
@@ -201,11 +195,10 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     final error = await ref
         .read(coordinatorScheduleProvider(widget.coordinator.id).notifier)
         .createSchedule(
-          origin: _originCtrl.text.trim(),
+          origin: widget.coordinator.entityName,
           destination: _destCtrl.text.trim(),
           departureTime: timeStr,
           availableDays: _selectedDays.toList(),
-          capacity: int.parse(_capacityCtrl.text.trim()),
           baseFare: double.parse(_fareCtrl.text.trim()),
           scheduleType: _selectedType!,
           subscriptionType: _selectedType == ScheduleType.university
@@ -417,10 +410,8 @@ class _TypeCard extends StatelessWidget {
 class _FormStep extends StatelessWidget {
   final ScheduleType scheduleType;
   final GlobalKey<FormState> formKey;
-  final TextEditingController originCtrl;
   final TextEditingController destCtrl;
   final TextEditingController fareCtrl;
-  final TextEditingController capacityCtrl;
   final TextEditingController durationCtrl;
   final TimeOfDay departureTime;
   final Set<String> selectedDays;
@@ -436,10 +427,8 @@ class _FormStep extends StatelessWidget {
     super.key,
     required this.scheduleType,
     required this.formKey,
-    required this.originCtrl,
     required this.destCtrl,
     required this.fareCtrl,
-    required this.capacityCtrl,
     required this.durationCtrl,
     required this.departureTime,
     required this.selectedDays,
@@ -464,37 +453,6 @@ class _FormStep extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Type indicator chip
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    scheduleType == ScheduleType.university
-                        ? CupertinoIcons.building_2_fill
-                        : CupertinoIcons.bus,
-                    color: _accentColor,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    scheduleType.label,
-                    style: GoogleFonts.cairo(
-                      color: _accentColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
             // University-specific: Subscription type + duration
             if (scheduleType == ScheduleType.university) ...[
               _SectionLabel('نوع الاشتراك'),
@@ -521,16 +479,8 @@ class _FormStep extends StatelessWidget {
               const SizedBox(height: 20),
             ],
 
-            _SectionLabel('المسار'),
+            _SectionLabel('الوجهة'),
             const SizedBox(height: 8),
-            _DarkField(
-              controller: originCtrl,
-              hint: 'نقطة الانطلاق',
-              accentColor: _accentColor,
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'مطلوب' : null,
-            ),
-            const SizedBox(height: 10),
             _DarkField(
               controller: destCtrl,
               hint: scheduleType == ScheduleType.university
@@ -613,50 +563,18 @@ class _FormStep extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _SectionLabel('السعر (جنيه)'),
-                      const SizedBox(height: 8),
-                      _DarkField(
-                        controller: fareCtrl,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        accentColor: _accentColor,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
-                          if (double.tryParse(v) == null) return 'رقم فقط';
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _SectionLabel('الطاقة الاستيعابية'),
-                      const SizedBox(height: 8),
-                      _DarkField(
-                        controller: capacityCtrl,
-                        hint: '14',
-                        keyboardType: TextInputType.number,
-                        accentColor: _accentColor,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'مطلوب';
-                          if (int.tryParse(v) == null) return 'رقم صحيح';
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            _SectionLabel('السعر (جنيه)'),
+            const SizedBox(height: 8),
+            _DarkField(
+              controller: fareCtrl,
+              hint: '0',
+              keyboardType: TextInputType.number,
+              accentColor: _accentColor,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'مطلوب';
+                if (double.tryParse(v) == null) return 'رقم فقط';
+                return null;
+              },
             ),
             const SizedBox(height: 28),
 

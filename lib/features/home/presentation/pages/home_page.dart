@@ -2226,7 +2226,6 @@ class _ScheduleCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const primaryColor = Color(0xFFC9D420);
-    final booked = (schedule.capacity * 0.6).round().clamp(3, schedule.capacity);
 
     return Hero(
       tag: 'schedule-card-${schedule.id}',
@@ -2266,7 +2265,7 @@ class _ScheduleCard extends ConsumerWidget {
                 // Top row: avatars + time
                 Row(
                   children: [
-                    _PassengerAvatarStack(booked: booked, capacity: schedule.capacity),
+                    const _PassengerAvatarStack(),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -2344,62 +2343,49 @@ class _ScheduleCard extends ConsumerWidget {
 // ── Shared Stat-less components ───────────────────────────────────
 
 class _PassengerAvatarStack extends StatelessWidget {
-  final int booked;
-  final int capacity;
-  const _PassengerAvatarStack({required this.booked, required this.capacity});
+  const _PassengerAvatarStack();
 
   @override
   Widget build(BuildContext context) {
+    const displayCount = 3;
     const avatarSize = 30.0;
     const overlap = 20.0;
-    final displayCount = booked > 3 ? 3 : booked;
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           height: avatarSize,
-          width: avatarSize + (displayCount) * overlap,
+          width: avatarSize + (displayCount - 1) * overlap,
           child: Stack(
             children: [
               for (int i = 0; i < displayCount; i++)
                 Positioned(
                   left: i * overlap,
                   child: Container(
-                    width: 30,
-                    height: 30,
+                    width: avatarSize,
+                    height: avatarSize,
                     decoration: BoxDecoration(
                       color: const Color(0xFF2E2E2E),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 1.5),
+                      border:
+                          Border.all(color: Colors.black, width: 1.5),
                     ),
-                    child: const Icon(CupertinoIcons.person_fill, color: Colors.white54, size: 15),
-                  ),
-                ),
-              if (booked > 3)
-                Positioned(
-                  left: 3 * overlap,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E2E2E),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 1.5),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '+${booked - 3}',
-                        style: GoogleFonts.cairo(color: const Color(0xFFC9D420), fontSize: 9, fontWeight: FontWeight.w800),
-                      ),
-                    ),
+                    child: const Icon(CupertinoIcons.person_fill,
+                        color: Colors.white54, size: 15),
                   ),
                 ),
             ],
           ),
         ),
-        const SizedBox(width: 10),
-        Text('$booked / $capacity', style: GoogleFonts.cairo(color: Colors.white60, fontSize: 12)),
+        const SizedBox(width: 8),
+        Text(
+          'ركاب',
+          style: GoogleFonts.cairo(
+              color: Colors.white60, fontSize: 12),
+        ),
       ],
     );
   }
 }
+

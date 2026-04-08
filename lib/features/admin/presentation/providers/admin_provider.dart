@@ -69,7 +69,6 @@ class AdminScheduleNotifier extends StateNotifier<AdminScheduleState> {
         destination: schedule.destination,
         departureTime: schedule.departureTime,
         availableDays: schedule.availableDays,
-        capacity: schedule.capacity,
         baseFare: schedule.baseFare,
         adminMargin: schedule.adminMargin,
         isApproved: true,

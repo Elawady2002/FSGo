@@ -293,24 +293,6 @@ class _DutyCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(
-                        CupertinoIcons.person_2,
-                        size: 13,
-                        color: _kSubText,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${schedule.capacity} مقعد',
-                        style: GoogleFonts.cairo(
-                          color: _kSubText,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),

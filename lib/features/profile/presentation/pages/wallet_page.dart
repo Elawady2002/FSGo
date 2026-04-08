@@ -71,7 +71,7 @@ class WalletPage extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    // Top Green Section (Balance)
+                    // Top Section (Balance)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -79,7 +79,7 @@ class WalletPage extends ConsumerWidget {
                         horizontal: 24,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
+                        color: const Color(0xFF141414),
                         borderRadius: BorderRadius.circular(32),
                       ),
                       child: Stack(
@@ -97,13 +97,15 @@ class WalletPage extends ConsumerWidget {
                             child: Column(
                               children: [
                                 walletState.isLoading
-                                    ? const CupertinoActivityIndicator()
+                                    ? const CupertinoActivityIndicator(
+                                        color: Color(0xFFC9D420),
+                                      )
                                     : Text(
-                                        '${walletState.balance.toStringAsFixed(2)} EGP',
+                                        'EGP ${walletState.balance.toStringAsFixed(2)}',
                                         style: const TextStyle(
                                           fontSize: 40,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF003300),
+                                          color: Color(0xFFC9D420),
                                           letterSpacing: -1,
                                         ),
                                       ),
@@ -113,8 +115,8 @@ class WalletPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF003300)
-                                        .withValues(alpha: 0.7),
+                                    color: const Color(0xFFC9D420)
+                                        .withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -124,11 +126,11 @@ class WalletPage extends ConsumerWidget {
                       ),
                     ),
 
-                    // Bottom Black Section (Action: Top-Up Only)
+                    // Bottom Section (Action: Top-Up Only)
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 24,
+                        vertical: 16,
+                        horizontal: 20,
                       ),
                       child: SizedBox(
                         width: double.infinity,
@@ -141,17 +143,27 @@ class WalletPage extends ConsumerWidget {
                               ),
                             );
                           },
-                          icon: const Icon(
-                            CupertinoIcons.add,
-                            color: Color(0xFF1A1A1A),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFC9D420),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
                           ),
-                          label: Text(
+                          icon: const Icon(
+                            CupertinoIcons.add_circled_solid,
+                            color: Colors.black,
+                            size: 22,
+                          ),
+                          label: const Text(
                             'شحن رصيد',
                             style: TextStyle(
-                              color: Color(0xFF1A1A1A),
-                              fontSize: 18,
+                              color: Colors.black,
+                              fontSize: 17,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ),
@@ -339,7 +351,7 @@ class _Rivet extends StatelessWidget {
       height: 8,
       margin: const EdgeInsets.all(8),
       decoration: const BoxDecoration(
-        color: Color(0xFF003300),
+        color: Color(0xFFC9D420),
         shape: BoxShape.circle,
       ),
     );

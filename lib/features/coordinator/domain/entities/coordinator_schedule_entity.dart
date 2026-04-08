@@ -57,7 +57,6 @@ class CoordinatorScheduleEntity extends Equatable {
   final String destination;
   final String departureTime; // "HH:mm"
   final List<String> availableDays;
-  final int capacity;
   final double baseFare;
   final double adminMargin;
   final bool isApproved;
@@ -78,7 +77,6 @@ class CoordinatorScheduleEntity extends Equatable {
     required this.destination,
     required this.departureTime,
     required this.availableDays,
-    required this.capacity,
     required this.baseFare,
     required this.adminMargin,
     required this.isApproved,
@@ -127,7 +125,6 @@ class CoordinatorScheduleEntity extends Equatable {
     String? destination,
     String? departureTime,
     List<String>? availableDays,
-    int? capacity,
     double? baseFare,
     double? adminMargin,
     bool? isApproved,
@@ -146,7 +143,6 @@ class CoordinatorScheduleEntity extends Equatable {
       destination: destination ?? this.destination,
       departureTime: departureTime ?? this.departureTime,
       availableDays: availableDays ?? this.availableDays,
-      capacity: capacity ?? this.capacity,
       baseFare: baseFare ?? this.baseFare,
       adminMargin: adminMargin ?? this.adminMargin,
       isApproved: isApproved ?? this.isApproved,
@@ -168,7 +164,6 @@ class CoordinatorScheduleEntity extends Equatable {
     destination,
     departureTime,
     availableDays,
-    capacity,
     baseFare,
     adminMargin,
     isApproved,

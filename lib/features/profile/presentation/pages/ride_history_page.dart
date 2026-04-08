@@ -69,17 +69,17 @@ class _RideHistoryPageState extends ConsumerState<RideHistoryPage>
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
-                color: AppTheme.primaryColor,
+                color: const Color(0xFF1A1A1A),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    color: Colors.black.withValues(alpha: 0.25),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              labelColor: Colors.black,
+              labelColor: const Color(0xFFC9D420),
               unselectedLabelColor: Colors.grey.shade500,
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.w800,

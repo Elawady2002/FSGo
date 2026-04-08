@@ -30,7 +30,6 @@ class CoordinatorDataSource {
     required String destination,
     required String departureTime,
     required List<String> availableDays,
-    required int capacity,
     required double baseFare,
   }) async {
     final data = {
@@ -39,7 +38,6 @@ class CoordinatorDataSource {
       'destination': destination,
       'departure_time': departureTime,
       'available_days': availableDays,
-      'capacity': capacity,
       'base_fare': baseFare,
       'admin_margin': 0,
       'is_approved': false,
@@ -169,7 +167,6 @@ class CoordinatorDataSource {
       availableDays: List<String>.from(
         (json['available_days'] as List?) ?? [],
       ),
-      capacity: (json['capacity'] as num?)?.toInt() ?? 0,
       baseFare: (json['base_fare'] as num?)?.toDouble() ?? 0,
       adminMargin: (json['admin_margin'] as num?)?.toDouble() ?? 0,
       isApproved: json['is_approved'] as bool? ?? false,

@@ -19,7 +19,7 @@ class DriverDutyDataSource {
         .eq('is_active', true)
         .order('departure_time');
 
-    return (response as List).map((json) {
+    return (response as List).map<CoordinatorScheduleEntity>((json) {
       return CoordinatorScheduleEntity(
         id: json['id'] as String,
         coordinatorId: json['coordinator_id'] as String? ?? '',
@@ -29,7 +29,6 @@ class DriverDutyDataSource {
         availableDays: List<String>.from(
           (json['available_days'] as List?) ?? [],
         ),
-        capacity: (json['capacity'] as num?)?.toInt() ?? 0,
         baseFare: (json['base_fare'] as num?)?.toDouble() ?? 0,
         adminMargin: (json['admin_margin'] as num?)?.toDouble() ?? 0,
         isApproved: true,

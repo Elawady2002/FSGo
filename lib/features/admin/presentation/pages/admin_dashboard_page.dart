@@ -246,7 +246,7 @@ class _PendingCard extends ConsumerWidget {
           const SizedBox(height: 4),
           _DetailRow(
             icon: CupertinoIcons.money_dollar_circle,
-            label: '${schedule.baseFare.toStringAsFixed(0)} جنيه  •  ${schedule.capacity} مقعد',
+            label: '${schedule.baseFare.toStringAsFixed(0)} جنيه',
           ),
           const SizedBox(height: 14),
           // Action buttons
