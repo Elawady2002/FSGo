@@ -32,7 +32,24 @@ enum ScheduleApprovalStatus {
   }
 }
 
-/// A schedule created and managed by a coordinator (station/office owner)
+/// Type of schedule: university (with subscriptions) or station (daily recurring)
+enum ScheduleType {
+  university, // مواعيد جامعة — اشتراكات شهرية/ترم
+  station;    // مواعيد موقف — يومية متكررة
+
+  String get label => this == university ? 'جامعة' : 'موقف';
+
+  String toJson() => name;
+
+  static ScheduleType fromJson(String value) {
+    return ScheduleType.values.firstWhere(
+      (t) => t.name == value,
+      orElse: () => ScheduleType.university,
+    );
+  }
+}
+
+/// A schedule created and managed by a coordinator (station/office/business owner)
 class CoordinatorScheduleEntity extends Equatable {
   final String id;
   final String coordinatorId;
@@ -49,6 +66,11 @@ class CoordinatorScheduleEntity extends Equatable {
   final String? driverName;
   final DateTime createdAt;
 
+  // Unified schedule type fields
+  final ScheduleType scheduleType;
+  final String? subscriptionType; // 'monthly' | 'semester' (جامعة فقط)
+  final int? durationDays;        // مدة الاشتراك بالأيام (جامعة فقط)
+
   const CoordinatorScheduleEntity({
     required this.id,
     required this.coordinatorId,
@@ -64,6 +86,9 @@ class CoordinatorScheduleEntity extends Equatable {
     this.driverId,
     this.driverName,
     required this.createdAt,
+    this.scheduleType = ScheduleType.university,
+    this.subscriptionType,
+    this.durationDays,
   });
 
   ScheduleApprovalStatus get approvalStatus =>
@@ -76,6 +101,12 @@ class CoordinatorScheduleEntity extends Equatable {
 
   String get routeLabel => '$origin → $destination';
 
+  bool get isUniversity => scheduleType == ScheduleType.university;
+  bool get isStation => scheduleType == ScheduleType.station;
+
+  String get subscriptionLabel =>
+      subscriptionType == 'semester' ? 'فصل دراسي' : 'شهري';
+
   String get daysLabel {
     const dayNames = {
       'sunday': 'الأحد',
@@ -87,6 +118,46 @@ class CoordinatorScheduleEntity extends Equatable {
       'saturday': 'السبت',
     };
     return availableDays.map((d) => dayNames[d] ?? d).join('، ');
+  }
+
+  CoordinatorScheduleEntity copyWith({
+    String? id,
+    String? coordinatorId,
+    String? origin,
+    String? destination,
+    String? departureTime,
+    List<String>? availableDays,
+    int? capacity,
+    double? baseFare,
+    double? adminMargin,
+    bool? isApproved,
+    bool? isActive,
+    String? driverId,
+    String? driverName,
+    DateTime? createdAt,
+    ScheduleType? scheduleType,
+    String? subscriptionType,
+    int? durationDays,
+  }) {
+    return CoordinatorScheduleEntity(
+      id: id ?? this.id,
+      coordinatorId: coordinatorId ?? this.coordinatorId,
+      origin: origin ?? this.origin,
+      destination: destination ?? this.destination,
+      departureTime: departureTime ?? this.departureTime,
+      availableDays: availableDays ?? this.availableDays,
+      capacity: capacity ?? this.capacity,
+      baseFare: baseFare ?? this.baseFare,
+      adminMargin: adminMargin ?? this.adminMargin,
+      isApproved: isApproved ?? this.isApproved,
+      isActive: isActive ?? this.isActive,
+      driverId: driverId ?? this.driverId,
+      driverName: driverName ?? this.driverName,
+      createdAt: createdAt ?? this.createdAt,
+      scheduleType: scheduleType ?? this.scheduleType,
+      subscriptionType: subscriptionType ?? this.subscriptionType,
+      durationDays: durationDays ?? this.durationDays,
+    );
   }
 
   @override
@@ -105,5 +176,8 @@ class CoordinatorScheduleEntity extends Equatable {
     driverId,
     driverName,
     createdAt,
+    scheduleType,
+    subscriptionType,
+    durationDays,
   ];
 }

@@ -40,6 +40,7 @@ class PassengerEntity extends Equatable {
   final PassengerBoardingStatus boardingStatus;
   final int passengerCount;
   final bool isLadies;
+  final String? avatarUrl;
 
   const PassengerEntity({
     required this.bookingId,
@@ -50,6 +51,7 @@ class PassengerEntity extends Equatable {
     required this.boardingStatus,
     required this.passengerCount,
     required this.isLadies,
+    this.avatarUrl,
   });
 
   bool get isBoarded => boardingStatus == PassengerBoardingStatus.boarded;
@@ -65,5 +67,6 @@ class PassengerEntity extends Equatable {
     boardingStatus,
     passengerCount,
     isLadies,
+    avatarUrl,
   ];
 }

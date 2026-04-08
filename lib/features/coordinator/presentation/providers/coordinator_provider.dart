@@ -45,11 +45,12 @@ class CoordinatorScheduleNotifier
   CoordinatorScheduleNotifier(this._dataSource, this._coordinatorId)
       : super(CoordinatorScheduleState(
           schedules: [
+            // 🧪 MOCK — جامعة، شهري، معتمد + سائق معيّن
             CoordinatorScheduleEntity(
-              id: 'mock-1',
+              id: 'mock-uni-1',
               coordinatorId: _coordinatorId,
               origin: 'المنصورة',
-              destination: 'القاهرة',
+              destination: 'جامعة القاهرة',
               departureTime: '08:00',
               availableDays: const ['sunday', 'tuesday', 'thursday'],
               capacity: 14,
@@ -59,7 +60,62 @@ class CoordinatorScheduleNotifier
               isActive: true,
               createdAt: DateTime.now(),
               driverName: 'أحمد محمود (تجريبي)',
-              driverId: 'mock-driver',
+              driverId: 'mock-driver-1',
+              scheduleType: ScheduleType.university,
+              subscriptionType: 'monthly',
+              durationDays: 30,
+            ),
+            // 🧪 MOCK — جامعة، ترم، في انتظار الموافقة
+            CoordinatorScheduleEntity(
+              id: 'mock-uni-2',
+              coordinatorId: _coordinatorId,
+              origin: 'بلبيس',
+              destination: 'جامعة الأزهر',
+              departureTime: '07:30',
+              availableDays: const ['saturday', 'monday', 'wednesday'],
+              capacity: 20,
+              baseFare: 60.0,
+              adminMargin: 5.0,
+              isApproved: false,
+              isActive: true,
+              createdAt: DateTime.now().subtract(const Duration(days: 2)),
+              scheduleType: ScheduleType.university,
+              subscriptionType: 'semester',
+              durationDays: 120,
+            ),
+            // 🧪 MOCK — موقف، معتمد + سائق معيّن
+            CoordinatorScheduleEntity(
+              id: 'mock-sta-1',
+              coordinatorId: _coordinatorId,
+              origin: 'ميدان الحسين',
+              destination: 'مطار القاهرة',
+              departureTime: '06:00',
+              availableDays: const ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'],
+              capacity: 7,
+              baseFare: 35.0,
+              adminMargin: 5.0,
+              isApproved: true,
+              isActive: true,
+              createdAt: DateTime.now().subtract(const Duration(days: 1)),
+              driverName: 'محمود علي (تجريبي)',
+              driverId: 'mock-driver-2',
+              scheduleType: ScheduleType.station,
+            ),
+            // 🧪 MOCK — موقف، في انتظار الموافقة
+            CoordinatorScheduleEntity(
+              id: 'mock-sta-2',
+              coordinatorId: _coordinatorId,
+              origin: 'العباسية',
+              destination: 'مدينة نصر',
+              departureTime: '09:00',
+              availableDays: const ['saturday', 'sunday', 'monday'],
+              capacity: 14,
+              baseFare: 25.0,
+              adminMargin: 5.0,
+              isApproved: false,
+              isActive: true,
+              createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+              scheduleType: ScheduleType.station,
             ),
           ],
         ));
@@ -81,9 +137,12 @@ class CoordinatorScheduleNotifier
     required List<String> availableDays,
     required int capacity,
     required double baseFare,
+    required ScheduleType scheduleType,
+    String? subscriptionType,
+    int? durationDays,
   }) async {
     try {
-      // 🧪 MOCK MODE: Skip database call for now as requested
+      // 🧪 MOCK MODE: Skip database call for now
       final created = CoordinatorScheduleEntity(
         id: 'mock-${DateTime.now().millisecondsSinceEpoch}',
         coordinatorId: _coordinatorId,
@@ -93,10 +152,13 @@ class CoordinatorScheduleNotifier
         availableDays: availableDays,
         capacity: capacity,
         baseFare: baseFare,
-        adminMargin: 5.0, // Mock admin margin
-        isApproved: false, // Initially pending
+        adminMargin: 5.0,
+        isApproved: false,
         isActive: true,
         createdAt: DateTime.now(),
+        scheduleType: scheduleType,
+        subscriptionType: subscriptionType,
+        durationDays: durationDays,
       );
 
       state = state.copyWith(
@@ -126,32 +188,16 @@ class CoordinatorScheduleNotifier
     }
   }
 
-  Future<String?> assignDriver(String scheduleId, String driverId,
-      String driverName) async {
+  Future<String?> assignDriver(
+      String scheduleId, String driverId, String driverName) async {
     try {
       await _dataSource.assignDriver(
         scheduleId: scheduleId,
         driverId: driverId,
       );
-      // Update local state
       final updated = state.schedules.map((s) {
         if (s.id == scheduleId) {
-          return CoordinatorScheduleEntity(
-            id: s.id,
-            coordinatorId: s.coordinatorId,
-            origin: s.origin,
-            destination: s.destination,
-            departureTime: s.departureTime,
-            availableDays: s.availableDays,
-            capacity: s.capacity,
-            baseFare: s.baseFare,
-            adminMargin: s.adminMargin,
-            isApproved: s.isApproved,
-            isActive: s.isActive,
-            driverId: driverId,
-            driverName: driverName,
-            createdAt: s.createdAt,
-          );
+          return s.copyWith(driverId: driverId, driverName: driverName);
         }
         return s;
       }).toList();

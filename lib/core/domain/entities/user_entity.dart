@@ -6,7 +6,8 @@ enum UserType {
   driver,
   admin,
   stationOwner,
-  officeOwner;
+  officeOwner,
+  businessOwner;
 
   String toJson() {
     switch (this) {
@@ -14,6 +15,8 @@ enum UserType {
         return 'station_owner';
       case UserType.officeOwner:
         return 'office_owner';
+      case UserType.businessOwner:
+        return 'business_owner';
       default:
         return name;
     }
@@ -25,6 +28,8 @@ enum UserType {
         return UserType.stationOwner;
       case 'office_owner':
         return UserType.officeOwner;
+      case 'business_owner':
+        return UserType.businessOwner;
       default:
         return UserType.values.firstWhere(
           (type) => type.name == value,
@@ -52,6 +57,7 @@ class UserEntity extends Equatable {
   final String? subscriptionStatus;
   final String? officeName;
   final String? stationName;
+  final String? businessName;
 
   const UserEntity({
     required this.id,
@@ -70,6 +76,7 @@ class UserEntity extends Equatable {
     this.subscriptionStatus,
     this.officeName,
     this.stationName,
+    this.businessName,
   });
 
   @override
@@ -90,6 +97,7 @@ class UserEntity extends Equatable {
     subscriptionStatus,
     officeName,
     stationName,
+    businessName,
   ];
 
   /// Role Getters
@@ -98,9 +106,14 @@ class UserEntity extends Equatable {
   bool get isAdmin => userType == UserType.admin;
   bool get isStationOwner => userType == UserType.stationOwner;
   bool get isOfficeOwner => userType == UserType.officeOwner;
+  bool get isBusinessOwner => userType == UserType.businessOwner;
 
-  /// Check if user is a coordinator (office or station owner)
-  bool get isCoordinator => isOfficeOwner || isStationOwner;
+  /// Check if user is a coordinator (office, station, or unified business owner)
+  bool get isCoordinator => isOfficeOwner || isStationOwner || isBusinessOwner;
+
+  /// Display name for the business/office/station
+  String get entityName =>
+      businessName ?? officeName ?? stationName ?? fullName;
 
   /// Check if user has an active subscription
   bool get hasActiveSubscription {
@@ -133,6 +146,7 @@ class UserEntity extends Equatable {
     String? subscriptionStatus,
     String? officeName,
     String? stationName,
+    String? businessName,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -152,6 +166,7 @@ class UserEntity extends Equatable {
       subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
       officeName: officeName ?? this.officeName,
       stationName: stationName ?? this.stationName,
+      businessName: businessName ?? this.businessName,
     );
   }
 }

@@ -33,10 +33,11 @@ import '../../../../core/widgets/dashed_rect.dart';
 import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../coordinator/presentation/pages/add_schedule_page.dart';
-import '../../../coordinator/presentation/pages/add_driver_page.dart';
+import '../../../coordinator/presentation/pages/driver_manager_page.dart';
 import '../../../coordinator/presentation/providers/coordinator_provider.dart';
 import '../../../coordinator/domain/entities/coordinator_schedule_entity.dart';
 import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
+import '../../../coordinator/presentation/pages/trip_assignment_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -1746,7 +1747,6 @@ class _LocationSelectionDrawerState
   }
 }
 
-
 // ---------------------------------------------------------------------------
 // Coordinator Dashboard (FR-005: office_owner / station_owner)
 // ---------------------------------------------------------------------------
@@ -1765,8 +1765,12 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
   static const _kBg = Colors.white;
   static const _kCard = Color(0xFFF5F5F5);
   static const _kLime = Color(0xFFC9D420);
+  static const _kDark = Color(0xFF1A1A1A);
   static const _kText = Color(0xFF1A1A1A);
   static const _kSubText = Color(0xFF666666);
+
+  ScheduleType _filterType = ScheduleType.university;
+  DateTime _selectedDate = DateTime.now();
 
   void _showActionMenu(BuildContext context, UserEntity user) {
     HapticFeedback.mediumImpact();
@@ -1781,9 +1785,7 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
-    final entityName = user.isOfficeOwner
-        ? (user.officeName ?? 'مكتبي')
-        : (user.stationName ?? 'محطتي');
+    final entityName = user.entityName;
     final firstName = user.fullName.split(' ').first;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -1815,7 +1817,7 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
             textColor: const Color(0xFFC9D420),
           ),
         ),
-          body: SafeArea(
+        body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -1854,8 +1856,8 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                       child: Container(
                         width: 44,
                         height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A1A1A),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1A1A1A),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -1874,37 +1876,33 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                     ),
                   ],
                 ),
-                const SizedBox(height: 28),
-                // ── Role badge ───────────────────────────────
+                const SizedBox(height: 20),
+                // ── Type Toggle ──────────────────────────────
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _kLime.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: _kLime.withValues(alpha: 0.3)),
+                    color: _kCard,
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  padding: const EdgeInsets.all(4),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        user.isOfficeOwner
-                            ? CupertinoIcons.building_2_fill
-                            : CupertinoIcons.map_pin_ellipse,
-                        color: _kLime,
-                        size: 14,
+                      _ToggleTab(
+                        label: 'مواعيد جامعة',
+                        isSelected: _filterType == ScheduleType.university,
+                        onTap: () => setState(() => _filterType = ScheduleType.university),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        user.isOfficeOwner ? 'مالك مكتب' : 'مالك محطة',
-                        style: GoogleFonts.cairo(
-                            color: _kLime, fontSize: 12),
+                      _ToggleTab(
+                        label: 'مواعيد موقف',
+                        isSelected: _filterType == ScheduleType.station,
+                        onTap: () => setState(() => _filterType = ScheduleType.station),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
+                // ── Date Picker ───────────────────────
+                _buildDatePicker(),
+                const SizedBox(height: 24),
                 // ── Posted Schedules ─────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1923,7 +1921,10 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                 Consumer(
                   builder: (context, ref, child) {
                     final scheduleState = ref.watch(coordinatorScheduleProvider(user.id));
-                    
+                    final filtered = scheduleState.schedules
+                        .where((s) => s.scheduleType == _filterType)
+                        .toList();
+
                     if (scheduleState.isLoading && scheduleState.schedules.isEmpty) {
                       return const Center(
                         child: Padding(
@@ -1933,21 +1934,20 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                       );
                     }
 
-                    if (scheduleState.schedules.isEmpty) {
+                    if (filtered.isEmpty) {
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
                           color: _kCard,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.black12, style: BorderStyle.none),
                         ),
                         child: Column(
                           children: [
                             Icon(CupertinoIcons.calendar_today, color: _kSubText.withValues(alpha: 0.3), size: 48),
                             const SizedBox(height: 16),
                             Text(
-                              'لا توجد مواعيد منشورة حالياً',
+                              'لا توجد مواعيد من هذا النوع',
                               style: GoogleFonts.cairo(color: _kSubText, fontSize: 14),
                             ),
                           ],
@@ -1956,10 +1956,10 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                     }
 
                     return Column(
-                      children: scheduleState.schedules.take(3).map((schedule) {
+                      children: filtered.take(3).map((schedule) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
-                          child: _ScheduleCard(schedule: schedule),
+                          child: _ScheduleCard(schedule: schedule, date: _selectedDate),
                         );
                       }).toList(),
                     );
@@ -1992,6 +1992,108 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePicker() {
+    return SizedBox(
+      height: 70,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: 14,
+        itemBuilder: (context, i) {
+          final date = DateTime.now().add(Duration(days: i));
+          final isSelected = _selectedDate.day == date.day && 
+                            _selectedDate.month == date.month;
+          final isToday = date.day == DateTime.now().day;
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedDate = date),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(left: 12),
+              width: 85,
+              decoration: BoxDecoration(
+                color: isSelected ? _kDark : _kCard,
+                borderRadius: BorderRadius.circular(16),
+                border: isToday && !isSelected 
+                  ? Border.all(color: _kLime, width: 1.5) 
+                  : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _getDayName(date.weekday),
+                    style: GoogleFonts.cairo(
+                      color: isSelected ? _kLime : _kSubText,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    date.day.toString(),
+                    style: GoogleFonts.cairo(
+                      color: isSelected ? Colors.white : _kText,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _getDayName(int weekday) {
+    const days = ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
+    return days[weekday - 1];
+  }
+}
+
+// ── Toggle Tab (for coordinator dashboard) ────────────────────
+class _ToggleTab extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ToggleTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF1A1A1A) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.cairo(
+                  color: isSelected ? const Color(0xFFC9D420) : const Color(0xFF999999),
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -2057,7 +2159,7 @@ class _ActionBottomSheet extends StatelessWidget {
               Navigator.push(
                 context,
                 CupertinoPageRoute(
-                  builder: (_) => AddDriverPage(coordinator: user),
+                  builder: (_) => DriverManagerPage(coordinator: user),
                 ),
               );
             },
@@ -2090,10 +2192,10 @@ class _ActionItem extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5), // Light grey circle
-          shape: BoxShape.circle,
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: const Color(0xFF1A1A1A), size: 24),
+        child: Icon(icon, color: Colors.black),
       ),
       title: Text(
         title,
@@ -2115,160 +2217,189 @@ class _ActionItem extends StatelessWidget {
   }
 }
 
-class _ScheduleCard extends StatelessWidget {
+// ── Schedule Card ──────────────────────────────────────────────
+class _ScheduleCard extends ConsumerWidget {
   final CoordinatorScheduleEntity schedule;
-
-  const _ScheduleCard({required this.schedule});
+  final DateTime date;
+  const _ScheduleCard({required this.schedule, required this.date});
 
   @override
-  Widget build(BuildContext context) {
-    const primaryColor = Color(0xFFC9D420); // Driver app lime
-    
-    return Container(
-      height: 240,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Status Badge (Mirroring confirmed/soon)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: schedule.isApproved ? primaryColor : Colors.amber,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            schedule.approvalStatus.label,
-                            style: GoogleFonts.cairo(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        // Action Icon (QR Placeholder)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            CupertinoIcons.qrcode,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    const primaryColor = Color(0xFFC9D420);
+    final booked = (schedule.capacity * 0.6).round().clamp(3, schedule.capacity);
+
+    return Hero(
+      tag: 'schedule-card-${schedule.id}',
+      child: Material(
+        color: Colors.transparent,
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                transitionDuration: const Duration(milliseconds: 500),
+                reverseTransitionDuration: const Duration(milliseconds: 500),
+                pageBuilder: (context, animation, secondaryAnimation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: TripAssignmentPage(
+                      schedule: schedule,
+                      coordinator: ref.read(authProvider).valueOrNull!,
+                      date: date, // Correctly sync with dashboard date
                     ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'امتى؟',
-                              style: GoogleFonts.cairo(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              schedule.daysLabel.split('،').length > 2 
-                                  ? 'أيام محددة' 
-                                  : schedule.daysLabel,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'نوع الرحلة',
-                              style: GoogleFonts.cairo(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'من محطة لمحطة',
-                              style: GoogleFonts.cairo(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 12),
-              const Divider(color: Colors.white24, height: 1),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 24,
-                child: Row(
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top row: avatars + time
+                Row(
                   children: [
-                    const Icon(
-                      CupertinoIcons.location_fill,
-                      color: primaryColor,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '${schedule.departureTime} · ${schedule.origin} ← ${schedule.destination}',
-                        style: GoogleFonts.cairo(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
+                    _PassengerAvatarStack(booked: booked, capacity: schedule.capacity),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(CupertinoIcons.clock, color: Colors.white70, size: 13),
+                          const SizedBox(width: 5),
+                          Text(
+                            schedule.departureTime,
+                            style: GoogleFonts.cairo(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                // Days + Type
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('امتى؟', style: GoogleFonts.cairo(color: Colors.white70, fontSize: 13)),
+                        const SizedBox(height: 3),
+                        Text(
+                          'أيام محددة',
+                          style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 19),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('نوع الموعد', style: GoogleFonts.cairo(color: Colors.white70, fontSize: 13)),
+                        const SizedBox(height: 3),
+                        Text(
+                          schedule.scheduleType.label,
+                          style: GoogleFonts.cairo(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 19),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.white24, height: 1),
+                const SizedBox(height: 12),
+                // Route
+                Row(
+                  children: [
+                    const Icon(CupertinoIcons.location_fill, color: primaryColor, size: 16),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${schedule.origin} ← ${schedule.destination}',
+                        style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Shared Stat-less components ───────────────────────────────────
+
+class _PassengerAvatarStack extends StatelessWidget {
+  final int booked;
+  final int capacity;
+  const _PassengerAvatarStack({required this.booked, required this.capacity});
+
+  @override
+  Widget build(BuildContext context) {
+    const avatarSize = 30.0;
+    const overlap = 20.0;
+    final displayCount = booked > 3 ? 3 : booked;
+
+    return Row(
+      children: [
+        SizedBox(
+          height: avatarSize,
+          width: avatarSize + (displayCount) * overlap,
+          child: Stack(
+            children: [
+              for (int i = 0; i < displayCount; i++)
+                Positioned(
+                  left: i * overlap,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E2E2E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.black, width: 1.5),
+                    ),
+                    child: const Icon(CupertinoIcons.person_fill, color: Colors.white54, size: 15),
+                  ),
+                ),
+              if (booked > 3)
+                Positioned(
+                  left: 3 * overlap,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E2E2E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.black, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '+${booked - 3}',
+                        style: GoogleFonts.cairo(color: const Color(0xFFC9D420), fontSize: 9, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text('$booked / $capacity', style: GoogleFonts.cairo(color: Colors.white60, fontSize: 12)),
+      ],
     );
   }
 }

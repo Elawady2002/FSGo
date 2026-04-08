@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/domain/entities/user_entity.dart';
+import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../providers/coordinator_provider.dart';
 
+// ── Design tokens ──────────────────────────────────────────────
 const _kBg = Colors.white;
 const _kCard = Color(0xFFF5F5F5);
-const _kLime = Color(0xFF1A1A1A);
 const _kText = Color(0xFF1A1A1A);
 const _kSubText = Color(0xFF666666);
+const _kLime = Color(0xFFC9D420);
+// Both schedule types use the same primary color scheme
+const _kUniversity = Color(0xFF1A1A1A);
+const _kStation = Color(0xFF1A1A1A);
 
 class AddSchedulePage extends ConsumerStatefulWidget {
   final UserEntity coordinator;
@@ -20,14 +25,20 @@ class AddSchedulePage extends ConsumerStatefulWidget {
 }
 
 class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
+  // Step 0 = type selector, Step 1 = form
+  int _step = 0;
+  ScheduleType? _selectedType;
+
   final _formKey = GlobalKey<FormState>();
   final _originCtrl = TextEditingController();
   final _destCtrl = TextEditingController();
   final _fareCtrl = TextEditingController();
-  final _capacityCtrl = TextEditingController(text: '20');
+  final _capacityCtrl = TextEditingController(text: '14');
+  final _durationCtrl = TextEditingController();
 
   TimeOfDay _departureTime = const TimeOfDay(hour: 7, minute: 0);
   final Set<String> _selectedDays = {};
+  String _subscriptionType = 'monthly'; // 'monthly' | 'semester'
   bool _isSaving = false;
 
   static const _days = [
@@ -46,6 +57,7 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     _destCtrl.dispose();
     _fareCtrl.dispose();
     _capacityCtrl.dispose();
+    _durationCtrl.dispose();
     super.dispose();
   }
 
@@ -57,7 +69,7 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
         backgroundColor: _kBg,
         elevation: 0,
         title: Text(
-          'موعد جديد',
+          _step == 0 ? 'نوع الموعد' : 'تفاصيل الموعد',
           style: GoogleFonts.cairo(
             color: _kText,
             fontSize: 18,
@@ -65,204 +77,62 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
           ),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: _kText),
+        leading: IconButton(
+          icon: const Icon(CupertinoIcons.back, color: _kText),
+          onPressed: () {
+            if (_step == 1) {
+              setState(() => _step = 0);
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionLabel('المسار'),
-              const SizedBox(height: 8),
-              _DarkField(
-                controller: _originCtrl,
-                hint: 'نقطة الانطلاق (مثال: بلبيس)',
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'مطلوب' : null,
-              ),
-              const SizedBox(height: 10),
-              _DarkField(
-                controller: _destCtrl,
-                hint: 'الوجهة (مثال: السلام)',
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'مطلوب' : null,
-              ),
-              const SizedBox(height: 20),
-              _SectionLabel('وقت الانطلاق'),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: _pickTime,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _kCard,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(CupertinoIcons.clock,
-                          color: _kLime, size: 18),
-                      const SizedBox(width: 10),
-                      Text(
-                        _departureTime.format(context),
-                        style: GoogleFonts.cairo(
-                            color: _kText, fontSize: 16),
-                      ),
-                      const Spacer(),
-                      const Icon(CupertinoIcons.chevron_right,
-                          color: _kSubText, size: 14),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              _SectionLabel('أيام التشغيل'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _days.map((day) {
-                  final isSelected = _selectedDays.contains(day.$1);
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      if (isSelected) {
-                        _selectedDays.remove(day.$1);
-                      } else {
-                        _selectedDays.add(day.$1);
-                      }
-                    }),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? _kLime.withValues(alpha: 0.15)
-                            : _kCard,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? _kLime : Colors.black12,
-                        ),
-                      ),
-                      child: Text(
-                        day.$2,
-                        style: GoogleFonts.cairo(
-                          color: isSelected ? _kLime : _kSubText,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionLabel('السعر (جنيه)'),
-                        const SizedBox(height: 8),
-                        _DarkField(
-                          controller: _fareCtrl,
-                          hint: '0',
-                          keyboardType: TextInputType.number,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return 'مطلوب';
-                            if (double.tryParse(v) == null) return 'رقم فقط';
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionLabel('الطاقة الاستيعابية'),
-                        const SizedBox(height: 8),
-                        _DarkField(
-                          controller: _capacityCtrl,
-                          hint: '20',
-                          keyboardType: TextInputType.number,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return 'مطلوب';
-                            if (int.tryParse(v) == null) return 'رقم صحيح';
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _kLime.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _kLime.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(CupertinoIcons.info_circle,
-                        color: _kLime, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'سيتم إرسال الموعد للمراجعة. بعد موافقة الإدارة يمكنك تعيين سائق.',
-                        style: GoogleFonts.cairo(
-                            color: _kLime.withValues(alpha: 0.8),
-                            fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _kLime,
-                    foregroundColor: _kBg,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  onPressed: _isSaving ? null : _submit,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: _kBg,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          'إرسال للموافقة',
-                          style: GoogleFonts.cairo(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                ),
-              ),
-            ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
           ),
         ),
+        child: _step == 0
+            ? _TypeSelectorStep(
+                key: const ValueKey('step-0'),
+                selectedType: _selectedType,
+                onTypeSelected: (t) => setState(() => _selectedType = t),
+                onContinue: () => setState(() => _step = 1),
+              )
+            : _FormStep(
+                key: const ValueKey('step-1'),
+                scheduleType: _selectedType!,
+                formKey: _formKey,
+                originCtrl: _originCtrl,
+                destCtrl: _destCtrl,
+                fareCtrl: _fareCtrl,
+                capacityCtrl: _capacityCtrl,
+                durationCtrl: _durationCtrl,
+                departureTime: _departureTime,
+                selectedDays: _selectedDays,
+                subscriptionType: _subscriptionType,
+                isSaving: _isSaving,
+                onPickTime: _pickTime,
+                onDayToggle: (day) => setState(() {
+                  if (_selectedDays.contains(day)) {
+                    _selectedDays.remove(day);
+                  } else {
+                    _selectedDays.add(day);
+                  }
+                }),
+                onSubscriptionTypeChange: (v) =>
+                    setState(() => _subscriptionType = v),
+                onSubmit: _submit,
+                days: _days,
+              ),
       ),
     );
   }
@@ -273,15 +143,18 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
       initialTime: _departureTime,
       builder: (ctx, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: _kLime,
+          colorScheme: ColorScheme.light(
+            primary: _selectedType == ScheduleType.university
+                ? _kUniversity
+                : _kStation,
             onPrimary: Colors.white,
             onSurface: _kText,
-            secondary: _kLime,
           ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
-              foregroundColor: _kLime,
+              foregroundColor: _selectedType == ScheduleType.university
+                  ? _kUniversity
+                  : _kStation,
               textStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700),
             ),
           ),
@@ -291,10 +164,14 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
             hourMinuteTextColor: _kText,
             dayPeriodColor: _kCard,
             dayPeriodTextColor: _kText,
-            dialHandColor: _kLime,
+            dialHandColor: _selectedType == ScheduleType.university
+                ? _kUniversity
+                : _kStation,
             dialBackgroundColor: _kCard,
             dialTextColor: _kText,
-            entryModeIconColor: _kLime,
+            entryModeIconColor: _selectedType == ScheduleType.university
+                ? _kUniversity
+                : _kStation,
           ),
         ),
         child: child!,
@@ -330,6 +207,14 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
           availableDays: _selectedDays.toList(),
           capacity: int.parse(_capacityCtrl.text.trim()),
           baseFare: double.parse(_fareCtrl.text.trim()),
+          scheduleType: _selectedType!,
+          subscriptionType: _selectedType == ScheduleType.university
+              ? _subscriptionType
+              : null,
+          durationDays: _selectedType == ScheduleType.university &&
+                  _durationCtrl.text.trim().isNotEmpty
+              ? int.tryParse(_durationCtrl.text.trim())
+              : null,
         );
 
     setState(() => _isSaving = false);
@@ -346,7 +231,7 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم إرسال الموعد بنجاح — في انتظار الموافقة',
+          content: Text('تم إرسال الموعد — في انتظار الموافقة',
               style: GoogleFonts.cairo()),
           backgroundColor: Colors.green,
         ),
@@ -356,7 +241,573 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
   }
 }
 
-// ── Shared dark widgets ────────────────────────────────────────
+// ── Step 0: Type Selector ──────────────────────────────────────
+
+class _TypeSelectorStep extends StatelessWidget {
+  final ScheduleType? selectedType;
+  final ValueChanged<ScheduleType> onTypeSelected;
+  final VoidCallback onContinue;
+
+  const _TypeSelectorStep({
+    super.key,
+    required this.selectedType,
+    required this.onTypeSelected,
+    required this.onContinue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ما نوع الموعد الذي تريد إضافته؟',
+            style: GoogleFonts.cairo(
+              color: _kSubText,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _TypeCard(
+            type: ScheduleType.university,
+            icon: CupertinoIcons.building_2_fill,
+            title: 'موعد جامعة',
+            subtitle: 'اشتراكات شهرية أو فصل دراسي مع مدة محددة',
+            accentColor: _kUniversity,
+            isSelected: selectedType == ScheduleType.university,
+            onTap: () => onTypeSelected(ScheduleType.university),
+          ),
+          const SizedBox(height: 16),
+          _TypeCard(
+            type: ScheduleType.station,
+            icon: CupertinoIcons.bus,
+            title: 'موعد موقف',
+            subtitle: 'مواعيد يومية متكررة بدون اشتراكات',
+            accentColor: _kStation,
+            isSelected: selectedType == ScheduleType.station,
+            onTap: () => onTypeSelected(ScheduleType.station),
+          ),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: selectedType == null
+                    ? const Color(0xFFCCCCCC)
+                    : _kText,
+                foregroundColor: selectedType == null ? Colors.white : _kLime,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+              onPressed: selectedType == null ? null : onContinue,
+              child: Text(
+                'متابعة',
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypeCard extends StatelessWidget {
+  final ScheduleType type;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TypeCard({
+    required this.type,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: isSelected ? _kText : _kCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? _kText : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? _kLime.withValues(alpha: 0.15)
+                    : accentColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? _kLime : _kSubText,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.cairo(
+                      color: isSelected ? Colors.white : _kText,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.cairo(
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : _kSubText,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(CupertinoIcons.checkmark_circle_fill,
+                  color: _kLime, size: 22)
+            else
+              const Icon(CupertinoIcons.circle,
+                  color: Colors.black12, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Step 1: Form ───────────────────────────────────────────────
+
+class _FormStep extends StatelessWidget {
+  final ScheduleType scheduleType;
+  final GlobalKey<FormState> formKey;
+  final TextEditingController originCtrl;
+  final TextEditingController destCtrl;
+  final TextEditingController fareCtrl;
+  final TextEditingController capacityCtrl;
+  final TextEditingController durationCtrl;
+  final TimeOfDay departureTime;
+  final Set<String> selectedDays;
+  final String subscriptionType;
+  final bool isSaving;
+  final VoidCallback onPickTime;
+  final ValueChanged<String> onDayToggle;
+  final ValueChanged<String> onSubscriptionTypeChange;
+  final VoidCallback onSubmit;
+  final List<(String, String)> days;
+
+  const _FormStep({
+    super.key,
+    required this.scheduleType,
+    required this.formKey,
+    required this.originCtrl,
+    required this.destCtrl,
+    required this.fareCtrl,
+    required this.capacityCtrl,
+    required this.durationCtrl,
+    required this.departureTime,
+    required this.selectedDays,
+    required this.subscriptionType,
+    required this.isSaving,
+    required this.onPickTime,
+    required this.onDayToggle,
+    required this.onSubscriptionTypeChange,
+    required this.onSubmit,
+    required this.days,
+  });
+
+  Color get _accentColor =>
+      scheduleType == ScheduleType.university ? _kUniversity : _kStation;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Type indicator chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    scheduleType == ScheduleType.university
+                        ? CupertinoIcons.building_2_fill
+                        : CupertinoIcons.bus,
+                    color: _accentColor,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    scheduleType.label,
+                    style: GoogleFonts.cairo(
+                      color: _accentColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // University-specific: Subscription type + duration
+            if (scheduleType == ScheduleType.university) ...[
+              _SectionLabel('نوع الاشتراك'),
+              const SizedBox(height: 8),
+              _SubscriptionTypeToggle(
+                value: subscriptionType,
+                accentColor: _accentColor,
+                onChanged: onSubscriptionTypeChange,
+              ),
+              const SizedBox(height: 16),
+              _SectionLabel('مدة الاشتراك (بالأيام)'),
+              const SizedBox(height: 8),
+              _DarkField(
+                controller: durationCtrl,
+                hint: subscriptionType == 'semester' ? '120 يوم' : '30 يوم',
+                keyboardType: TextInputType.number,
+                accentColor: _accentColor,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'مطلوب';
+                  if (int.tryParse(v) == null) return 'رقم صحيح فقط';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            _SectionLabel('المسار'),
+            const SizedBox(height: 8),
+            _DarkField(
+              controller: originCtrl,
+              hint: 'نقطة الانطلاق',
+              accentColor: _accentColor,
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'مطلوب' : null,
+            ),
+            const SizedBox(height: 10),
+            _DarkField(
+              controller: destCtrl,
+              hint: scheduleType == ScheduleType.university
+                  ? 'اسم الجامعة / الوجهة'
+                  : 'الوجهة',
+              accentColor: _accentColor,
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'مطلوب' : null,
+            ),
+            const SizedBox(height: 20),
+
+            _SectionLabel('وقت الانطلاق'),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: onPickTime,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: _kCard,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.clock,
+                        color: _accentColor, size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      departureTime.format(context),
+                      style: GoogleFonts.cairo(
+                          color: _kText, fontSize: 16),
+                    ),
+                    const Spacer(),
+                    const Icon(CupertinoIcons.chevron_right,
+                        color: _kSubText, size: 14),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            _SectionLabel('أيام التشغيل'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: days.map((day) {
+                final isSelected = selectedDays.contains(day.$1);
+                return GestureDetector(
+                  onTap: () => onDayToggle(day.$1),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? _accentColor.withValues(alpha: 0.12)
+                          : _kCard,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected
+                            ? _accentColor
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: Text(
+                      day.$2,
+                      style: GoogleFonts.cairo(
+                        color:
+                            isSelected ? _accentColor : _kSubText,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w400,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SectionLabel('السعر (جنيه)'),
+                      const SizedBox(height: 8),
+                      _DarkField(
+                        controller: fareCtrl,
+                        hint: '0',
+                        keyboardType: TextInputType.number,
+                        accentColor: _accentColor,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'مطلوب';
+                          if (double.tryParse(v) == null) return 'رقم فقط';
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SectionLabel('الطاقة الاستيعابية'),
+                      const SizedBox(height: 8),
+                      _DarkField(
+                        controller: capacityCtrl,
+                        hint: '14',
+                        keyboardType: TextInputType.number,
+                        accentColor: _accentColor,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'مطلوب';
+                          if (int.tryParse(v) == null) return 'رقم صحيح';
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+
+            // Info banner
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _accentColor.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: _accentColor.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  Icon(CupertinoIcons.info_circle,
+                      color: _accentColor, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'سيتم إرسال الموعد للمراجعة. بعد موافقة الإدارة يمكنك تعيين سائق.',
+                      style: GoogleFonts.cairo(
+                          color: _accentColor.withValues(alpha: 0.85),
+                          fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kText,
+                  foregroundColor: _kLime,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: isSaving ? null : onSubmit,
+                child: isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: _kLime,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'إرسال للموافقة',
+                        style: GoogleFonts.cairo(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Subscription Type Toggle ───────────────────────────────────
+
+class _SubscriptionTypeToggle extends StatelessWidget {
+  final String value;
+  final Color accentColor;
+  final ValueChanged<String> onChanged;
+
+  const _SubscriptionTypeToggle({
+    required this.value,
+    required this.accentColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _ToggleOption(
+            label: 'شهري',
+            isSelected: value == 'monthly',
+            accentColor: accentColor,
+            onTap: () => onChanged('monthly'),
+          ),
+          _ToggleOption(
+            label: 'فصل دراسي',
+            isSelected: value == 'semester',
+            accentColor: accentColor,
+            onTap: () => onChanged('semester'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleOption extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  const _ToggleOption({
+    required this.label,
+    required this.isSelected,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? accentColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.cairo(
+              color: isSelected ? Colors.white : _kSubText,
+              fontSize: 14,
+              fontWeight:
+                  isSelected ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared Widgets ─────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   final String text;
@@ -370,7 +821,7 @@ class _SectionLabel extends StatelessWidget {
         color: _kSubText,
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        letterSpacing: 0.3,
       ),
     );
   }
@@ -380,11 +831,13 @@ class _DarkField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final TextInputType keyboardType;
+  final Color accentColor;
   final String? Function(String?)? validator;
 
   const _DarkField({
     required this.controller,
     required this.hint,
+    required this.accentColor,
     this.keyboardType = TextInputType.text,
     this.validator,
   });
@@ -411,9 +864,14 @@ class _DarkField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _kLime, width: 1.5),
+          borderSide: BorderSide(color: accentColor, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
               const BorderSide(color: Colors.redAccent, width: 1.5),

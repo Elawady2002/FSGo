@@ -19,6 +19,7 @@ class UserModel extends UserEntity {
     super.subscriptionStatus,
     super.officeName,
     super.stationName,
+    super.businessName,
   });
 
   /// Create UserModel from Supabase JSON
@@ -44,6 +45,7 @@ class UserModel extends UserEntity {
       subscriptionStatus: json['subscription_status'] as String?,
       officeName: json['office_name'] as String?,
       stationName: json['station_name'] as String?,
+      businessName: json['business_name'] as String?,
     );
   }
 
@@ -66,6 +68,7 @@ class UserModel extends UserEntity {
       'subscription_status': subscriptionStatus,
       'office_name': officeName,
       'station_name': stationName,
+      'business_name': businessName,
     };
   }
 
@@ -88,6 +91,7 @@ class UserModel extends UserEntity {
       subscriptionStatus: entity.subscriptionStatus,
       officeName: entity.officeName,
       stationName: entity.stationName,
+      businessName: entity.businessName,
     );
   }
 
@@ -110,6 +114,7 @@ class UserModel extends UserEntity {
       subscriptionStatus: subscriptionStatus,
       officeName: officeName,
       stationName: stationName,
+      businessName: businessName,
     );
   }
 }
