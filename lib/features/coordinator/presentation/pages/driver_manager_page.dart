@@ -22,11 +22,13 @@ class DriverManagerPage extends ConsumerStatefulWidget {
 }
 
 class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   bool _isInviting = false;
 
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
     super.dispose();
   }
@@ -34,6 +36,7 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
   @override
   Widget build(BuildContext context) {
     final driversAsync = ref.watch(coordinatorDriversProvider(widget.coordinator.id));
+    final invitesAsync = ref.watch(pendingInvitesProvider(widget.coordinator.id));
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -59,7 +62,7 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
         children: [
           // ── Invitation Header ──
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
             decoration: BoxDecoration(
               color: _kBg,
               boxShadow: [
@@ -81,7 +84,28 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                // Name field
+                Container(
+                  decoration: BoxDecoration(
+                    color: _kCard,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: TextField(
+                    controller: _nameCtrl,
+                    textDirection: TextDirection.rtl,
+                    style: GoogleFonts.cairo(fontSize: 15, color: _kText),
+                    decoration: InputDecoration(
+                      hintText: 'اسم السائق',
+                      hintStyle: GoogleFonts.cairo(color: _kSubText, fontSize: 13),
+                      hintTextDirection: TextDirection.rtl,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Email field + invite button
                 Container(
                   decoration: BoxDecoration(
                     color: _kCard,
@@ -93,7 +117,7 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                     textDirection: TextDirection.ltr,
                     style: GoogleFonts.cairo(fontSize: 15, color: _kText),
                     decoration: InputDecoration(
-                      hintText: 'أدخل البريد الإلكتروني...',
+                      hintText: 'البريد الإلكتروني',
                       hintStyle: GoogleFonts.cairo(color: _kSubText, fontSize: 13),
                       hintTextDirection: TextDirection.rtl,
                       border: InputBorder.none,
@@ -128,7 +152,10 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
               data: (drivers) {
                 return RefreshIndicator(
                   color: _kDark,
-                  onRefresh: () => ref.refresh(coordinatorDriversProvider(widget.coordinator.id).future),
+                  onRefresh: () async {
+                    ref.invalidate(coordinatorDriversProvider(widget.coordinator.id));
+                    ref.invalidate(pendingInvitesProvider(widget.coordinator.id));
+                  },
                   child: ListView(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     children: [
@@ -152,19 +179,16 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                         statusColor: _kSubText,
                         isOwner: true,
                       ),
-                      
+
                       if (drivers.isEmpty) ...[
-                         const SizedBox(height: 40),
-                         Icon(CupertinoIcons.person_2, color: _kCard, size: 64),
-                         const SizedBox(height: 16),
-                         Center(
-                           child: Text(
-                             'لا يوجد سائقين مضافين حالياً',
-                             style: GoogleFonts.cairo(color: _kSubText, fontSize: 14),
-                           ),
-                         ),
+                        const SizedBox(height: 24),
+                        Center(
+                          child: Text(
+                            'لا يوجد سائقين مضافين حالياً',
+                            style: GoogleFonts.cairo(color: _kSubText, fontSize: 14),
+                          ),
+                        ),
                       ] else
-                        // Already Joined Drivers
                         ...drivers.map((d) => _buildDriverRow(
                               name: d.fullName,
                               status: 'نشط',
@@ -185,16 +209,32 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                         ),
                       ),
 
-                      // Mocked Pending Invites
-                      _buildDriverRow(
-                        name: 'أحمد رضوان (تجريبي)',
-                        status: 'بانتظار الموافقة',
-                        statusColor: Colors.orange,
-                      ),
-                      _buildDriverRow(
-                        name: 'شعبان إبراهيم (تجريبي)',
-                        status: 'بانتظار الموافقة',
-                        statusColor: Colors.orange,
+                      // Real pending invites from DB
+                      invitesAsync.when(
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator(color: _kDark)),
+                        ),
+                        error: (_, __) => const SizedBox.shrink(),
+                        data: (invites) {
+                          if (invites.isEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              child: Text(
+                                'لا توجد دعوات معلقة',
+                                style: GoogleFonts.cairo(color: _kSubText, fontSize: 13),
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: invites.map((inv) => _buildDriverRow(
+                              name: inv.driverName,
+                              status: 'بانتظار الموافقة',
+                              statusColor: Colors.orange,
+                              subtitle: inv.driverEmail,
+                            )).toList(),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -212,6 +252,7 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
     required String status,
     required Color statusColor,
     bool isOwner = false,
+    String? subtitle,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -232,20 +273,20 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: isOwner 
-                ? const Icon(CupertinoIcons.person_fill, color: _kLime, size: 22)
-                : Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: GoogleFonts.cairo(
-                      fontWeight: FontWeight.w800, 
-                      color: _kSubText,
-                      fontSize: 18,
+              child: isOwner
+                  ? const Icon(CupertinoIcons.person_fill, color: _kLime, size: 22)
+                  : Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.w800,
+                        color: _kSubText,
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
             ),
           ),
           const SizedBox(width: 14),
-          
+
           // Name and Role
           Expanded(
             child: Column(
@@ -260,11 +301,8 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                   ),
                 ),
                 Text(
-                  isOwner ? 'مسؤول المحطة' : 'سائق معتمد',
-                  style: GoogleFonts.cairo(
-                    fontSize: 11,
-                    color: _kSubText,
-                  ),
+                  subtitle ?? (isOwner ? 'مسؤول المحطة' : 'سائق معتمد'),
+                  style: GoogleFonts.cairo(fontSize: 11, color: _kSubText),
                 ),
               ],
             ),
@@ -292,22 +330,46 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
   }
 
   Future<void> _handleInvite() async {
+    final name = _nameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
-    if (email.isEmpty) return;
+    if (name.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('من فضلك أدخل الاسم والبريد الإلكتروني', style: GoogleFonts.cairo()),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isInviting = true);
-    
-    // Simulate sending invite
-    await ref.read(coordinatorScheduleProvider(widget.coordinator.id).notifier).inviteDriver(
-      coordinatorId: widget.coordinator.id,
-      driverName: 'سائق جديد',
-      driverPhone: email, // Reusing phone field as email for mock purposes
-    );
+
+    final error = await ref
+        .read(coordinatorScheduleProvider(widget.coordinator.id).notifier)
+        .inviteDriver(
+          coordinatorId: widget.coordinator.id,
+          driverName: name,
+          driverEmail: email,
+        );
 
     if (!mounted) return;
     setState(() => _isInviting = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('خطأ: $error', style: GoogleFonts.cairo()),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    _nameCtrl.clear();
     _emailCtrl.clear();
-    
+    // Refresh pending invites list
+    ref.invalidate(pendingInvitesProvider(widget.coordinator.id));
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('تم إرسال الدعوة بنجاح', style: GoogleFonts.cairo()),

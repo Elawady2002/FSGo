@@ -5,6 +5,8 @@ import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../../domain/entities/office_plan_entity.dart';
 import '../../../../core/domain/entities/user_entity.dart';
 
+export '../../data/datasources/coordinator_data_source.dart' show DriverInvite;
+
 // ── DI ───────────────────────────────────────────────────────
 
 final coordinatorDataSourceProvider = Provider<CoordinatorDataSource>((ref) {
@@ -43,78 +45,9 @@ class CoordinatorScheduleNotifier
   final String _coordinatorId;
 
   CoordinatorScheduleNotifier(this._dataSource, this._coordinatorId)
-      : super(CoordinatorScheduleState(
-          schedules: [
-            // 🧪 MOCK — جامعة، شهري، معتمد + سائق معيّن
-            CoordinatorScheduleEntity(
-              id: 'mock-uni-1',
-              coordinatorId: _coordinatorId,
-              origin: 'المنصورة',
-              destination: 'جامعة القاهرة',
-              departureTime: '08:00',
-              availableDays: const ['sunday', 'tuesday', 'thursday'],
-              baseFare: 45.0,
-              adminMargin: 5.0,
-              isApproved: true,
-              isActive: true,
-              createdAt: DateTime.now(),
-              driverName: 'أحمد محمود (تجريبي)',
-              driverId: 'mock-driver-1',
-              scheduleType: ScheduleType.university,
-              subscriptionType: 'monthly',
-              durationDays: 30,
-            ),
-            // 🧪 MOCK — جامعة، ترم، في انتظار الموافقة
-            CoordinatorScheduleEntity(
-              id: 'mock-uni-2',
-              coordinatorId: _coordinatorId,
-              origin: 'بلبيس',
-              destination: 'جامعة الأزهر',
-              departureTime: '07:30',
-              availableDays: const ['saturday', 'monday', 'wednesday'],
-              baseFare: 60.0,
-              adminMargin: 5.0,
-              isApproved: false,
-              isActive: true,
-              createdAt: DateTime.now().subtract(const Duration(days: 2)),
-              scheduleType: ScheduleType.university,
-              subscriptionType: 'semester',
-              durationDays: 120,
-            ),
-            // 🧪 MOCK — موقف، معتمد + سائق معيّن
-            CoordinatorScheduleEntity(
-              id: 'mock-sta-1',
-              coordinatorId: _coordinatorId,
-              origin: 'ميدان الحسين',
-              destination: 'مطار القاهرة',
-              departureTime: '06:00',
-              availableDays: const ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'],
-              baseFare: 35.0,
-              adminMargin: 5.0,
-              isApproved: true,
-              isActive: true,
-              createdAt: DateTime.now().subtract(const Duration(days: 1)),
-              driverName: 'محمود علي (تجريبي)',
-              driverId: 'mock-driver-2',
-              scheduleType: ScheduleType.station,
-            ),
-            // 🧪 MOCK — موقف، في انتظار الموافقة
-            CoordinatorScheduleEntity(
-              id: 'mock-sta-2',
-              coordinatorId: _coordinatorId,
-              origin: 'العباسية',
-              destination: 'مدينة نصر',
-              departureTime: '09:00',
-              availableDays: const ['saturday', 'sunday', 'monday'],
-              baseFare: 25.0,
-              adminMargin: 5.0,
-              isApproved: false,
-              isActive: true,
-              createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-              scheduleType: ScheduleType.station,
-            ),
-          ],
-        ));
+      : super(const CoordinatorScheduleState(isLoading: true)) {
+    Future.microtask(load);
+  }
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -137,24 +70,17 @@ class CoordinatorScheduleNotifier
     int? durationDays,
   }) async {
     try {
-      // 🧪 MOCK MODE: Skip database call for now
-      final created = CoordinatorScheduleEntity(
-        id: 'mock-${DateTime.now().millisecondsSinceEpoch}',
+      final created = await _dataSource.createSchedule(
         coordinatorId: _coordinatorId,
         origin: origin,
         destination: destination,
         departureTime: departureTime,
         availableDays: availableDays,
         baseFare: baseFare,
-        adminMargin: 5.0,
-        isApproved: false,
-        isActive: true,
-        createdAt: DateTime.now(),
         scheduleType: scheduleType,
         subscriptionType: subscriptionType,
         durationDays: durationDays,
       );
-
       state = state.copyWith(
         schedules: [created, ...state.schedules],
       );
@@ -164,17 +90,17 @@ class CoordinatorScheduleNotifier
     }
   }
 
-  /// Invite a new driver to join the office
+  /// Invite a new driver to join the office via email
   Future<String?> inviteDriver({
     required String coordinatorId,
     required String driverName,
-    required String driverPhone,
+    required String driverEmail,
   }) async {
     try {
       await _dataSource.inviteDriver(
         coordinatorId: coordinatorId,
         driverName: driverName,
-        driverPhone: driverPhone,
+        driverEmail: driverEmail,
       );
       return null;
     } catch (e) {
@@ -217,6 +143,14 @@ final coordinatorDriversProvider =
     FutureProvider.family<List<UserEntity>, String>((ref, coordinatorId) async {
   final ds = ref.watch(coordinatorDataSourceProvider);
   return ds.getMyDrivers(coordinatorId);
+});
+
+// ── Pending Invites ───────────────────────────────────────────
+
+final pendingInvitesProvider =
+    FutureProvider.family<List<DriverInvite>, String>((ref, coordinatorId) async {
+  final ds = ref.watch(coordinatorDataSourceProvider);
+  return ds.getPendingInvites(coordinatorId);
 });
 
 // ── Office Plans ──────────────────────────────────────────────

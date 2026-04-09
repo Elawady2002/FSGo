@@ -3,6 +3,19 @@ import '../../domain/entities/coordinator_schedule_entity.dart';
 import '../../domain/entities/office_plan_entity.dart';
 import '../../../../core/domain/entities/user_entity.dart';
 
+/// Simple model for a pending driver invite record.
+class DriverInvite {
+  final String driverName;
+  final String driverEmail;
+  final String status;
+
+  const DriverInvite({
+    required this.driverName,
+    required this.driverEmail,
+    required this.status,
+  });
+}
+
 class CoordinatorDataSource {
   final SupabaseClient _client;
 
@@ -31,6 +44,10 @@ class CoordinatorDataSource {
     required String departureTime,
     required List<String> availableDays,
     required double baseFare,
+    int capacity = 4,
+    ScheduleType scheduleType = ScheduleType.university,
+    String? subscriptionType,
+    int? durationDays,
   }) async {
     final data = {
       'coordinator_id': coordinatorId,
@@ -40,18 +57,37 @@ class CoordinatorDataSource {
       'available_days': availableDays,
       'base_fare': baseFare,
       'admin_margin': 0,
+      'price_per_trip': baseFare,
+      'capacity': capacity,
       'is_approved': false,
       'is_active': true,
-      // Legacy required columns — use placeholders until schema is confirmed
-      'route_id': '00000000-0000-0000-0000-000000000000',
-      'direction': 'to_university',
-      'price_per_trip': baseFare,
+      'schedule_type': scheduleType.toJson(),
+      if (subscriptionType != null) 'subscription_type': subscriptionType,
+      if (durationDays != null) 'duration_days': durationDays,
     };
 
     final response =
         await _client.from('schedules').insert(data).select().single();
 
     return _scheduleFromJson(response);
+  }
+
+  /// Fetch pending driver invites for this coordinator
+  Future<List<DriverInvite>> getPendingInvites(String coordinatorId) async {
+    final response = await _client
+        .from('driver_invites')
+        .select()
+        .eq('coordinator_id', coordinatorId)
+        .eq('status', 'pending')
+        .order('created_at', ascending: false);
+
+    return (response as List).map((e) {
+      return DriverInvite(
+        driverName: e['driver_name'] as String? ?? '',
+        driverEmail: e['driver_email'] as String? ?? '',
+        status: e['status'] as String? ?? 'pending',
+      );
+    }).toList();
   }
 
   /// Fetch drivers that belong to this coordinator's org
@@ -78,16 +114,16 @@ class CoordinatorDataSource {
     }).toList();
   }
 
-  /// Send a driver invite request — inserts a pending record in driver_invites
+  /// Send a driver invite by email — inserts a pending record in driver_invites
   Future<void> inviteDriver({
     required String coordinatorId,
     required String driverName,
-    required String driverPhone,
+    required String driverEmail,
   }) async {
     await _client.from('driver_invites').insert({
       'coordinator_id': coordinatorId,
       'driver_name': driverName,
-      'driver_phone': driverPhone,
+      'driver_email': driverEmail,
       'status': 'pending',
     });
   }
@@ -175,6 +211,11 @@ class CoordinatorDataSource {
       driverName: driverName,
       createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
+      scheduleType: ScheduleType.fromJson(
+        json['schedule_type'] as String? ?? 'university',
+      ),
+      subscriptionType: json['subscription_type'] as String?,
+      durationDays: json['duration_days'] as int?,
     );
   }
 

@@ -5,12 +5,17 @@ enum UserType {
   student,
   driver,
   admin,
+  coordinator, // unified type: office owner / station owner / business owner
+  // Legacy values — kept for code that may still reference them directly;
+  // fromJson maps all three to coordinator.
   stationOwner,
   officeOwner,
   businessOwner;
 
   String toJson() {
     switch (this) {
+      case UserType.coordinator:
+        return 'coordinator';
       case UserType.stationOwner:
         return 'station_owner';
       case UserType.officeOwner:
@@ -24,12 +29,11 @@ enum UserType {
 
   static UserType fromJson(String value) {
     switch (value) {
+      case 'coordinator':
       case 'station_owner':
-        return UserType.stationOwner;
       case 'office_owner':
-        return UserType.officeOwner;
       case 'business_owner':
-        return UserType.businessOwner;
+        return UserType.coordinator;
       default:
         return UserType.values.firstWhere(
           (type) => type.name == value,
@@ -104,12 +108,11 @@ class UserEntity extends Equatable {
   bool get isStudent => userType == UserType.student;
   bool get isDriver => userType == UserType.driver;
   bool get isAdmin => userType == UserType.admin;
+  bool get isCoordinator => userType == UserType.coordinator;
+  // Legacy getters — kept for backward compatibility; all map to coordinator.
   bool get isStationOwner => userType == UserType.stationOwner;
   bool get isOfficeOwner => userType == UserType.officeOwner;
   bool get isBusinessOwner => userType == UserType.businessOwner;
-
-  /// Check if user is a coordinator (office, station, or unified business owner)
-  bool get isCoordinator => isOfficeOwner || isStationOwner || isBusinessOwner;
 
   /// Display name for the business/office/station
   String get entityName =>

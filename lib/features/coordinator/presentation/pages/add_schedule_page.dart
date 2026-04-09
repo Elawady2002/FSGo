@@ -141,7 +141,7 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
             primary: _selectedType == ScheduleType.university
                 ? _kUniversity
                 : _kStation,
-            onPrimary: Colors.white,
+            onPrimary: _kLime,
             onSurface: _kText,
           ),
           textButtonTheme: TextButtonThemeData(
@@ -162,7 +162,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                 ? _kUniversity
                 : _kStation,
             dialBackgroundColor: _kCard,
-            dialTextColor: _kText,
+            dialTextColor: MaterialStateColor.resolveWith((states) =>
+                states.contains(MaterialState.selected) ? _kLime : _kText),
             entryModeIconColor: _selectedType == ScheduleType.university
                 ? _kUniversity
                 : _kStation,

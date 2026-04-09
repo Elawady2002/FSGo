@@ -1887,14 +1887,14 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                   child: Row(
                     children: [
                       _ToggleTab(
-                        label: 'مواعيد جامعة',
-                        isSelected: _filterType == ScheduleType.university,
-                        onTap: () => setState(() => _filterType = ScheduleType.university),
-                      ),
-                      _ToggleTab(
                         label: 'مواعيد موقف',
                         isSelected: _filterType == ScheduleType.station,
                         onTap: () => setState(() => _filterType = ScheduleType.station),
+                      ),
+                      _ToggleTab(
+                        label: 'مواعيد جامعة',
+                        isSelected: _filterType == ScheduleType.university,
+                        onTap: () => setState(() => _filterType = ScheduleType.university),
                       ),
                     ],
                   ),

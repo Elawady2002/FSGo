@@ -32,100 +32,11 @@ class TripAssignmentPage extends ConsumerStatefulWidget {
 }
 
 class _TripAssignmentPageState extends ConsumerState<TripAssignmentPage> {
-  Map<String, List<String>> _assignments = {};
+  final Map<String, List<String>> _assignments = {};
 
   /// Booking IDs currently selected by the user (tap-to-select)
   final Set<String> _selectedPassengers = {};
 
-  static final List<PassengerEntity> _mockPassengers = [
-    const PassengerEntity(
-      bookingId: 'p1',
-      userId: 'u1',
-      fullName: 'أحمد محمود العوضي',
-      phone: '01012345678',
-      paymentType: PassengerPaymentType.cash,
-      boardingStatus: PassengerBoardingStatus.booked,
-      passengerCount: 1,
-      isLadies: false,
-      avatarUrl:
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-    ),
-    const PassengerEntity(
-      bookingId: 'p2',
-      userId: 'u2',
-      fullName: 'سارة محمد علي',
-      phone: '01198765432',
-      paymentType: PassengerPaymentType.subscriber,
-      boardingStatus: PassengerBoardingStatus.booked,
-      passengerCount: 1,
-      isLadies: true,
-      avatarUrl:
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-    ),
-    const PassengerEntity(
-      bookingId: 'p3',
-      userId: 'u3',
-      fullName: 'ياسين حسن',
-      phone: '01255566677',
-      paymentType: PassengerPaymentType.cash,
-      boardingStatus: PassengerBoardingStatus.booked,
-      passengerCount: 2,
-      isLadies: false,
-      avatarUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    ),
-    const PassengerEntity(
-      bookingId: 'p4',
-      userId: 'u4',
-      fullName: 'ليلى إبراهيم',
-      phone: '01566677788',
-      paymentType: PassengerPaymentType.cash,
-      boardingStatus: PassengerBoardingStatus.booked,
-      passengerCount: 1,
-      isLadies: true,
-      avatarUrl:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    ),
-  ];
-
-  static final List<UserEntity> _mockDrivers = [
-    UserEntity(
-      id: 'd1',
-      email: 'driver1@test.com',
-      phone: '01000000001',
-      fullName: 'كابتن محمد سمير',
-      userType: UserType.driver,
-      isVerified: true,
-      createdAt: DateTime.now(),
-      officeName: 'مكتب المنصورة',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=200&q=80',
-    ),
-    UserEntity(
-      id: 'd2',
-      email: 'driver2@test.com',
-      phone: '01000000002',
-      fullName: 'كابتن محمود إبراهيم',
-      userType: UserType.driver,
-      isVerified: true,
-      createdAt: DateTime.now(),
-      officeName: 'رابطة سائقي القاهرة',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&w=200&q=80',
-    ),
-    UserEntity(
-      id: 'd3',
-      email: 'driver3@test.com',
-      phone: '01000000003',
-      fullName: 'كابتن علي حسن',
-      userType: UserType.driver,
-      isVerified: true,
-      createdAt: DateTime.now(),
-      officeName: 'محطة العاصمة',
-      avatarUrl:
-          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
-    ),
-  ];
 
   @override
   void initState() {
@@ -157,9 +68,7 @@ class _TripAssignmentPageState extends ConsumerState<TripAssignmentPage> {
     final manifestState = ref.watch(manifestProvider(manifestKey));
     final driversAsync =
         ref.watch(coordinatorDriversProvider(widget.coordinator.id));
-    final displayPassengers = manifestState.passengers.isEmpty
-        ? _mockPassengers
-        : manifestState.passengers;
+    final displayPassengers = manifestState.passengers;
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -492,25 +401,21 @@ class _TripAssignmentPageState extends ConsumerState<TripAssignmentPage> {
                 ),
                 const Spacer(),
                 driversAsync.maybeWhen(
-                  data: (d) {
-                    final count =
-                        d.isEmpty ? _mockDrivers.length : d.length;
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: _kLime.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$count سائق',
-                        style: GoogleFonts.cairo(
-                            color: _kLime,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    );
-                  },
+                  data: (d) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _kLime.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${d.length} سائق',
+                      style: GoogleFonts.cairo(
+                          color: _kLime,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
                   orElse: () => const SizedBox.shrink(),
                 ),
               ],
@@ -524,13 +429,12 @@ class _TripAssignmentPageState extends ConsumerState<TripAssignmentPage> {
                   child: Text('خطأ في التحميل',
                       style: GoogleFonts.cairo(color: Colors.redAccent))),
               data: (driversList) {
-                final drivers =
-                    driversList.isEmpty ? _mockDrivers : driversList;
-                if (drivers.isEmpty) {
+                if (driversList.isEmpty) {
                   return Center(
                       child: Text('لا يوجد سائقين متاحين',
                           style: GoogleFonts.cairo(color: _kSubText)));
                 }
+                final drivers = driversList;
                 return ListView.builder(
                   // ── Vertical scroll ──
                   scrollDirection: Axis.vertical,
@@ -596,15 +500,6 @@ class _TripAssignmentPageState extends ConsumerState<TripAssignmentPage> {
     );
   }
 
-  void _saveAssignments() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم حفظ التقسيمات بنجاح', style: GoogleFonts.cairo()),
-        backgroundColor: Colors.green,
-      ),
-    );
-    Navigator.pop(context);
-  }
 }
 
 // ── Meta chip for header ─────────────────────────────────────────
