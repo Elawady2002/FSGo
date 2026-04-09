@@ -5,12 +5,12 @@ import '../../../../core/domain/entities/user_entity.dart';
 
 /// Simple model for a pending driver invite record.
 class DriverInvite {
-  final String driverName;
+  final String? driverName;
   final String driverEmail;
   final String status;
 
   const DriverInvite({
-    required this.driverName,
+    this.driverName,
     required this.driverEmail,
     required this.status,
   });
@@ -83,7 +83,7 @@ class CoordinatorDataSource {
 
     return (response as List).map((e) {
       return DriverInvite(
-        driverName: e['driver_name'] as String? ?? '',
+        driverName: e['driver_name'] as String?,
         driverEmail: e['driver_email'] as String? ?? '',
         status: e['status'] as String? ?? 'pending',
       );
@@ -117,12 +117,12 @@ class CoordinatorDataSource {
   /// Send a driver invite by email — inserts a pending record in driver_invites
   Future<void> inviteDriver({
     required String coordinatorId,
-    required String driverName,
+    String? driverName,
     required String driverEmail,
   }) async {
     await _client.from('driver_invites').insert({
       'coordinator_id': coordinatorId,
-      'driver_name': driverName,
+      if (driverName != null) 'driver_name': driverName,
       'driver_email': driverEmail,
       'status': 'pending',
     });

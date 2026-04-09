@@ -20,21 +20,25 @@ class UserModel extends UserEntity {
     super.officeName,
     super.stationName,
     super.businessName,
+    super.city,
+    super.cityId,
   });
 
   /// Create UserModel from Supabase JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String,
-      fullName: json['full_name'] as String,
+      id: json['id'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? '',
       studentId: json['student_id'] as String?,
       universityId: json['university_id'] as String?,
-      userType: UserType.fromJson(json['user_type'] as String),
+      userType: UserType.fromJson(json['user_type'] as String? ?? 'driver'),
       avatarUrl: json['avatar_url'] as String?,
       isVerified: json['is_verified'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : DateTime.now(),
       subscriptionType: json['subscription_type'] as String?,
       subscriptionStartDate: json['subscription_start_date'] != null
           ? DateTime.parse(json['subscription_start_date'] as String)
@@ -46,6 +50,8 @@ class UserModel extends UserEntity {
       officeName: json['office_name'] as String?,
       stationName: json['station_name'] as String?,
       businessName: json['business_name'] as String?,
+      city: json['city'] as String?,
+      cityId: json['city_id'] as String?,
     );
   }
 
@@ -69,6 +75,8 @@ class UserModel extends UserEntity {
       'office_name': officeName,
       'station_name': stationName,
       'business_name': businessName,
+      'city': city,
+      'city_id': cityId,
     };
   }
 
@@ -92,6 +100,8 @@ class UserModel extends UserEntity {
       officeName: entity.officeName,
       stationName: entity.stationName,
       businessName: entity.businessName,
+      city: entity.city,
+      cityId: entity.cityId,
     );
   }
 
@@ -115,6 +125,8 @@ class UserModel extends UserEntity {
       officeName: officeName,
       stationName: stationName,
       businessName: businessName,
+      city: city,
+      cityId: cityId,
     );
   }
 }

@@ -12,6 +12,7 @@ class CustomInput extends StatefulWidget {
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
   final Widget? suffixIcon;
+  final Widget? prefixWidget;
   final Color? backgroundColor;
 
   const CustomInput({
@@ -23,6 +24,7 @@ class CustomInput extends StatefulWidget {
     this.validator,
     this.keyboardType,
     this.suffixIcon,
+    this.prefixWidget,
     this.backgroundColor,
   });
 
@@ -90,16 +92,17 @@ class _CustomInputState extends State<CustomInput> {
             borderRadius: BorderRadius.circular(16),
             borderSide: const BorderSide(color: Colors.red, width: 1.5),
           ),
-          prefixIcon: widget.prefixIcon != null
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Icon(
-                    widget.prefixIcon,
-                    color: CupertinoColors.systemGrey,
-                    size: 20,
-                  ),
-                )
-              : null,
+          prefixIcon: widget.prefixWidget ??
+              (widget.prefixIcon != null
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Icon(
+                        widget.prefixIcon,
+                        color: CupertinoColors.systemGrey,
+                        size: 20,
+                      ),
+                    )
+                  : null),
           prefixIconConstraints: const BoxConstraints(minWidth: 40),
           suffixIcon: showBuiltInToggle
               ? GestureDetector(

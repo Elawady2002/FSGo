@@ -23,9 +23,13 @@ class SupabaseAuthDataSource implements AuthDataSource {
     String userType = 'driver',
     String? officeName,
     String? stationName,
+    String? city,
+    String? cityId,
   }) async {
     try {
-      // Sign up with Supabase Auth
+      LoggerService.info('Auth: Starting signup for $email as $userType');
+      
+      // 1. Sign up with Supabase Auth
       final authResponse = await _client.auth.signUp(
         email: email,
         password: password,
@@ -35,17 +39,19 @@ class SupabaseAuthDataSource implements AuthDataSource {
           'student_id': studentId,
           'university_id': universityId,
           'user_type': userType,
+          'city': city,
+          'city_id': cityId,
         },
       );
 
       if (authResponse.user == null) {
-        throw Exception('Failed to create user account');
+        throw Exception('فشل إنشاء الحساب. الرجاء المحاولة مرة أخرى.');
       }
 
       final userId = authResponse.user!.id;
       final isVerified = authResponse.session != null;
 
-      // Insert user data into users table and return it immediately
+      // 2. Prepare user data for the database
       final userData = {
         'id': userId,
         'email': email,
@@ -58,37 +64,46 @@ class SupabaseAuthDataSource implements AuthDataSource {
         'created_at': DateTime.now().toIso8601String(),
         'office_name': officeName,
         'station_name': stationName,
+        'city': city,
+        'city_id': cityId,
       };
 
       try {
-        await _client.from('users').insert(userData);
-
-        // Return user from local data to avoid RLS race conditions
+        // 3. Attempt manual insert. 
+        // Note: A database trigger might have already done this.
+        // We use upsert to handle both cases safely.
+        await _client.from('users').upsert(userData);
+        
+        LoggerService.info('Auth: User profile created/synced for $userId');
         return UserModel.fromJson(userData);
-      } on PostgrestException catch (e) {
-        // 23505 = unique violation — a Supabase trigger already inserted the
-        // row before our manual insert. Fetch the existing record and return it.
-        if (e.code == '23505') {
-          final existing = await _client
-              .from('users')
-              .select()
-              .eq('id', userId)
-              .maybeSingle();
-          if (existing != null) {
-            return UserModel.fromJson(existing);
-          }
+      } catch (e) {
+        // If upsert fails, try to fetch whatever is there
+        LoggerService.warning('Auth: Manual insert failed, fetching existing profile: $e');
+        final existing = await _client
+            .from('users')
+            .select()
+            .eq('id', userId)
+            .maybeSingle();
+            
+        if (existing != null) {
+          return UserModel.fromJson(existing);
         }
-        rethrow;
+        
+        // Final fallback: use the local data we have if DB fetch fails but Auth succeeded
+        return UserModel.fromJson(userData);
       }
     } on AuthException catch (e) {
-      throw Exception('Authentication error: ${e.message}');
+      LoggerService.error('Auth Exception during signup', error: e);
+      throw Exception(e.message);
     } on PostgrestException catch (e) {
-      if (e.message.contains('users_email_key')) {
+      LoggerService.error('Database Exception during signup', error: e);
+      if (e.message.contains('users_email_key') || e.code == '23505') {
         throw Exception('البريد الإلكتروني مسجل بالفعل. الرجاء تسجيل الدخول.');
       }
-      throw Exception('Database error: ${e.message}');
+      throw Exception('خطأ في قاعدة البيانات: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error during sign up: $e');
+      LoggerService.error('Unexpected Exception during signup', error: e);
+      throw Exception('حدث خطأ غير متوقع أثناء التسجيل: $e');
     }
   }
 

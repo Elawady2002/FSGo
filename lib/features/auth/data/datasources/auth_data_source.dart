@@ -15,6 +15,8 @@ abstract class AuthDataSource {
     String userType = 'driver',
     String? officeName,
     String? stationName,
+    String? city,
+    String? cityId,
   });
 
   Future<UserModel> signIn({

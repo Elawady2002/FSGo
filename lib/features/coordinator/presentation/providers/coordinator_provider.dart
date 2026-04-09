@@ -93,7 +93,7 @@ class CoordinatorScheduleNotifier
   /// Invite a new driver to join the office via email
   Future<String?> inviteDriver({
     required String coordinatorId,
-    required String driverName,
+    String? driverName,
     required String driverEmail,
   }) async {
     try {

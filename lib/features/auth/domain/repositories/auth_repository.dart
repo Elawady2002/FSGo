@@ -17,6 +17,8 @@ abstract class AuthRepository {
     String userType = 'driver',
     String? officeName,
     String? stationName,
+    String? city,
+    String? cityId,
   });
 
   /// Sign in an existing user with email and password

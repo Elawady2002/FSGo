@@ -62,6 +62,8 @@ class UserEntity extends Equatable {
   final String? officeName;
   final String? stationName;
   final String? businessName;
+  final String? city;
+  final String? cityId;
 
   const UserEntity({
     required this.id,
@@ -81,6 +83,8 @@ class UserEntity extends Equatable {
     this.officeName,
     this.stationName,
     this.businessName,
+    this.city,
+    this.cityId,
   });
 
   @override
@@ -102,6 +106,8 @@ class UserEntity extends Equatable {
     officeName,
     stationName,
     businessName,
+    city,
+    cityId,
   ];
 
   /// Role Getters
@@ -150,6 +156,8 @@ class UserEntity extends Equatable {
     String? officeName,
     String? stationName,
     String? businessName,
+    String? city,
+    String? cityId,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -170,6 +178,8 @@ class UserEntity extends Equatable {
       officeName: officeName ?? this.officeName,
       stationName: stationName ?? this.stationName,
       businessName: businessName ?? this.businessName,
+      city: city ?? this.city,
+      cityId: cityId ?? this.cityId,
     );
   }
 }

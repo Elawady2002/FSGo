@@ -22,13 +22,11 @@ class DriverManagerPage extends ConsumerStatefulWidget {
 }
 
 class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
-  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   bool _isInviting = false;
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
     _emailCtrl.dispose();
     super.dispose();
   }
@@ -85,26 +83,6 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Name field
-                Container(
-                  decoration: BoxDecoration(
-                    color: _kCard,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: TextField(
-                    controller: _nameCtrl,
-                    textDirection: TextDirection.rtl,
-                    style: GoogleFonts.cairo(fontSize: 15, color: _kText),
-                    decoration: InputDecoration(
-                      hintText: 'اسم السائق',
-                      hintStyle: GoogleFonts.cairo(color: _kSubText, fontSize: 13),
-                      hintTextDirection: TextDirection.rtl,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
                 // Email field + invite button
                 Container(
                   decoration: BoxDecoration(
@@ -228,10 +206,10 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
                           }
                           return Column(
                             children: invites.map((inv) => _buildDriverRow(
-                              name: inv.driverName,
+                              name: inv.driverName ?? inv.driverEmail,
                               status: 'بانتظار الموافقة',
                               statusColor: Colors.orange,
-                              subtitle: inv.driverEmail,
+                              subtitle: inv.driverName != null ? inv.driverEmail : null,
                             )).toList(),
                           );
                         },
@@ -330,12 +308,11 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
   }
 
   Future<void> _handleInvite() async {
-    final name = _nameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
-    if (name.isEmpty || email.isEmpty) {
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('من فضلك أدخل الاسم والبريد الإلكتروني', style: GoogleFonts.cairo()),
+          content: Text('من فضلك أدخل البريد الإلكتروني', style: GoogleFonts.cairo()),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -348,7 +325,6 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
         .read(coordinatorScheduleProvider(widget.coordinator.id).notifier)
         .inviteDriver(
           coordinatorId: widget.coordinator.id,
-          driverName: name,
           driverEmail: email,
         );
 
@@ -365,7 +341,6 @@ class _DriverManagerPageState extends ConsumerState<DriverManagerPage> {
       return;
     }
 
-    _nameCtrl.clear();
     _emailCtrl.clear();
     // Refresh pending invites list
     ref.invalidate(pendingInvitesProvider(widget.coordinator.id));

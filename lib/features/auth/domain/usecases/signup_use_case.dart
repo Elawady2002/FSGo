@@ -18,6 +18,8 @@ class SignupUseCase {
     String userType = 'driver',
     String? officeName,
     String? stationName,
+    String? city,
+    String? cityId,
   }) =>
       _repository.signUp(
         email: email,
@@ -29,5 +31,7 @@ class SignupUseCase {
         userType: userType,
         officeName: officeName,
         stationName: stationName,
+        city: city,
+        cityId: cityId,
       );
 }

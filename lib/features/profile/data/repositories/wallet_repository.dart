@@ -86,41 +86,25 @@ class WalletRepositoryImpl implements WalletRepository {
     String reason,
   ) async {
     try {
-      AppLogger.info('💸 Deducting $amount from wallet for: $reason');
+      AppLogger.info('💸 Deducting $amount from wallet via RPC for: $reason');
 
-      // Get current balance
-      final balanceResult = await getBalance(userId);
-      final currentBalance = balanceResult.fold(
-        (failure) => throw Exception(failure.message),
-        (balance) => balance,
+      final response = await _supabase.rpc(
+        'handle_wallet_deduction',
+        params: {
+          'p_user_id': userId,
+          'p_amount': amount,
+          'p_reason': reason,
+        },
       );
 
-      if (currentBalance < amount) {
-        AppLogger.warning('⚠️ Insufficient balance: $currentBalance < $amount');
-        return Left(ServerFailure(message: 'رصيد غير كافي'));
-      }
-
-      final newBalance = currentBalance - amount;
-
-      // Update balance
-      await _supabase
-          .from('users')
-          .update({'wallet_balance': newBalance})
-          .eq('id', userId);
-
-      // Record transaction
-      await _supabase.from('wallet_transactions').insert({
-        'user_id': userId,
-        'amount': amount,
-        'type': 'debit',
-        'reason': reason,
-        'balance_after': newBalance,
-      });
-
-      AppLogger.info('✅ Amount deducted. New balance: $newBalance');
+      final newBalance = (response as num).toDouble();
+      AppLogger.info('✅ Amount deducted via RPC. New balance: $newBalance');
       return Right(newBalance);
     } catch (e) {
-      AppLogger.error('❌ Error deducting amount: $e');
+      AppLogger.error('❌ Error deducting amount via RPC: $e');
+      if (e.toString().contains('رصيد غير كافي')) {
+        return Left(ServerFailure(message: 'رصيد غير كافي'));
+      }
       return Left(ServerFailure(message: 'فشل في خصم المبلغ'));
     }
   }
@@ -132,35 +116,22 @@ class WalletRepositoryImpl implements WalletRepository {
     String reason,
   ) async {
     try {
-      AppLogger.info('💰 Adding $amount to wallet for: $reason');
+      AppLogger.info('💰 Adding $amount to wallet via RPC for: $reason');
 
-      // Get current balance
-      final balanceResult = await getBalance(userId);
-      final currentBalance = balanceResult.fold(
-        (failure) => throw Exception(failure.message),
-        (balance) => balance,
+      final response = await _supabase.rpc(
+        'handle_wallet_addition',
+        params: {
+          'p_user_id': userId,
+          'p_amount': amount,
+          'p_reason': reason,
+        },
       );
 
-      final newBalance = currentBalance + amount;
-
-      // Update balance
-      await _supabase
-          .from('users')
-          .update({'wallet_balance': newBalance})
-          .eq('id', userId);
-
-      // Record transaction
-      await _supabase.from('wallet_transactions').insert({
-        'user_id': userId,
-        'amount': amount,
-        'type': 'credit',
-        'reason': reason,
-        'balance_after': newBalance,
-      });
-
-      AppLogger.info('✅ Amount added. New balance: $newBalance');
+      final newBalance = (response as num).toDouble();
+      AppLogger.info('✅ Amount added via RPC. New balance: $newBalance');
       return Right(newBalance);
     } catch (e) {
+      AppLogger.error('❌ Error adding amount via RPC: $e');
       return Left(ServerFailure(message: 'فشل في إضافة المبلغ'));
     }
   }

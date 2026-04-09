@@ -2,11 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/domain/entities/city_entity.dart';
 import '../../../../core/domain/entities/user_entity.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_toast.dart';
+import '../../../../core/widgets/searchable_city_picker.dart';
 import '../providers/auth_provider.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import 'login_page.dart';
@@ -25,6 +28,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _entityNameController = TextEditingController();
+  CityEntity? _selectedCity;
 
   UserType _selectedRole = UserType.driver;
   bool _isLoading = false;
@@ -40,53 +44,66 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   }
 
   String get _entityNameHint {
-    if (_selectedRole == UserType.officeOwner) return 'اسم المكتب';
-    if (_selectedRole == UserType.stationOwner) return 'اسم المحطة';
+    if (_selectedRole == UserType.coordinator) return 'اسم المكتب أو المحطة';
     return '';
   }
 
-  bool get _showEntityName =>
-      _selectedRole == UserType.officeOwner ||
-      _selectedRole == UserType.stationOwner;
+  bool get _showEntityName => _selectedRole == UserType.coordinator;
 
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
+      if (_selectedRole == UserType.coordinator && _selectedCity == null) {
+        _showError('الرجاء اختيار المدينة');
+        return;
+      }
+
       setState(() => _isLoading = true);
 
       try {
-        final error = await ref
-            .read(authProvider.notifier)
-            .signup(
+        final error = await ref.read(authProvider.notifier).signup(
               _nameController.text.trim(),
               _emailController.text.trim(),
               _passwordController.text.trim(),
               _phoneController.text.trim(),
               userType: _selectedRole.toJson(),
-              officeName: _selectedRole == UserType.officeOwner
+              city: _selectedCity?.nameAr,
+              cityId: _selectedCity?.id,
+              officeName: _selectedRole == UserType.coordinator
                   ? _entityNameController.text.trim()
                   : null,
-              stationName: _selectedRole == UserType.stationOwner
+              stationName: _selectedRole == UserType.coordinator
                   ? _entityNameController.text.trim()
                   : null,
             );
 
-        if (mounted) {
-          setState(() => _isLoading = false);
+        if (!mounted) return;
 
-          if (error == null) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              CupertinoPageRoute(builder: (_) => const HomePage()),
-              (route) => false,
-            );
-          } else {
-            _showError(error);
+        if (error == null) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            CupertinoPageRoute(builder: (_) => const HomePage()),
+            (route) => false,
+          );
+        } else {
+          // Parse complex JSON error messages if they happen
+          String displayError = error;
+          if (error.contains('"message":')) {
+            try {
+              // Extract message more gracefully
+              final start = error.indexOf('"message":"') + 11;
+              final end = error.indexOf('"', start);
+              displayError = error.substring(start, end);
+            } catch (_) {}
           }
+          _showError(displayError);
         }
       } catch (e) {
         if (mounted) {
-          setState(() => _isLoading = false);
           _showError('حدث خطأ غير متوقع: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }
@@ -199,7 +216,58 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       CustomInput(
                         controller: _entityNameController,
                         hintText: _entityNameHint,
-                        prefixIcon: CupertinoIcons.building_2_fill,
+                        prefixWidget: GestureDetector(
+                          onTap: () => SearchableCityPicker.show(
+                            context,
+                            initialCityId: _selectedCity?.id,
+                            onCitySelected: (city) =>
+                                setState(() => _selectedCity = city),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: Colors.grey.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _selectedCity == null
+                                      ? CupertinoIcons.location_solid
+                                      : CupertinoIcons.location_fill,
+                                  color: _selectedCity == null
+                                      ? CupertinoColors.systemGrey
+                                      : AppTheme.primaryColor,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _selectedCity?.nameAr ?? 'المدينة',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    color: _selectedCity == null
+                                        ? CupertinoColors.systemGrey
+                                        : AppTheme.primaryColor,
+                                    fontWeight: _selectedCity == null
+                                        ? FontWeight.normal
+                                        : FontWeight.bold,
+                                  ),
+                                ),
+                                const Icon(
+                                  CupertinoIcons.chevron_down,
+                                  size: 14,
+                                  color: CupertinoColors.systemGrey,
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            ),
+                          ),
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'الرجاء إدخال $_entityNameHint';
@@ -233,7 +301,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        CupertinoPageRoute(builder: (_) => LoginPage()),
+                        CupertinoPageRoute(builder: (_) => const LoginPage()),
                       );
                     },
                     style: TextButton.styleFrom(
@@ -270,14 +338,9 @@ class _RoleSelector extends StatelessWidget {
     const roles = [
       (label: 'سائق', role: UserType.driver, icon: CupertinoIcons.car_fill),
       (
-        label: 'مكتب',
-        role: UserType.officeOwner,
-        icon: CupertinoIcons.building_2_fill
-      ),
-      (
-        label: 'محطة',
-        role: UserType.stationOwner,
-        icon: CupertinoIcons.map_pin_ellipse
+        label: 'منظم الرحلات',
+        role: UserType.coordinator,
+        icon: CupertinoIcons.briefcase_fill
       ),
     ];
 
@@ -302,7 +365,7 @@ class _RoleSelector extends StatelessWidget {
                   onTap: () => onChanged(entry.role),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color: isSelected ? AppTheme.primaryColor : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -316,14 +379,14 @@ class _RoleSelector extends StatelessWidget {
                         Icon(
                           entry.icon,
                           color: isSelected ? AppTheme.accentColor : Colors.grey,
-                          size: 20,
+                          size: 24,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           entry.label,
                           style: TextStyle(
                             color: isSelected ? AppTheme.accentColor : Colors.grey,
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,

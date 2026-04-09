@@ -22,6 +22,8 @@ class AuthRepositoryImpl implements AuthRepository {
     String userType = 'driver',
     String? officeName,
     String? stationName,
+    String? city,
+    String? cityId,
   }) async {
     try {
       final user = await _dataSource.signUp(
@@ -34,6 +36,8 @@ class AuthRepositoryImpl implements AuthRepository {
         userType: userType,
         officeName: officeName,
         stationName: stationName,
+        city: city,
+        cityId: cityId,
       );
       return Right(user.toEntity());
     } catch (e) {

@@ -32,6 +32,8 @@ class Auth extends _$Auth {
     String userType = 'driver',
     String? officeName,
     String? stationName,
+    String? city,
+    String? cityId,
   }) async {
     final result = await ref.read(signupUseCaseProvider)(
       email: email,
@@ -43,6 +45,8 @@ class Auth extends _$Auth {
       userType: userType,
       officeName: officeName,
       stationName: stationName,
+      city: city,
+      cityId: cityId,
     );
 
     return result.fold((failure) => failure.message, (_) => null);
