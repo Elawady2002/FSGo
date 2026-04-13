@@ -161,34 +161,11 @@ class SupabaseAuthDataSource implements AuthDataSource {
           .maybeSingle(); // Use maybeSingle() to handle 0 or 1 results
 
       if (response == null) {
-        // Self-healing: if profile is missing, attempt to create it from metadata
-        final healed = await _ensureProfileExists(authResponse.user!);
-        if (healed != null) {
-          return UserModel.fromJson(healed);
-        }
-
-        // Fallback to metadata-only model if healing fails
-        LoggerService.warning(
-          'User $userId not found even after self-healing attempt. Fallback to Auth metadata.',
-        );
-        
-        final authUser = authResponse.user!;
-        final metadata = authUser.userMetadata ?? {};
-
-        return UserModel(
-          id: authUser.id,
-          email: authUser.email ?? email,
-          phone: metadata['phone'] ?? '',
-          fullName: metadata['full_name'] ?? '',
-          userType: UserType.fromJson(
-            metadata['user_type'] ?? 'driver',
-          ),
-          studentId: metadata['student_id'],
-          universityId: metadata['university_id'],
-          avatarUrl: metadata['avatar_url'],
-          isVerified: true,
-          createdAt: DateTime.tryParse(authUser.createdAt) ?? DateTime.now(),
-        );
+        // If profile is missing, it might have been deleted. 
+        // We should NOT auto-create it (self-heal) as per user requirements.
+        LoggerService.warning('User $userId not found in database during sign in.');
+        await signOut();
+        throw Exception('هذا الحساب غير موجود في النظام. الرجاء التواصل مع الإدارة.');
       }
 
       return UserModel.fromJson(response);
@@ -239,15 +216,8 @@ class SupabaseAuthDataSource implements AuthDataSource {
           .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 or 1 results
 
       if (response == null) {
-        // Self-healing: attempt to recreate profile if missing but session exists
-        final healed = await _ensureProfileExists(session.user);
-        if (healed != null) {
-          return UserModel.fromJson(healed);
-        }
-
-        LoggerService.warning(
-          'User $userId has auth session but no database record even after healing attempt.',
-        );
+        LoggerService.warning('User $userId has auth session but no database record. Logging out.');
+        await signOut();
         return null;
       }
 
@@ -307,13 +277,9 @@ class SupabaseAuthDataSource implements AuthDataSource {
           LoggerService.info('Auth: Full profile loaded for $userId');
           yield UserModel.fromJson(response);
         } else {
-          // Attempt self-healing in background
-          final healed = await _ensureProfileExists(authUser);
-          if (healed != null) {
-            yield UserModel.fromJson(healed);
-          } else {
-            LoggerService.warning('Auth: No database record found for $userId even after healing');
-          }
+          LoggerService.warning('Auth: No database record found for $userId. Triggering logout.');
+          await signOut();
+          yield null;
         }
       } catch (e) {
         LoggerService.error('Error in authStateChanges', error: e);
@@ -463,43 +429,5 @@ class SupabaseAuthDataSource implements AuthDataSource {
     }
   }
 
-  /// Private helper to ensure a user profile exists in public.users.
-  /// If it's missing, it attempts to create it using Auth metadata.
-  Future<Map<String, dynamic>?> _ensureProfileExists(User authUser) async {
-    final userId = authUser.id;
-    final metadata = authUser.userMetadata ?? {};
-
-    try {
-      // 1. Double check existence to avoid race conditions
-      final check = await _client
-          .from('users')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
-
-      if (check != null) return check;
-
-      // 2. If missing, attempt to insert from metadata
-      final userData = {
-        'id': userId,
-        'email': authUser.email ?? '',
-        'phone': metadata['phone'] ?? '',
-        'full_name': metadata['full_name'] ?? 'مستخدم جديد',
-        'user_type': metadata['user_type'] ?? 'student',
-        'is_verified': true,
-        'created_at': DateTime.tryParse(authUser.createdAt)?.toIso8601String() ??
-            DateTime.now().toIso8601String(),
-      };
-
-      final insertResponse =
-          await _client.from('users').insert(userData).select().single();
-      LoggerService.info('Auth: Self-healed missing profile for $userId');
-      return insertResponse;
-    } catch (e) {
-      LoggerService.error(
-          'Auth: Failed to self-heal missing profile for $userId',
-          error: e);
-      return null;
-    }
-  }
 }
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/logger_service.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../providers/user_session_validator.dart';
 import '../../features/auth/presentation/pages/onboarding_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
@@ -11,6 +12,9 @@ class AuthWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Initialize session validator (it will listen to lifecycle changes)
+    ref.watch(userSessionValidatorProvider);
+    
     final authState = ref.watch(authProvider);
 
     LoggerService.debug('AuthWrapper build called. State: $authState');
