@@ -15,13 +15,10 @@ enum UserType {
   String toJson() {
     switch (this) {
       case UserType.coordinator:
-        return 'coordinator';
       case UserType.stationOwner:
-        return 'station_owner';
       case UserType.officeOwner:
-        return 'office_owner';
       case UserType.businessOwner:
-        return 'business_owner';
+        return 'office_owner';
       default:
         return name;
     }
@@ -33,6 +30,9 @@ enum UserType {
       case 'station_owner':
       case 'office_owner':
       case 'business_owner':
+      case 'stationOwner':
+      case 'officeOwner':
+      case 'businessOwner':
         return UserType.coordinator;
       default:
         return UserType.values.firstWhere(

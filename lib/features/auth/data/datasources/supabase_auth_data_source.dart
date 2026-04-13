@@ -63,7 +63,7 @@ class SupabaseAuthDataSource implements AuthDataSource {
         'is_verified': isVerified,
         'created_at': DateTime.now().toIso8601String(),
         'office_name': officeName,
-        'station_name': stationName,
+        'station_name': stationName ?? officeName, // Ensure station_name is set
         'city': city,
         'city_id': cityId,
       };
@@ -75,6 +75,35 @@ class SupabaseAuthDataSource implements AuthDataSource {
         await _client.from('users').upsert(userData);
         
         LoggerService.info('Auth: User profile created/synced for $userId');
+
+        // 4. For coordinators, also ensure the station exists in boarding_stations
+        if (userType == 'coordinator' && (stationName != null || officeName != null) && cityId != null) {
+          final effectiveStationName = stationName ?? officeName;
+          if (effectiveStationName != null) {
+            try {
+              // Check if station already exists to avoid duplicates
+              final existing = await _client
+                  .from('boarding_stations')
+                  .select()
+                  .eq('city_id', cityId)
+                  .eq('name_ar', effectiveStationName)
+                  .maybeSingle();
+
+              if (existing == null) {
+                await _client.from('boarding_stations').insert({
+                  'name_ar': effectiveStationName,
+                  'name_en': effectiveStationName,
+                  'city_id': cityId,
+                });
+                LoggerService.info('Auth: Station added to boarding_stations: $effectiveStationName');
+              }
+            } catch (stationError) {
+              // Log but don't fail the main registration
+              LoggerService.warning('Auth: Optional boarding_stations insert failed: $stationError');
+            }
+          }
+        }
+        
         return UserModel.fromJson(userData);
       } catch (e) {
         // If upsert fails, try to fetch whatever is there

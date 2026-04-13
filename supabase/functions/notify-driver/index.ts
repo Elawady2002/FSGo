@@ -8,9 +8,7 @@
 // is needed in the future (e.g., for killed-app background push via APNs direct
 // integration). For now it simply acknowledges the webhook and returns 200.
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-
-serve(async (_req: Request) => {
+Deno.serve(async (_req: Request) => {
   return new Response(
     JSON.stringify({ ok: true, note: "Notifications handled via Supabase Realtime on client" }),
     { status: 200, headers: { "Content-Type": "application/json" } },
