@@ -87,8 +87,13 @@ class SupabaseAuthDataSource implements AuthDataSource {
         
         LoggerService.info('Auth: User profile created/synced for $userId');
 
-        // 4. For coordinators, also ensure the station exists in boarding_stations
-        if (userType == 'coordinator' && (stationName != null || officeName != null) && cityId != null) {
+        // 4. For coordinators/office owners, also ensure the station exists in boarding_stations
+        final isCoordinatorType = userType == 'coordinator' || 
+                                 userType == 'office_owner' || 
+                                 userType == 'station_owner' || 
+                                 userType == 'business_owner';
+                                 
+        if (isCoordinatorType && (stationName != null || officeName != null) && cityId != null) {
           final effectiveStationName = stationName ?? officeName;
           if (effectiveStationName != null) {
             try {
