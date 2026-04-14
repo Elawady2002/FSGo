@@ -1956,7 +1956,7 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                     }
 
                     return Column(
-                      children: filtered.take(3).map((schedule) {
+                      children: filtered.map((schedule) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: _ScheduleCard(schedule: schedule, date: _selectedDate),
