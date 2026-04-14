@@ -34,20 +34,58 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
   final _fareCtrl = TextEditingController();
   final _durationCtrl = TextEditingController();
 
-  TimeOfDay _departureTime = const TimeOfDay(hour: 7, minute: 0);
-  final Set<String> _selectedDays = {};
+  // Multi-time selection
+  final List<TimeOfDay> _selectedTimes = [const TimeOfDay(hour: 8, minute: 0)];
+
+  // Location selection
+  String? _selectedCityId;
+  String? _selectedCityName;
+  String? _selectedStationId;
+  String? _selectedStationName;
+
+  final Set<int> _selectedDays = {};
   String _subscriptionType = 'monthly'; // 'monthly' | 'semester'
   bool _isSaving = false;
 
   static const _days = [
-    ('sunday', 'الأحد'),
-    ('monday', 'الاثنين'),
-    ('tuesday', 'الثلاثاء'),
-    ('wednesday', 'الأربعاء'),
-    ('thursday', 'الخميس'),
-    ('friday', 'الجمعة'),
-    ('saturday', 'السبت'),
+    (1, 'الاثنين'),
+    (2, 'الثلاثاء'),
+    (3, 'الأربعاء'),
+    (4, 'الخميس'),
+    (5, 'الجمعة'),
+    (6, 'السبت'),
+    (7, 'الأحد'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fill city from coordinator profile
+    _selectedCityId = widget.coordinator.cityId;
+    _selectedCityName = widget.coordinator.city;
+  }
+
+  void _handleStationAutoSelection(List<Map<String, dynamic>> stations) {
+    if (_selectedStationId != null || widget.coordinator.stationName == null) return;
+    
+    final stationName = widget.coordinator.stationName!.trim();
+    final match = stations.firstWhere(
+      (s) => (s['name_ar'] as String).trim() == stationName || 
+             (s['name_en'] as String).trim() == stationName,
+      orElse: () => {},
+    );
+
+    if (match.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _selectedStationId == null) {
+          setState(() {
+            _selectedStationId = match['id'];
+            _selectedStationName = match['name_ar'];
+          });
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -59,6 +97,13 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch stations and handle auto-selection
+    if (_selectedCityId != null) {
+      ref.watch(boardingStationsProvider(_selectedCityId!)).whenData((stations) {
+        _handleStationAutoSelection(stations);
+      });
+    }
+
     return Scaffold(
       backgroundColor: _kBg,
       appBar: AppBar(
@@ -110,11 +155,24 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                 destCtrl: _destCtrl,
                 fareCtrl: _fareCtrl,
                 durationCtrl: _durationCtrl,
-                departureTime: _departureTime,
+                selectedTimes: _selectedTimes,
+                selectedCityId: _selectedCityId,
+                selectedStationId: _selectedStationId,
                 selectedDays: _selectedDays,
                 subscriptionType: _subscriptionType,
                 isSaving: _isSaving,
-                onPickTime: _pickTime,
+                onAddTime: _addTime,
+                onRemoveTime: (idx) => setState(() => _selectedTimes.removeAt(idx)),
+                onCityChanged: (id, name) => setState(() {
+                  _selectedCityId = id;
+                  _selectedCityName = name;
+                  _selectedStationId = null;
+                  _selectedStationName = null;
+                }),
+                onStationChanged: (id, name) => setState(() {
+                  _selectedStationId = id;
+                  _selectedStationName = name;
+                }),
                 onDayToggle: (day) => setState(() {
                   if (_selectedDays.contains(day)) {
                     _selectedDays.remove(day);
@@ -131,75 +189,48 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     );
   }
 
-  Future<void> _pickTime() async {
+  Future<void> _addTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _departureTime,
+      initialTime: const TimeOfDay(hour: 8, minute: 0),
       builder: (ctx, child) => Theme(
         data: ThemeData.light().copyWith(
-          colorScheme: ColorScheme.light(
-            primary: _selectedType == ScheduleType.university
-                ? _kUniversity
-                : _kStation,
-            onPrimary: _kLime,
-            onSurface: _kText,
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: _selectedType == ScheduleType.university
-                  ? _kUniversity
-                  : _kStation,
-              textStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700),
-            ),
-          ),
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: Colors.white,
-            hourMinuteColor: _kCard,
-            hourMinuteTextColor: _kText,
-            dayPeriodColor: _kCard,
-            dayPeriodTextColor: _kText,
-            dialHandColor: _selectedType == ScheduleType.university
-                ? _kUniversity
-                : _kStation,
-            dialBackgroundColor: _kCard,
-            dialTextColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.selected) ? _kLime : _kText),
-            entryModeIconColor: _selectedType == ScheduleType.university
-                ? _kUniversity
-                : _kStation,
-          ),
+          colorScheme: const ColorScheme.light(primary: _kText, onPrimary: _kLime),
         ),
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _departureTime = picked);
+    if (picked != null) setState(() => _selectedTimes.add(picked));
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedStationId == null) {
+      _showMsg('برجاء اختيار محطة الانطلاق');
+      return;
+    }
+    if (_selectedTimes.isEmpty) {
+      _showMsg('برجاء إضافة موعد واحد على الأقل');
+      return;
+    }
     if (_selectedDays.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('اختر يوماً واحداً على الأقل',
-              style: GoogleFonts.cairo()),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      _showMsg('اختر يوماً واحداً على الأقل');
       return;
     }
 
     setState(() => _isSaving = true);
 
-    final timeStr =
-        '${_departureTime.hour.toString().padLeft(2, '0')}:${_departureTime.minute.toString().padLeft(2, '0')}';
+    final List<String> timesList = _selectedTimes.map((t) {
+      return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    }).toList();
 
     final error = await ref
         .read(coordinatorScheduleProvider(widget.coordinator.id).notifier)
         .createSchedule(
-          origin: widget.coordinator.entityName,
+          origin: _selectedStationName ?? 'unknown',
           destination: _destCtrl.text.trim(),
-          departureTime: timeStr,
-          availableDays: _selectedDays.toList(),
+          timesList: timesList,
+          daysOfWeek: _selectedDays.toList(),
           baseFare: double.parse(_fareCtrl.text.trim()),
           scheduleType: _selectedType!,
           subscriptionType: _selectedType == ScheduleType.university
@@ -216,22 +247,20 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     if (!mounted) return;
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('خطأ: $error', style: GoogleFonts.cairo()),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      _showMsg('خطأ: $error', isError: true);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تم إرسال الموعد — في انتظار الموافقة',
-              style: GoogleFonts.cairo()),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showMsg('تم إرسال المواعيد — سيظهر كل وقت في كارت منفصل', isError: false);
       Navigator.pop(context);
     }
+  }
+
+  void _showMsg(String msg, {bool isError = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: GoogleFonts.cairo()),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+      ),
+    );
   }
 }
 
@@ -372,7 +401,7 @@ class _TypeCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                   Text(
                     title,
                     style: GoogleFonts.cairo(
                       color: isSelected ? Colors.white : _kText,
@@ -408,21 +437,26 @@ class _TypeCard extends StatelessWidget {
 
 // ── Step 1: Form ───────────────────────────────────────────────
 
-class _FormStep extends StatelessWidget {
+class _FormStep extends ConsumerWidget {
   final ScheduleType scheduleType;
   final GlobalKey<FormState> formKey;
   final TextEditingController destCtrl;
   final TextEditingController fareCtrl;
   final TextEditingController durationCtrl;
-  final TimeOfDay departureTime;
-  final Set<String> selectedDays;
+  final List<TimeOfDay> selectedTimes;
+  final String? selectedCityId;
+  final String? selectedStationId;
+  final Set<int> selectedDays;
   final String subscriptionType;
   final bool isSaving;
-  final VoidCallback onPickTime;
-  final ValueChanged<String> onDayToggle;
+  final VoidCallback onAddTime;
+  final void Function(int index) onRemoveTime;
+  final void Function(String id, String name)? onCityChanged;
+  final void Function(String id, String name)? onStationChanged;
+  final ValueChanged<int> onDayToggle;
   final ValueChanged<String> onSubscriptionTypeChange;
   final VoidCallback onSubmit;
-  final List<(String, String)> days;
+  final List<(int, String)> days;
 
   const _FormStep({
     super.key,
@@ -431,22 +465,27 @@ class _FormStep extends StatelessWidget {
     required this.destCtrl,
     required this.fareCtrl,
     required this.durationCtrl,
-    required this.departureTime,
+    required this.selectedTimes,
+    required this.selectedCityId,
+    required this.selectedStationId,
     required this.selectedDays,
     required this.subscriptionType,
     required this.isSaving,
-    required this.onPickTime,
+    required this.onAddTime,
+    required this.onRemoveTime,
+    this.onCityChanged,
+    this.onStationChanged,
     required this.onDayToggle,
     required this.onSubscriptionTypeChange,
     required this.onSubmit,
     required this.days,
   });
 
-  Color get _accentColor =>
-      scheduleType == ScheduleType.university ? _kUniversity : _kStation;
+
+  Color get _accentColor => _kText;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Form(
@@ -454,118 +493,38 @@ class _FormStep extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // University-specific: Subscription type + duration
-            if (scheduleType == ScheduleType.university) ...[
-              _SectionLabel('نوع الاشتراك'),
-              const SizedBox(height: 8),
-              _SubscriptionTypeToggle(
-                value: subscriptionType,
-                accentColor: _accentColor,
-                onChanged: onSubscriptionTypeChange,
-              ),
-              const SizedBox(height: 16),
-              _SectionLabel('مدة الاشتراك (بالأيام)'),
-              const SizedBox(height: 8),
-              _DarkField(
-                controller: durationCtrl,
-                hint: subscriptionType == 'semester' ? '120 يوم' : '30 يوم',
-                keyboardType: TextInputType.number,
-                accentColor: _accentColor,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'مطلوب';
-                  if (int.tryParse(v) == null) return 'رقم صحيح فقط';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            _SectionLabel('الوجهة'),
-            const SizedBox(height: 8),
+            // Destination Section
+            _SectionLabel('الوجهة (محطة الوصول)'),
+            const SizedBox(height: 10),
             _DarkField(
               controller: destCtrl,
-              hint: scheduleType == ScheduleType.university
-                  ? 'اسم الجامعة / الوجهة'
-                  : 'الوجهة',
+              hint: 'مثال: السلام، العباسية...',
               accentColor: _accentColor,
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'مطلوب' : null,
+              validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            _SectionLabel('وقت الانطلاق'),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: onPickTime,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: _kCard,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(CupertinoIcons.clock,
-                        color: _accentColor, size: 18),
-                    const SizedBox(width: 10),
-                    Text(
-                      departureTime.format(context),
-                      style: GoogleFonts.cairo(
-                          color: _kText, fontSize: 16),
-                    ),
-                    const Spacer(),
-                    const Icon(CupertinoIcons.chevron_right,
-                        color: _kSubText, size: 14),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            _SectionLabel('أيام التشغيل'),
-            const SizedBox(height: 8),
+            // Multiple Departure Times
+            _SectionLabel('أوقات الانطلاق'),
+            const SizedBox(height: 12),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: days.map((day) {
-                final isSelected = selectedDays.contains(day.$1);
-                return GestureDetector(
-                  onTap: () => onDayToggle(day.$1),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? _accentColor.withValues(alpha: 0.12)
-                          : _kCard,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? _accentColor
-                            : Colors.transparent,
-                      ),
-                    ),
-                    child: Text(
-                      day.$2,
-                      style: GoogleFonts.cairo(
-                        color:
-                            isSelected ? _accentColor : _kSubText,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w400,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.start,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _AddTimeButton(onTap: onAddTime),
+                ...selectedTimes.asMap().entries.map((entry) => _TimeBadge(
+                  time: entry.value,
+                  onRemove: () => onRemoveTime(entry.key),
+                )),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
+            // Pricing
             _SectionLabel('السعر (جنيه)'),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _DarkField(
               controller: fareCtrl,
               hint: '0',
@@ -577,67 +536,75 @@ class _FormStep extends StatelessWidget {
                 return null;
               },
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
-            // Info banner
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _accentColor.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: _accentColor.withValues(alpha: 0.25)),
-              ),
-              child: Row(
-                children: [
-                  Icon(CupertinoIcons.info_circle,
-                      color: _accentColor, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
+            // Days selection
+            _SectionLabel('أيام التشغيل'),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 10,
+              children: days.map((day) {
+                final isSelected = selectedDays.contains(day.$1);
+                return GestureDetector(
+                  onTap: () => onDayToggle(day.$1),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.white : _kCard,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected ? _kText : Colors.transparent,
+                        width: isSelected ? 1.5 : 1.0,
+                      ),
+                      boxShadow: isSelected ? [
+                        BoxShadow(
+                          color: _kText.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ] : null,
+                    ),
                     child: Text(
-                      'سيتم إرسال الموعد للمراجعة. بعد موافقة الإدارة يمكنك تعيين سائق.',
+                      day.$2,
                       style: GoogleFonts.cairo(
-                          color: _accentColor.withValues(alpha: 0.85),
-                          fontSize: 12),
+                        color: isSelected ? _kText : _kSubText,
+                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ],
-              ),
+                );
+              }).toList(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 40),
 
             SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kText,
                   foregroundColor: _kLime,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 0),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),
                 onPressed: isSaving ? null : onSubmit,
                 child: isSaving
                     ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: _kLime,
-                          strokeWidth: 2,
-                        ),
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(color: _kLime, strokeWidth: 2.5),
                       )
                     : Text(
-                        'إرسال للموافقة',
-                        style: GoogleFonts.cairo(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        'تأكيد ونشر الجدول',
+                        style: GoogleFonts.cairo(fontSize: 17, fontWeight: FontWeight.w800),
                       ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -645,7 +612,151 @@ class _FormStep extends StatelessWidget {
   }
 }
 
-// ── Subscription Type Toggle ───────────────────────────────────
+class _TimeBadge extends StatelessWidget {
+  final TimeOfDay time;
+  final VoidCallback onRemove;
+  const _TimeBadge({required this.time, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final timeStr =
+        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEEEEE),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(CupertinoIcons.multiply_circle_fill, size: 18, color: Color(0xFF999999)),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            timeStr,
+            style: GoogleFonts.cairo(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: _kText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddTimeButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddTimeButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: _kLime.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _kLime.withValues(alpha: 0.5), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(CupertinoIcons.add, size: 18, color: _kText),
+            const SizedBox(width: 6),
+            Text(
+              'إضافة وقت',
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: _kText,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared Widgets ─────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: GoogleFonts.cairo(
+        color: _kSubText,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.3,
+      ),
+    );
+  }
+}
+
+class _DarkField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final TextInputType keyboardType;
+  final Color accentColor;
+  final String? Function(String?)? validator;
+
+  const _DarkField({
+    required this.controller,
+    required this.hint,
+    required this.accentColor,
+    this.keyboardType = TextInputType.text,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: GoogleFonts.cairo(color: _kText, fontSize: 15),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.cairo(color: _kSubText, fontSize: 15),
+        filled: true,
+        fillColor: _kCard,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: accentColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+}
+
 
 class _SubscriptionTypeToggle extends StatelessWidget {
   final String value;
@@ -716,87 +827,10 @@ class _ToggleOption extends StatelessWidget {
             style: GoogleFonts.cairo(
               color: isSelected ? Colors.white : _kSubText,
               fontSize: 14,
-              fontWeight:
-                  isSelected ? FontWeight.w700 : FontWeight.w400,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Shared Widgets ─────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.cairo(
-        color: _kSubText,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.3,
-      ),
-    );
-  }
-}
-
-class _DarkField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final TextInputType keyboardType;
-  final Color accentColor;
-  final String? Function(String?)? validator;
-
-  const _DarkField({
-    required this.controller,
-    required this.hint,
-    required this.accentColor,
-    this.keyboardType = TextInputType.text,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: GoogleFonts.cairo(color: _kText, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.cairo(color: _kSubText, fontSize: 15),
-        filled: true,
-        fillColor: _kCard,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: accentColor, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

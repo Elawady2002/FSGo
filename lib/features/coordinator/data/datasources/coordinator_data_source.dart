@@ -36,40 +36,57 @@ class CoordinatorDataSource {
         .toList();
   }
 
-  /// Create a new schedule (awaits admin approval)
-  Future<CoordinatorScheduleEntity> createSchedule({
+  /// Fetch all active cities
+  Future<List<Map<String, dynamic>>> getCities() async {
+    final response = await _client
+        .from('cities')
+        .select()
+        .eq('is_active', true)
+        .order('name_ar');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Fetch boarding stations for a city
+  Future<List<Map<String, dynamic>>> getBoardingStations(String cityId) async {
+    final response = await _client
+        .from('boarding_stations')
+        .select()
+        .eq('city_id', cityId)
+        .order('name_ar');
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Create new schedules (awaits admin approval)
+  Future<void> createSchedules({
     required String coordinatorId,
     required String origin,
     required String destination,
-    required String departureTime,
-    required List<String> availableDays,
+    required List<String> departureTimes,
+    required List<int> daysOfWeek,
     required double baseFare,
-    int capacity = 4,
+    int capacity = 14,
     ScheduleType scheduleType = ScheduleType.university,
     String? subscriptionType,
     int? durationDays,
   }) async {
-    final data = {
-      'coordinator_id': coordinatorId,
-      'origin': origin,
-      'destination': destination,
-      'departure_time': departureTime,
-      'available_days': availableDays,
-      'base_fare': baseFare,
-      'admin_margin': 0,
-      'price_per_trip': baseFare,
-      'capacity': capacity,
-      'is_approved': false,
-      'is_active': true,
-      'schedule_type': scheduleType.toJson(),
-      if (subscriptionType != null) 'subscription_type': subscriptionType,
-      if (durationDays != null) 'duration_days': durationDays,
-    };
+    final List<Map<String, dynamic>> batchData = departureTimes.map((time) {
+      return {
+        'coordinator_id': coordinatorId,
+        'origin': origin,
+        'destination': destination,
+        'departure_time': time,
+        'days_of_week': daysOfWeek,
+        'base_fare': baseFare,
+        'capacity': capacity,
+        'is_approved': true,
+        'is_active': true,
+        'schedule_type': scheduleType.toJson(),
+        if (subscriptionType != null) 'subscription_type': subscriptionType,
+        if (durationDays != null) 'duration_days': durationDays,
+      };
+    }).toList();
 
-    final response =
-        await _client.from('schedules').insert(data).select().single();
-
-    return _scheduleFromJson(response);
+    await _client.from('schedules').insert(batchData);
   }
 
   /// Fetch pending driver invites for this coordinator
@@ -200,11 +217,10 @@ class CoordinatorDataSource {
       origin: json['origin'] as String? ?? '',
       destination: json['destination'] as String? ?? '',
       departureTime: json['departure_time'] as String? ?? '',
-      availableDays: List<String>.from(
-        (json['available_days'] as List?) ?? [],
+      daysOfWeek: List<int>.from(
+        (json['days_of_week'] as List?) ?? (json['available_days'] as List?) ?? [],
       ),
       baseFare: (json['base_fare'] as num?)?.toDouble() ?? 0,
-      adminMargin: (json['admin_margin'] as num?)?.toDouble() ?? 0,
       isApproved: json['is_approved'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
       driverId: json['driver_id'] as String?,

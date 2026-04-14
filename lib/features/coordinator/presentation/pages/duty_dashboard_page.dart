@@ -93,9 +93,8 @@ class _DutyDashboardPageState extends ConsumerState<DutyDashboardPage> {
               ),
               data: (schedules) {
                 // Filter schedules that are available on the selected day
-                final dayName = _dayName(_selectedDate.weekday);
                 final filtered = schedules
-                    .where((s) => s.availableDays.contains(dayName))
+                    .where((s) => s.daysOfWeek.contains(_selectedDate.weekday))
                     .toList();
 
                 // Update driver status based on trips
@@ -160,19 +159,6 @@ class _DutyDashboardPageState extends ConsumerState<DutyDashboardPage> {
       ),
     );
     if (picked != null) setState(() => _selectedDate = picked);
-  }
-
-  String _dayName(int weekday) {
-    const days = [
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-      'sunday',
-    ];
-    return days[(weekday - 1) % 7];
   }
 }
 

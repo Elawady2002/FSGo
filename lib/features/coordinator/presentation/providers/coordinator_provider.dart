@@ -62,30 +62,33 @@ class CoordinatorScheduleNotifier
   Future<String?> createSchedule({
     required String origin,
     required String destination,
-    required String departureTime,
-    required List<String> availableDays,
+    required List<String> timesList,
+    required List<int> daysOfWeek,
     required double baseFare,
     required ScheduleType scheduleType,
     String? subscriptionType,
     int? durationDays,
   }) async {
+    state = state.copyWith(isLoading: true);
     try {
-      final created = await _dataSource.createSchedule(
+      await _dataSource.createSchedules(
         coordinatorId: _coordinatorId,
         origin: origin,
         destination: destination,
-        departureTime: departureTime,
-        availableDays: availableDays,
+        departureTimes: timesList,
+        daysOfWeek: daysOfWeek,
         baseFare: baseFare,
+        capacity: 14, // Standard capacity for now
         scheduleType: scheduleType,
         subscriptionType: subscriptionType,
         durationDays: durationDays,
       );
-      state = state.copyWith(
-        schedules: [created, ...state.schedules],
-      );
+      
+      // Reload to show the new schedules
+      await load();
       return null;
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       return e.toString();
     }
   }
@@ -135,6 +138,19 @@ final coordinatorScheduleProvider = StateNotifierProvider.family<
     String>((ref, coordinatorId) {
   final ds = ref.watch(coordinatorDataSourceProvider);
   return CoordinatorScheduleNotifier(ds, coordinatorId);
+});
+
+// ── Cities & Stations Providers ────────────────────────────────
+
+final citiesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final ds = ref.watch(coordinatorDataSourceProvider);
+  return ds.getCities();
+});
+
+final boardingStationsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, cityId) async {
+  if (cityId.isEmpty) return [];
+  final ds = ref.watch(coordinatorDataSourceProvider);
+  return ds.getBoardingStations(cityId);
 });
 
 // ── Drivers List ──────────────────────────────────────────────

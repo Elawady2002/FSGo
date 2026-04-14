@@ -34,7 +34,7 @@ import '../../../../core/widgets/custom_input.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../coordinator/presentation/pages/add_schedule_page.dart';
 import '../../../coordinator/presentation/pages/driver_manager_page.dart';
-import '../../../coordinator/presentation/providers/coordinator_provider.dart';
+import '../../../coordinator/presentation/providers/coordinator_provider.dart' as coord;
 import '../../../coordinator/domain/entities/coordinator_schedule_entity.dart';
 import '../../../coordinator/presentation/pages/duty_dashboard_page.dart';
 import '../../../coordinator/presentation/pages/trip_assignment_page.dart';
@@ -1920,7 +1920,7 @@ class _CoordinatorDashboardState extends ConsumerState<_CoordinatorDashboard>
                 const SizedBox(height: 12),
                 Consumer(
                   builder: (context, ref, child) {
-                    final scheduleState = ref.watch(coordinatorScheduleProvider(user.id));
+                    final scheduleState = ref.watch(coord.coordinatorScheduleProvider(user.id));
                     final filtered = scheduleState.schedules
                         .where((s) => s.scheduleType == _filterType)
                         .toList();

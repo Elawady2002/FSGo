@@ -60,9 +60,10 @@ class AdminDataSource {
       origin: json['origin'] as String? ?? '',
       destination: json['destination'] as String? ?? '',
       departureTime: json['departure_time'] as String? ?? '',
-      availableDays: List<String>.from((json['available_days'] as List?) ?? []),
+      daysOfWeek: List<int>.from(
+        (json['days_of_week'] as List?) ?? (json['available_days'] as List?) ?? [],
+      ),
       baseFare: (json['base_fare'] as num?)?.toDouble() ?? 0,
-      adminMargin: (json['admin_margin'] as num?)?.toDouble() ?? 0,
       isApproved: json['is_approved'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
       driverId: json['driver_id'] as String?,

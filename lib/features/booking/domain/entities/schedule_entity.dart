@@ -24,7 +24,7 @@ class ScheduleEntity extends Equatable {
   final String routeId;
   final RouteDirection direction;
   final String departureTime; // Format: "HH:mm"
-  final List<String> availableDays; // ['sunday', 'monday', ...]
+  final List<int> daysOfWeek; // [1, 2, 3...] where 1 = Monday
   final int capacity;
   final double pricePerTrip;
   final bool isActive;
@@ -34,7 +34,7 @@ class ScheduleEntity extends Equatable {
     required this.routeId,
     required this.direction,
     required this.departureTime,
-    required this.availableDays,
+    required this.daysOfWeek,
     required this.capacity,
     required this.pricePerTrip,
     required this.isActive,
@@ -46,7 +46,7 @@ class ScheduleEntity extends Equatable {
     routeId,
     direction,
     departureTime,
-    availableDays,
+    daysOfWeek,
     capacity,
     pricePerTrip,
     isActive,
@@ -54,22 +54,6 @@ class ScheduleEntity extends Equatable {
 
   /// Check if schedule is available on a specific day
   bool isAvailableOn(DateTime date) {
-    final dayName = _getDayName(date.weekday);
-    return availableDays.contains(dayName);
+    return daysOfWeek.contains(date.weekday);
   }
-
-  String _getDayName(int weekday) {
-    // weekday: 1 = Monday, 7 = Sunday
-    const days = [
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-      'sunday',
-    ];
-    return days[(weekday - 1) % 7];
-  }
-
 }

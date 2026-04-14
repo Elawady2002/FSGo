@@ -56,9 +56,8 @@ class CoordinatorScheduleEntity extends Equatable {
   final String origin;
   final String destination;
   final String departureTime; // "HH:mm"
-  final List<String> availableDays;
+  final List<int> daysOfWeek;
   final double baseFare;
-  final double adminMargin;
   final bool isApproved;
   final bool isActive;
   final String? driverId;
@@ -76,9 +75,8 @@ class CoordinatorScheduleEntity extends Equatable {
     required this.origin,
     required this.destination,
     required this.departureTime,
-    required this.availableDays,
+    required this.daysOfWeek,
     required this.baseFare,
-    required this.adminMargin,
     required this.isApproved,
     required this.isActive,
     this.driverId,
@@ -95,7 +93,7 @@ class CoordinatorScheduleEntity extends Equatable {
   bool get canAssignDriver => isApproved && driverId == null;
   bool get hasDriver => driverId != null;
 
-  double get totalFare => baseFare + adminMargin;
+  double get totalFare => baseFare;
 
   String get routeLabel => '$origin → $destination';
 
@@ -107,15 +105,15 @@ class CoordinatorScheduleEntity extends Equatable {
 
   String get daysLabel {
     const dayNames = {
-      'sunday': 'الأحد',
-      'monday': 'الاثنين',
-      'tuesday': 'الثلاثاء',
-      'wednesday': 'الأربعاء',
-      'thursday': 'الخميس',
-      'friday': 'الجمعة',
-      'saturday': 'السبت',
+      1: 'الاثنين', // Monday
+      2: 'الثلاثاء',
+      3: 'الأربعاء',
+      4: 'الخميس',
+      5: 'الجمعة',
+      6: 'السبت',
+      7: 'الأحد',   // Sunday
     };
-    return availableDays.map((d) => dayNames[d] ?? d).join('، ');
+    return daysOfWeek.map((d) => dayNames[d] ?? d.toString()).join('، ');
   }
 
   CoordinatorScheduleEntity copyWith({
@@ -124,9 +122,8 @@ class CoordinatorScheduleEntity extends Equatable {
     String? origin,
     String? destination,
     String? departureTime,
-    List<String>? availableDays,
+    List<int>? daysOfWeek,
     double? baseFare,
-    double? adminMargin,
     bool? isApproved,
     bool? isActive,
     String? driverId,
@@ -142,9 +139,8 @@ class CoordinatorScheduleEntity extends Equatable {
       origin: origin ?? this.origin,
       destination: destination ?? this.destination,
       departureTime: departureTime ?? this.departureTime,
-      availableDays: availableDays ?? this.availableDays,
+      daysOfWeek: daysOfWeek ?? this.daysOfWeek,
       baseFare: baseFare ?? this.baseFare,
-      adminMargin: adminMargin ?? this.adminMargin,
       isApproved: isApproved ?? this.isApproved,
       isActive: isActive ?? this.isActive,
       driverId: driverId ?? this.driverId,
@@ -163,9 +159,8 @@ class CoordinatorScheduleEntity extends Equatable {
     origin,
     destination,
     departureTime,
-    availableDays,
+    daysOfWeek,
     baseFare,
-    adminMargin,
     isApproved,
     isActive,
     driverId,
