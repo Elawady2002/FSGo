@@ -30,21 +30,21 @@ class UserModel extends UserEntity {
       id: json['id'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      fullName: json['full_name'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? 'كابتن',
       studentId: json['student_id'] as String?,
       universityId: json['university_id'] as String?,
       userType: UserType.fromJson(json['user_type'] as String? ?? 'driver'),
       avatarUrl: json['avatar_url'] as String?,
       isVerified: json['is_verified'] as bool? ?? false,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
           : DateTime.now(),
       subscriptionType: json['subscription_type'] as String?,
       subscriptionStartDate: json['subscription_start_date'] != null
-          ? DateTime.parse(json['subscription_start_date'] as String)
+          ? DateTime.tryParse(json['subscription_start_date'] as String)
           : null,
       subscriptionEndDate: json['subscription_end_date'] != null
-          ? DateTime.parse(json['subscription_end_date'] as String)
+          ? DateTime.tryParse(json['subscription_end_date'] as String)
           : null,
       subscriptionStatus: json['subscription_status'] as String?,
       officeName: json['office_name'] as String?,
