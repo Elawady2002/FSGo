@@ -29,7 +29,18 @@ class SupabaseAuthDataSource implements AuthDataSource {
     try {
       LoggerService.info('Auth: Starting signup for $email as $userType');
       
-      // 1. Sign up with Supabase Auth
+      // 1. Pre-check for phone uniqueness to provide better UX
+      final phoneCheck = await _client
+          .from('users')
+          .select('id')
+          .eq('phone', phone)
+          .maybeSingle();
+
+      if (phoneCheck != null) {
+        throw Exception('رقم الهاتف مسجل بالفعل. الرجاء استخدام رقم آخر أو تسجيل الدخول.');
+      }
+
+      // 2. Sign up with Supabase Auth
       final authResponse = await _client.auth.signUp(
         email: email,
         password: password,
@@ -123,16 +134,30 @@ class SupabaseAuthDataSource implements AuthDataSource {
       }
     } on AuthException catch (e) {
       LoggerService.error('Auth Exception during signup', error: e);
-      throw Exception(e.message);
+      final message = e.message.toLowerCase();
+      if (message.contains('user already registered')) {
+        throw Exception('هذا البريد الإلكتروني مسجل بالفعل. يمكنك تسجيل الدخول بدلاً من ذلك.');
+      }
+      if (message.contains('database error saving new user')) {
+        throw Exception('عذراً، يبدو أن رقم الهاتف أو البريد الإلكتروني مستخدم بالفعل في حساب آخر. يرجى التأكد من بياناتك.');
+      }
+      throw Exception('عذراً، حدث خطأ أثناء إنشاء الحساب: ${e.message}');
     } on PostgrestException catch (e) {
       LoggerService.error('Database Exception during signup', error: e);
-      if (e.message.contains('users_email_key') || e.code == '23505') {
-        throw Exception('البريد الإلكتروني مسجل بالفعل. الرجاء تسجيل الدخول.');
+      if (e.message.contains('users_phone_key') || e.code == '23505') {
+        throw Exception('رقم الهاتف هذا مسجل بالفعل. يرجى استخدام رقم آخر.');
       }
-      throw Exception('خطأ في قاعدة البيانات: ${e.message}');
+      if (e.message.contains('users_email_key')) {
+        throw Exception('البريد الإلكتروني مسجل بالفعل. يمكنك تسجيل الدخول بدلاً من ذلك.');
+      }
+      throw Exception('عذراً، حدث خطأ في قاعدة البيانات. يرجى المحاولة لاحقاً.');
     } catch (e) {
       LoggerService.error('Unexpected Exception during signup', error: e);
-      throw Exception('حدث خطأ غير متوقع أثناء التسجيل: $e');
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('database error saving new user')) {
+        throw Exception('عذراً، هذا الحساب أو رقم الهاتف مسجل لدينا بالفعل. يرجى تسجيل الدخول.');
+      }
+      throw Exception('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     }
   }
 
@@ -175,16 +200,16 @@ class SupabaseAuthDataSource implements AuthDataSource {
           'بيانات الدخول غير صحيحة، أو لم يتم تفعيل البريد الإلكتروني.',
         );
       }
-      throw Exception('Authentication error: ${e.message}');
+      throw Exception('عذراً، حدث خطأ في تسجيل الدخول: ${e.message}');
     } on PostgrestException catch (e) {
       LoggerService.error(
         'Database error in signIn: ${e.message}. Code: ${e.code}, Details: ${e.details}',
         error: e,
       );
-      throw Exception('Database error: ${e.message}');
+      throw Exception('عذراً، حدث خطأ في قاعدة البيانات. يرجى المحاولة لاحقاً.');
     } catch (e) {
       LoggerService.error('Unexpected error in signIn', error: e);
-      throw Exception('Unexpected error during sign in: $e');
+      throw Exception('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     }
   }
 
