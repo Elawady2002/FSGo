@@ -26,7 +26,7 @@ class CoordinatorDataSource {
     String coordinatorId,
   ) async {
     final response = await _client
-        .from('schedules')
+        .from('trip_schedules')
         .select('*, driver:driver_id(full_name)')
         .eq('coordinator_id', coordinatorId)
         .order('created_at', ascending: false);
@@ -59,6 +59,7 @@ class CoordinatorDataSource {
   /// Create new schedules (awaits admin approval)
   Future<void> createSchedules({
     required String coordinatorId,
+    required String cityId,
     required String origin,
     required String destination,
     required List<String> departureTimes,
@@ -72,6 +73,7 @@ class CoordinatorDataSource {
     final List<Map<String, dynamic>> batchData = departureTimes.map((time) {
       return {
         'coordinator_id': coordinatorId,
+        'city_id': cityId,
         'origin': origin,
         'destination': destination,
         'departure_time': time,
@@ -86,7 +88,7 @@ class CoordinatorDataSource {
       };
     }).toList();
 
-    await _client.from('schedules').insert(batchData);
+    await _client.from('trip_schedules').insert(batchData);
   }
 
   /// Fetch pending driver invites for this coordinator
@@ -151,7 +153,7 @@ class CoordinatorDataSource {
     required String driverId,
   }) async {
     await _client
-        .from('schedules')
+        .from('trip_schedules')
         .update({'driver_id': driverId})
         .eq('id', scheduleId)
         .eq('is_approved', true); // safety: only assign to approved ones

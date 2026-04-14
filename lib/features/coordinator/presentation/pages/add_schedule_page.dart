@@ -31,6 +31,7 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
 
   final _formKey = GlobalKey<FormState>();
   final _destCtrl = TextEditingController();
+  final _originCtrl = TextEditingController();
   final _fareCtrl = TextEditingController();
   final _durationCtrl = TextEditingController();
 
@@ -63,6 +64,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     // Auto-fill city from coordinator profile
     _selectedCityId = widget.coordinator.cityId;
     _selectedCityName = widget.coordinator.city;
+    // Auto-fill origin from coordinator profile
+    _originCtrl.text = widget.coordinator.stationName ?? '';
   }
 
   void _handleStationAutoSelection(List<Map<String, dynamic>> stations) {
@@ -98,11 +101,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
   @override
   Widget build(BuildContext context) {
     // Watch stations and handle auto-selection
-    if (_selectedCityId != null) {
-      ref.watch(boardingStationsProvider(_selectedCityId!)).whenData((stations) {
-        _handleStationAutoSelection(stations);
-      });
-    }
+    // Dynamic discovery of origins/destinations is handled in User app.
+    // Coordinator just provides the text now.
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -153,11 +153,11 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                 scheduleType: _selectedType!,
                 formKey: _formKey,
                 destCtrl: _destCtrl,
+                originCtrl: _originCtrl,
                 fareCtrl: _fareCtrl,
                 durationCtrl: _durationCtrl,
                 selectedTimes: _selectedTimes,
                 selectedCityId: _selectedCityId,
-                selectedStationId: _selectedStationId,
                 selectedDays: _selectedDays,
                 subscriptionType: _subscriptionType,
                 isSaving: _isSaving,
@@ -166,12 +166,6 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                 onCityChanged: (id, name) => setState(() {
                   _selectedCityId = id;
                   _selectedCityName = name;
-                  _selectedStationId = null;
-                  _selectedStationName = null;
-                }),
-                onStationChanged: (id, name) => setState(() {
-                  _selectedStationId = id;
-                  _selectedStationName = name;
                 }),
                 onDayToggle: (day) => setState(() {
                   if (_selectedDays.contains(day)) {
@@ -184,6 +178,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
                     setState(() => _subscriptionType = v),
                 onSubmit: _submit,
                 days: _days,
+                autoCityName: widget.coordinator.city,
+                autoOriginName: widget.coordinator.stationName,
               ),
       ),
     );
@@ -205,8 +201,12 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedStationId == null) {
-      _showMsg('برجاء اختيار محطة الانطلاق');
+    if (_selectedCityId == null) {
+      _showMsg('برجاء اختيار المدينة');
+      return;
+    }
+    if (_originCtrl.text.trim().isEmpty) {
+      _showMsg('برجاء إدخال محطة الانطلاق (نقطة التجمع)');
       return;
     }
     if (_selectedTimes.isEmpty) {
@@ -227,7 +227,8 @@ class _AddSchedulePageState extends ConsumerState<AddSchedulePage> {
     final error = await ref
         .read(coordinatorScheduleProvider(widget.coordinator.id).notifier)
         .createSchedule(
-          origin: _selectedStationName ?? 'unknown',
+          cityId: _selectedCityId!,
+          origin: _originCtrl.text.trim(),
           destination: _destCtrl.text.trim(),
           timesList: timesList,
           daysOfWeek: _selectedDays.toList(),
@@ -441,44 +442,46 @@ class _FormStep extends ConsumerWidget {
   final ScheduleType scheduleType;
   final GlobalKey<FormState> formKey;
   final TextEditingController destCtrl;
+  final TextEditingController originCtrl;
   final TextEditingController fareCtrl;
   final TextEditingController durationCtrl;
   final List<TimeOfDay> selectedTimes;
   final String? selectedCityId;
-  final String? selectedStationId;
   final Set<int> selectedDays;
   final String subscriptionType;
   final bool isSaving;
   final VoidCallback onAddTime;
   final void Function(int index) onRemoveTime;
   final void Function(String id, String name)? onCityChanged;
-  final void Function(String id, String name)? onStationChanged;
   final ValueChanged<int> onDayToggle;
   final ValueChanged<String> onSubscriptionTypeChange;
   final VoidCallback onSubmit;
   final List<(int, String)> days;
+  final String? autoCityName;
+  final String? autoOriginName;
 
   const _FormStep({
     super.key,
     required this.scheduleType,
     required this.formKey,
     required this.destCtrl,
+    required this.originCtrl,
     required this.fareCtrl,
     required this.durationCtrl,
     required this.selectedTimes,
     required this.selectedCityId,
-    required this.selectedStationId,
     required this.selectedDays,
     required this.subscriptionType,
     required this.isSaving,
     required this.onAddTime,
     required this.onRemoveTime,
     this.onCityChanged,
-    this.onStationChanged,
     required this.onDayToggle,
     required this.onSubscriptionTypeChange,
     required this.onSubmit,
     required this.days,
+    this.autoCityName,
+    this.autoOriginName,
   });
 
 
@@ -493,6 +496,75 @@ class _FormStep extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Auto-filled Info Header (Sleek Redesign)
+            if (autoCityName != null || autoOriginName != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: _kCard,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(CupertinoIcons.location_north_fill, size: 16, color: _kText),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'الموقع المسجل حالياً',
+                            style: GoogleFonts.cairo(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _kSubText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              if (autoCityName != null)
+                                Text(
+                                  autoCityName!,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: _kText,
+                                  ),
+                                ),
+                              if (autoCityName != null && autoOriginName != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                                  child: Text('•', style: TextStyle(color: _kSubText.withValues(alpha: 0.5))),
+                                ),
+                              if (autoOriginName != null)
+                                Text(
+                                  autoOriginName!,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: _kText,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
             // Destination Section
             _SectionLabel('الوجهة (محطة الوصول)'),
             const SizedBox(height: 10),
@@ -503,6 +575,54 @@ class _FormStep extends ConsumerWidget {
               validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
             ),
             const SizedBox(height: 24),
+
+            // City Section
+            if (autoCityName == null) ...[
+              _SectionLabel('المدينة'),
+              const SizedBox(height: 10),
+              ref.watch(citiesProvider).when(
+                data: (cities) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _kCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButton<String>(
+                    value: selectedCityId,
+                    hint: Text('اختر المدينة', style: GoogleFonts.cairo(color: _kSubText)),
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    icon: const Icon(CupertinoIcons.chevron_down, size: 16),
+                    items: cities.map((c) => DropdownMenuItem(
+                      value: c['id'] as String,
+                      child: Text(c['name_ar'] as String, style: GoogleFonts.cairo(color: _kText)),
+                    )).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        final city = cities.firstWhere((c) => c['id'] == val);
+                        onCityChanged?.call(val, city['name_ar']);
+                      }
+                    },
+                  ),
+                ),
+                loading: () => const Center(child: CupertinoActivityIndicator()),
+                error: (_, __) => Text('خطأ في تحميل المدن', style: GoogleFonts.cairo(color: Colors.red)),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Origin Section
+            if (autoOriginName == null) ...[
+              _SectionLabel('نقطة التجمع (مكان الانطلاق)'),
+              const SizedBox(height: 10),
+              _DarkField(
+                controller: originCtrl,
+                hint: 'مثال: القومية، البحر، المحطة...',
+                accentColor: _accentColor,
+                validator: (v) => v == null || v.isEmpty ? 'مطلوب' : null,
+              ),
+              const SizedBox(height: 24),
+            ],
 
             // Multiple Departure Times
             _SectionLabel('أوقات الانطلاق'),
@@ -832,6 +952,32 @@ class _ToggleOption extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AutoInfoBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _AutoInfoBadge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: _kSubText),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.cairo(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _kText,
+          ),
+        ),
+      ],
     );
   }
 }

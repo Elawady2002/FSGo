@@ -60,6 +60,7 @@ class CoordinatorScheduleNotifier
   }
 
   Future<String?> createSchedule({
+    required String cityId,
     required String origin,
     required String destination,
     required List<String> timesList,
@@ -73,6 +74,7 @@ class CoordinatorScheduleNotifier
     try {
       await _dataSource.createSchedules(
         coordinatorId: _coordinatorId,
+        cityId: cityId,
         origin: origin,
         destination: destination,
         departureTimes: timesList,
